@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="NetCore.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkClient.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkConnection.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkServer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="NetCore.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkClient.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkConnection.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkCore.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkServer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Network">
+      <UniqueIdentifier>{fc92d217-3896-4cd3-8a43-0c254a4a9a49}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
