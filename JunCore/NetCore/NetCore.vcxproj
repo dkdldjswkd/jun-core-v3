@@ -136,6 +136,8 @@
     <ClCompile Include="NetworkConnection.cpp" />
     <ClCompile Include="NetworkServer.cpp" />
     <ClCompile Include="NetworkClient.cpp" />
+    <ClCompile Include="ProtobufHelper.cpp" />
+    <ClCompile Include="Protocol\GameMessage.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetCore.h" />
@@ -143,6 +145,11 @@
     <ClInclude Include="NetworkConnection.h" />
     <ClInclude Include="NetworkServer.h" />
     <ClInclude Include="NetworkClient.h" />
+    <ClInclude Include="ProtobufHelper.h" />
+    <ClInclude Include="Protocol\GameMessage.pb.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="Protocol\GameMessage.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

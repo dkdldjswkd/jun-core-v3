@@ -7,8 +7,6 @@
 #include <memory>
 #include <mutex>
 
-
-
 // Network initialization helper
 class NetworkInitializer
 {

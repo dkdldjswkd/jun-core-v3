@@ -2,6 +2,9 @@
 #include "GameServerManager.h"
 #include <iostream>
 
+// Protobuf example function
+void ProtobufExample();
+
 int main()
 {
 	try
@@ -26,6 +29,12 @@ int main()
 		std::cout << "\n=== JunCore3 Game Server ===" << std::endl;
 		std::cout << "Server is running on port " << kServerPort << std::endl;
 		std::cout << "Local IP: " << NetworkUtils::GetLocalIPAddress() << std::endl;
+		
+		// Run protobuf example
+		std::cout << "\n";
+		ProtobufExample();
+		std::cout << "\n";
+		
 		std::cout << "Type commands to interact with the server." << std::endl;
 
 		// Run console interface

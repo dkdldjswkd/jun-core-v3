@@ -23,8 +23,7 @@ NetworkServer::~NetworkServer()
 	Stop();
 }
 
-NetworkError NetworkServer::Start(Port port, IServerEventHandler* handler,
-	int worker_thread_count)
+NetworkError NetworkServer::Start(Port port, IServerEventHandler* handler, int worker_thread_count)
 {
 	if (is_running_)
 	{
@@ -346,8 +345,15 @@ void NetworkServer::WorkerThreadProc()
 			break;
 		}
 
-		// Get connection from completion key
-		NetworkConnection* connection_ptr = reinterpret_cast<NetworkConnection*>(completion_key);
+		// Get IOContext from overlapped
+		IOContext* io_context = reinterpret_cast<IOContext*>(overlapped);
+		if (!io_context)
+		{
+			continue;
+		}
+
+		// Get connection from IOContext
+		NetworkConnection* connection_ptr = static_cast<NetworkConnection*>(io_context->connection);
 		if (!connection_ptr)
 		{
 			continue;
@@ -367,8 +373,19 @@ void NetworkServer::WorkerThreadProc()
 			continue;
 		}
 
-		// Handle received data
-		if (event_handler_)
+		// Handle based on operation type
+		switch (io_context->operation)
+		{
+		case IOOperation::kReceive:
+			HandleReceiveCompletion(connection, bytes_transferred);
+			break;
+		case IOOperation::kSend:
+			HandleSendCompletion(connection, bytes_transferred);
+			break;
+		default:
+			Logger::Warning("Unknown IOCP operation type");
+			break;
+		}
 		{
 			event_handler_->OnDataReceived(connection, connection->GetReceiveBuffer(), bytes_transferred);
 		}
@@ -385,7 +402,7 @@ void NetworkServer::HandleReceive(std::shared_ptr<NetworkConnection> connection)
 		return;
 	}
 
-	connection->ResetOverlapped();
+	connection->ResetReceiveContext();
 
 	WSABUF receive_buffer = {
 	  static_cast<ULONG>(connection->GetReceiveBufferSize()),
@@ -400,7 +417,7 @@ void NetworkServer::HandleReceive(std::shared_ptr<NetworkConnection> connection)
 		1,
 		&bytes_received,
 		&flags,
-		connection->GetOverlapped(),
+		&connection->GetReceiveContext()->overlapped,
 		nullptr);
 
 	if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)
@@ -424,4 +441,40 @@ void NetworkServer::CloseConnection(std::shared_ptr<NetworkConnection> connectio
 	}
 
 	connection->Disconnect();
+}
+
+
+void NetworkServer::HandleReceiveCompletion(std::shared_ptr<NetworkConnection> connection, DWORD bytes_transferred)
+{
+	if (!connection || !event_handler_)
+	{
+		return;
+	}
+
+	// Process received data
+	event_handler_->OnDataReceived(connection, connection->GetReceiveBuffer(), bytes_transferred);
+
+	// Reset receive context for next operation
+	connection->ResetReceiveContext();
+
+	// Post next receive operation
+	HandleReceive(connection);
+}
+
+void NetworkServer::HandleSendCompletion(std::shared_ptr<NetworkConnection> connection, DWORD bytes_transferred)
+{
+	if (!connection)
+	{
+		return;
+	}
+
+	// Reset send context for next operation
+	connection->ResetSendContext();
+
+	// Log successful send (optional)
+	Logger::Debug("Send completed for connection " + std::to_string(connection->GetId()) + 
+	              ", bytes: " + std::to_string(bytes_transferred));
+
+	// Note: If you need to track pending sends or implement send queue,
+	// this is where you would handle it
 }

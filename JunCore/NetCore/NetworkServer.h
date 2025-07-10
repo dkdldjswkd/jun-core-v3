@@ -58,6 +58,8 @@ private:
 	void WorkerThreadProc();
 	void AcceptThreadProc();
 	void HandleReceive(std::shared_ptr<NetworkConnection> connection);
+	void HandleReceiveCompletion(std::shared_ptr<NetworkConnection> connection, DWORD bytes_transferred);
+	void HandleSendCompletion(std::shared_ptr<NetworkConnection> connection, DWORD bytes_transferred);
 	void CloseConnection(std::shared_ptr<NetworkConnection> connection);
 
 	// Member variables

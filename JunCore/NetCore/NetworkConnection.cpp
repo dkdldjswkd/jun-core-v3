@@ -12,10 +12,11 @@ NetworkConnection::NetworkConnection(SOCKET socket, ConnectionId id)
 	: socket_(socket),
 	connection_id_(id),
 	state_(ConnectionState::kConnected),
+	recv_context_(IOOperation::kReceive, this),
+	send_context_(IOOperation::kSend, this),
 	remote_port_(0),
 	address_cached_(false)
 {
-	ZeroMemory(&overlapped_, sizeof(overlapped_));
 	ZeroMemory(receive_buffer_, sizeof(receive_buffer_));
 }
 
@@ -101,14 +102,24 @@ Port NetworkConnection::GetRemotePort() const
 	return remote_port_;
 }
 
-void NetworkConnection::ResetOverlapped()
+void NetworkConnection::ResetReceiveContext()
 {
-	ZeroMemory(&overlapped_, sizeof(overlapped_));
+	recv_context_.Reset();
+}
+
+void NetworkConnection::ResetSendContext()
+{
+	send_context_.Reset();
 }
 
 void NetworkConnection::SetState(ConnectionState state)
 {
 	state_ = state;
+}
+
+void NetworkConnection::ResetOverlapped()
+{
+	ResetReceiveContext();
 }
 
 void NetworkConnection::CacheRemoteAddress() const
@@ -169,9 +180,11 @@ NetworkError NetworkConnection::SendInternal(const char* data, size_t length)
 	};
 
 	DWORD bytes_sent = 0;
-	OVERLAPPED send_overlapped = {};
+	
+	// Reset send context before use
+	send_context_.Reset();
 
-	int result = WSASend(socket_, &send_buffer, 1, &bytes_sent, 0, &send_overlapped, nullptr);
+	int result = WSASend(socket_, &send_buffer, 1, &bytes_sent, 0, &send_context_.overlapped, nullptr);
 
 	if (result == SOCKET_ERROR)
 	{

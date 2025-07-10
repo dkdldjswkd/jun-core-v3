@@ -443,3 +443,58 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/c++,visualstudio,vcpkg
+
+#########################################
+# JunCore Project Specific
+#########################################
+
+# Protobuf generated files (should be generated locally)
+*.pb.h
+*.pb.cc
+
+# Claude Code local settings
+.claude/
+
+# Additional build artifacts
+*.idb
+build.log
+
+# Network library cache files
+NetCore/**/*.cache
+
+# Game server runtime files
+*.dat
+*.save
+server.config
+
+# Test output files
+test_results/
+benchmark_results/
+
+# Documentation build output
+docs/build/
+docs/_build/
+
+# Temporary protocol files
+*.proto.bak
+*.proto.tmp
+
+# IDE specific files not covered above
+.idea/
+*.swp
+*.swo
+*~
+
+# Platform specific
+Thumbs.db
+.DS_Store
+
+# Package managers
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local

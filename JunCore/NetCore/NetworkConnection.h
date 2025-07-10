@@ -5,7 +5,37 @@
 #include <thread>
 #include <unordered_map>
 
+//==============================================================================
+// IOCP Operation Types
+//==============================================================================
 
+enum class IOOperation
+{
+	kReceive,
+	kSend,
+	kConnect,
+	kDisconnect
+};
+
+// Extended OVERLAPPED structure to identify operation type
+struct IOContext
+{
+	OVERLAPPED overlapped;
+	IOOperation operation;
+	void* connection;  // Pointer back to the connection
+	
+	IOContext(IOOperation op, void* conn = nullptr) 
+		: operation(op), connection(conn)
+	{
+		ZeroMemory(&overlapped, sizeof(overlapped));
+	}
+	
+	void Reset()
+	{
+		ZeroMemory(&overlapped, sizeof(overlapped));
+		// operation and connection remain the same
+	}
+};
 
 //==============================================================================
 // Connection Implementation
@@ -43,13 +73,22 @@ public:
 		return kReceiveBufferSize;
 	}
 
-	OVERLAPPED* GetOverlapped()
+	IOContext* GetReceiveContext()
 	{
-		return &overlapped_;
+		return &recv_context_;
 	}
 
-	void ResetOverlapped();
+	IOContext* GetSendContext()
+	{
+		return &send_context_;
+	}
+
+	void ResetReceiveContext();
+	void ResetSendContext();
 	void SetState(ConnectionState state);
+
+	// IOCP 관련 추가 메서드  
+	void ResetOverlapped();
 
 private:
 	static constexpr size_t kReceiveBufferSize = 8192;
@@ -58,7 +97,8 @@ private:
 	ConnectionId connection_id_;
 	std::atomic<ConnectionState> state_;
 	char receive_buffer_[kReceiveBufferSize];
-	OVERLAPPED overlapped_;
+	IOContext recv_context_;
+	IOContext send_context_;
 	mutable std::mutex socket_mutex_;
 
 	// Connection info cache

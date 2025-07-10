@@ -344,7 +344,7 @@ void NetworkClient::HandleReceive()
 		return;
 	}
 
-	connection_->ResetOverlapped();
+	connection_->ResetReceiveContext();
 
 	WSABUF receive_buffer = {
 	  static_cast<ULONG>(connection_->GetReceiveBufferSize()),
@@ -359,7 +359,7 @@ void NetworkClient::HandleReceive()
 		1,
 		&bytes_received,
 		&flags,
-		connection_->GetOverlapped(),
+		&connection_->GetReceiveContext()->overlapped,
 		nullptr);
 
 	if (result == SOCKET_ERROR && WSAGetLastError() != WSA_IO_PENDING)

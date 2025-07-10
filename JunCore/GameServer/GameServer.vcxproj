@@ -150,6 +150,7 @@
     <ClCompile Include="GameServerHandler.cpp" />
     <ClCompile Include="GameServerManager.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ProtobufExample.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NetCore\NetCore.vcxproj">
