@@ -1,5 +1,5 @@
 #include "NetworkClient.h"
-#include "NetCore.h"
+#include "Logger.h"
 #include <iostream>
 #include <WS2tcpip.h>
 

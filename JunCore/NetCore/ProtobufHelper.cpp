@@ -42,7 +42,6 @@ bool ProtobufHelper::MessageToJson(const google::protobuf::Message& message, std
 {
     google::protobuf::util::JsonPrintOptions options;
     options.add_whitespace = true;
-    options.always_print_primitive_fields = true;
     
     auto status = google::protobuf::util::MessageToJsonString(message, &json, options);
     return status.ok();

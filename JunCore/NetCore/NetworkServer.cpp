@@ -1,5 +1,5 @@
 #include "NetworkServer.h"
-#include "NetCore.h"
+#include "Logger.h"
 #include <iostream>
 
 

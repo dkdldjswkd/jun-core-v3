@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="NetCore.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
     <ClCompile Include="NetworkClient.cpp">
       <Filter>Network</Filter>
     </ClCompile>
@@ -13,6 +10,17 @@
     <ClCompile Include="NetworkServer.cpp">
       <Filter>Network</Filter>
     </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkFactory.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkUtils.cpp">
+      <Filter>Util</Filter>
+    </ClCompile>
+    <ClCompile Include="ProtobufHelper.cpp" />
+    <ClCompile Include="Protocol\GameMessage.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetCore.h">
@@ -30,10 +38,24 @@
     <ClInclude Include="NetworkServer.h">
       <Filter>Network</Filter>
     </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkFactory.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkUtils.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="ProtobufHelper.h" />
+    <ClInclude Include="Protocol\GameMessage.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Network">
       <UniqueIdentifier>{fc92d217-3896-4cd3-8a43-0c254a4a9a49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Util">
+      <UniqueIdentifier>{67da6ab6-f800-4c08-8b7a-83bb121aad01}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

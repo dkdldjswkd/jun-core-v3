@@ -108,12 +108,16 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>../generate_protobuf.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -124,6 +128,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -132,10 +137,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="NetCore.cpp" />
     <ClCompile Include="NetworkConnection.cpp" />
     <ClCompile Include="NetworkServer.cpp" />
     <ClCompile Include="NetworkClient.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="NetworkFactory.cpp" />
+    <ClCompile Include="NetworkUtils.cpp" />
     <ClCompile Include="ProtobufHelper.cpp" />
     <ClCompile Include="Protocol\GameMessage.pb.cc" />
   </ItemGroup>
@@ -145,6 +152,9 @@
     <ClInclude Include="NetworkConnection.h" />
     <ClInclude Include="NetworkServer.h" />
     <ClInclude Include="NetworkClient.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="NetworkFactory.h" />
+    <ClInclude Include="NetworkUtils.h" />
     <ClInclude Include="ProtobufHelper.h" />
     <ClInclude Include="Protocol\GameMessage.pb.h" />
   </ItemGroup>
