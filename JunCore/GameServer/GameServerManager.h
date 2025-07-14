@@ -1,23 +1,23 @@
 #pragma once
-#include "NetCore.h"
-#include "GameServerHandler.h"
-#include <memory>
+#include "../NetCore/src/network/ServerManager.h"
 #include <string>
+#include <memory>
 
 class GameServerManager
 {
 public:
-    GameServerManager();
+	GameServerManager();
+	~GameServerManager();
 
-    bool Start(Port port);
-    void Stop();
-    void RunConsoleCommands();
+	bool Start(uint16 port, int worker_count);
+	void Stop();
+
+	void RunConsoleCommands();
 
 private:
-    void ShowStatus();
-    void ShowClients();
-    void BroadcastMessage(const std::string& message);
+	void OnClientAccepted(SessionPtr session);
+	void OnClientDisconnected(SessionPtr session);
+	void OnPacketReceived(SessionPtr session, int32 packet_id, const std::vector<char>& serialized_packet);
 
-    std::unique_ptr<INetworkServer> server_;
-    GameServerHandler handler_;
+	ServerManager server_manager_;
 };

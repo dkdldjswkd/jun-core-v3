@@ -3,99 +3,62 @@
 #include <thread>
 #include <chrono>
 
-GameServerManager::GameServerManager() : server_(NetworkFactory::CreateServer())
+GameServerManager::GameServerManager()
 {
 }
 
-bool GameServerManager::Start(Port port)
+GameServerManager::~GameServerManager()
 {
-    Logger::Info("Starting JunCore3 Game Server...");
+}
 
-    NetworkError result = server_->Start(port, &handler_, 0);
-    if (result != NetworkError::kSuccess)
-    {
-        Logger::Error("Failed to start server: " + NetworkUtils::GetErrorMessage(result));
-        return false;
-    }
+bool GameServerManager::Start(uint16 port, int worker_count)
+{
+	// Bind callbacks from ServerManager to GameServerManager methods
+	server_manager_.OnAccept = std::bind(&GameServerManager::OnClientAccepted, this, std::placeholders::_1);
+	server_manager_.OnSessionClose = std::bind(&GameServerManager::OnClientDisconnected, this, std::placeholders::_1);
 
-    Logger::Info("Server started successfully on port " + std::to_string(port));
-    return true;
+	// Start the server
+	return server_manager_.StartServer("0.0.0.0", port, worker_count);
 }
 
 void GameServerManager::Stop()
 {
-    Logger::Info("Stopping server...");
-    server_->Stop();
+	server_manager_.StopServer();
 }
 
 void GameServerManager::RunConsoleCommands()
 {
-    std::string command;
-    while (server_->IsRunning())
-    {
-        std::cout << "\nServer Console Commands:" << std::endl;
-        std::cout << "  status  - Show server status" << std::endl;
-        std::cout << "  clients - List connected clients" << std::endl;
-        std::cout << "  broadcast <message> - Broadcast to all clients" << std::endl;
-        std::cout << "  quit    - Stop server" << std::endl;
-        std::cout << "Enter command: ";
-
-        std::getline(std::cin, command);
-
-        if (command == "quit")
-        {
-            break;
-        }
-        else if (command == "status")
-        {
-            ShowStatus();
-        }
-        else if (command == "clients")
-        {
-            ShowClients();
-        }
-        else if (command.substr(0, 9) == "broadcast")
-        {
-            if (command.length() > 10)
-            {
-                std::string message = command.substr(10);
-                BroadcastMessage(message);
-            }
-            else
-            {
-                std::cout << "Usage: broadcast <message>" << std::endl;
-            }
-        }
-        else if (!command.empty())
-        {
-            std::cout << "Unknown command: " << command << std::endl;
-        }
-    }
+	std::string command;
+	while (std::getline(std::cin, command))
+	{
+		if (command == "exit")
+		{
+			break;
+		}
+		else
+		{
+			std::cout << "Unknown command: " << command << std::endl;
+		}
+	}
 }
 
-void GameServerManager::ShowStatus()
+void GameServerManager::OnClientAccepted(SessionPtr session)
 {
-    std::cout << "=== Server Status ===" << std::endl;
-    std::cout << "Running: " << (server_->IsRunning() ? "Yes" : "No") << std::endl;
-    std::cout << "Connected clients: " << server_->GetClientCount() << std::endl;
-    std::cout << "Local IP: " << NetworkUtils::GetLocalIPAddress() << std::endl;
+	std::cout << "Client connected: " << session->GetRemoteIpAddress() << ":" << session->GetRemotePort() << std::endl;
+
+	// Set packet receive callback for this session
+	session->OnPacketReceiveCallback = std::bind(&GameServerManager::OnPacketReceived, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 }
 
-void GameServerManager::ShowClients()
+void GameServerManager::OnClientDisconnected(SessionPtr session)
 {
-    size_t client_count = server_->GetClientCount();
-    std::cout << "=== Connected Clients (" << client_count << ") ===" << std::endl;
-
-    if (client_count == 0)
-    {
-        std::cout << "No clients connected." << std::endl;
-    }
-    // Note: For detailed client listing, we'd need to extend the interface
+	std::cout << "Client disconnected: " << session->GetRemoteIpAddress() << ":" << session->GetRemotePort() << std::endl;
 }
 
-void GameServerManager::BroadcastMessage(const std::string& message)
+void GameServerManager::OnPacketReceived(SessionPtr session, int32 packet_id, const std::vector<char>& serialized_packet)
 {
-    std::string broadcast_msg = "[Server Broadcast] " + message;
-    server_->BroadcastToAllClients(broadcast_msg);
-    std::cout << "Broadcasted message to " << server_->GetClientCount() << " clients." << std::endl;
+	std::cout << "Packet received from " << session->GetRemoteIpAddress() << ":" << session->GetRemotePort()
+		<< ", Packet ID: " << packet_id << ", Size: " << serialized_packet.size() << std::endl;
+
+	// TODO: Process packet based on packet_id
 }

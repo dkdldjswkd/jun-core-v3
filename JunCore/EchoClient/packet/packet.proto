@@ -1,0 +1,23 @@
+syntax = "proto3";
+package PacketLib;
+
+enum PACKET_ID
+{
+	PACKET_ID_NONE = 0;
+
+	// req
+	PACKET_ID_UG_ECHO_REQ = 1;
+
+	// res
+	PACKET_ID_GU_ECHO_RES = 101;
+}
+
+message UG_ECHO_REQ
+{
+	string echo = 1;
+}
+
+message GU_ECHO_RES
+{
+	string echo = 1;
+}

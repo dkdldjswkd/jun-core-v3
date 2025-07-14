@@ -27,8 +27,8 @@ set ERROR_FILES=0
 echo [INFO] Searching for .proto files...
 echo.
 
-:: 현재 디렉터리부터 재귀적으로 .proto 파일 검색
-for /r %%f in (*.proto) do (
+:: JunCore 루트 디렉터리부터 재귀적으로 .proto 파일 검색
+for /r "%~dp0" %%f in (*.proto) do (
     set CURRENT_FILE=%%f
     set SKIP_FILE=0
     
@@ -46,11 +46,14 @@ for /r %%f in (*.proto) do (
         
         echo [PROCESSING] !CURRENT_FILE!
         
-        :: 상대 경로로 변환
-        set REL_PATH=!CURRENT_FILE:%CD%\=!
+        :: 파일 디렉터리 추출
+        for %%i in ("!CURRENT_FILE!") do (
+            set FILE_DIR=%%~dpi
+            set FILE_NAME=%%~nxi
+        )
         
-        :: protoc 실행
-        "%PROTOC_PATH%" --cpp_out=. "!REL_PATH!"
+        :: protoc 실행 (각 파일의 디렉터리를 proto_path로 설정)
+        "%PROTOC_PATH%" --proto_path=!FILE_DIR! --cpp_out=!FILE_DIR! !FILE_NAME!
         
         if !ERRORLEVEL! == 0 (
             set /a SUCCESS_FILES+=1

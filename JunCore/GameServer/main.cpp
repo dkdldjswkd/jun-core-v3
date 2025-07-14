@@ -1,55 +1,28 @@
-#include "GameServerHandler.h"
 #include "GameServerManager.h"
 #include <iostream>
 
-// Protobuf example function
-void ProtobufExample();
-
 int main()
 {
-	try
+	GameServerManager server_manager;
+	constexpr uint16 kServerPort = 9000;
+	constexpr int kWorkerCount = 4; // Example worker count
+
+	if (!server_manager.Start(kServerPort, kWorkerCount))
 	{
-		// Configure logging
-		auto console_logger = std::make_shared<ConsoleLogger>();
-		console_logger->SetMinLevel(LogLevel::kInfo);
-		Logger::SetLogger(console_logger);
-
-		Logger::Info("JunCore3 Game Server starting...");
-
-		// Create and start server
-		GameServerManager server_manager;
-		constexpr Port kServerPort = 9000;
-
-		if (!server_manager.Start(kServerPort))
-		{
-			Logger::Error("Failed to start server on port " + std::to_string(kServerPort));
-			return 1;
-		}
-
-		std::cout << "\n=== JunCore3 Game Server ===" << std::endl;
-		std::cout << "Server is running on port " << kServerPort << std::endl;
-		std::cout << "Local IP: " << NetworkUtils::GetLocalIPAddress() << std::endl;
-		
-		// Run protobuf example
-		std::cout << "\n";
-		ProtobufExample();
-		std::cout << "\n";
-		
-		std::cout << "Type commands to interact with the server." << std::endl;
-
-		// Run console interface
-		server_manager.RunConsoleCommands();
-
-		// Cleanup
-		server_manager.Stop();
-		Logger::Info("Server shutdown complete.");
-
-	}
-	catch (const std::exception& e)
-	{
-		Logger::Error("Server error: " + std::string(e.what()));
+		std::cerr << "Failed to start server on port " << kServerPort << std::endl;
 		return 1;
 	}
+
+	std::cout << "
+=== JunCore3 Game Server ===" << std::endl;
+	std::cout << "Server is running on port " << kServerPort << std::endl;
+	
+	std::cout << "Type 'exit' to shutdown the server." << std::endl;
+
+	server_manager.RunConsoleCommands();
+
+	server_manager.Stop();
+	std::cout << "Server shutdown complete." << std::endl;
 
 	return 0;
 }

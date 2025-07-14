@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="network">
+      <UniqueIdentifier>{NETWORK_GUID_HERE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="packet">
+      <UniqueIdentifier>{PACKET_GUID_HERE}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="network\EchoServer.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="packet\packet.pb.cc">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="network\EchoServer.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\packet.pb.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+    <ClInclude Include="packet\PacketDefinitions.h">
+      <Filter>packet</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="packet\packet.proto">
+      <Filter>packet</Filter>
+    </Protobuf>
+  </ItemGroup>
+</Project>

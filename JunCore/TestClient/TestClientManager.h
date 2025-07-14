@@ -1,25 +1,24 @@
 #pragma once
-#include "NetCore.h"
-#include "TestClientHandler.h"
-#include <memory>
+#include "../NetCore/src/network/ClientManager.h"
 #include <string>
+#include <memory>
 
 class TestClientManager
 {
 public:
-    TestClientManager();
+	TestClientManager();
+	~TestClientManager();
 
-    bool Connect(const std::string& address, Port port);
-    void Disconnect();
-    void RunInteractiveSession();
-    void RunAutomatedTest();
+	bool Connect(const std::string& ip_address, uint16 port);
+	void Disconnect();
+
+	void RunAutomatedTest();
+	void RunInteractiveSession();
 
 private:
-    void ShowStatus();
-    void SendPing();
-    void SendMessage(const std::string& message);
-    void ShowHelp();
+	void OnConnected(SessionPtr session);
+	void OnDisconnected(SessionPtr session);
+	void OnPacketReceived(SessionPtr session, int32 packet_id, const std::vector<char>& serialized_packet);
 
-    std::unique_ptr<INetworkClient> client_;
-    TestClientHandler handler_;
+	ClientManager client_manager_;
 };

@@ -1,61 +1,78 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="NetworkClient.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="NetworkConnection.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="NetworkServer.cpp">
-      <Filter>Network</Filter>
-    </ClCompile>
-    <ClCompile Include="Logger.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="NetworkFactory.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="NetworkUtils.cpp">
-      <Filter>Util</Filter>
-    </ClCompile>
-    <ClCompile Include="ProtobufHelper.cpp" />
-    <ClCompile Include="Protocol\GameMessage.pb.cc" />
+    <Filter Include="common">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>h;cpp</Extensions>
+    </Filter>
+    <Filter Include="network">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;cpp</Extensions>
+    </Filter>
+    <Filter Include="packet">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>h;cpp</Extensions>
+    </Filter>
+    <Filter Include="protocol">
+      <UniqueIdentifier>{15071a9a-4589-4a53-858a-1f84a7a9374b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NetCore.h">
-      <Filter>Network</Filter>
+    <ClInclude Include="src\common\define.h">
+      <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkClient.h">
-      <Filter>Network</Filter>
+    <ClInclude Include="src\common\MessageBuffer.h">
+      <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkConnection.h">
-      <Filter>Network</Filter>
+    <ClInclude Include="src\common\IocpContext.h">
+      <Filter>common</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkCore.h">
-      <Filter>Network</Filter>
+    
+    <ClInclude Include="src\network\ServerManager.h">
+      <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkServer.h">
-      <Filter>Network</Filter>
+    
+    <ClInclude Include="src\network\IocpManager.h">
+      <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="Logger.h">
-      <Filter>Util</Filter>
+    <ClInclude Include="src\network\Session.h">
+      <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkFactory.h">
-      <Filter>Util</Filter>
+    <ClInclude Include="src\network\ClientManager.h">
+      <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="NetworkUtils.h">
-      <Filter>Util</Filter>
+    <ClInclude Include="src\packet\PacketBuffer.h">
+      <Filter>packet</Filter>
     </ClInclude>
-    <ClInclude Include="ProtobufHelper.h" />
-    <ClInclude Include="Protocol\GameMessage.pb.h" />
+    <ClInclude Include="src\Protocol\GameMessage.pb.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Network">
-      <UniqueIdentifier>{fc92d217-3896-4cd3-8a43-0c254a4a9a49}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Util">
-      <UniqueIdentifier>{67da6ab6-f800-4c08-8b7a-83bb121aad01}</UniqueIdentifier>
-    </Filter>
+    
+    <ClCompile Include="src\network\ServerManager.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    
+    <ClCompile Include="src\network\IocpManager.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\network\Session.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\network\ClientManager.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\packet\PacketBuffer.cpp">
+      <Filter>packet</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Protocol\GameMessage.pb.cc">
+      <Filter>protocol</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="src\Protocol\GameMessage.proto">
+      <Filter>protocol</Filter>
+    </Protobuf>
   </ItemGroup>
 </Project>

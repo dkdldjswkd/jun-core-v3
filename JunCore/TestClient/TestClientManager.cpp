@@ -3,126 +3,71 @@
 #include <thread>
 #include <chrono>
 
-TestClientManager::TestClientManager() : client_(NetworkFactory::CreateClient())
+TestClientManager::TestClientManager()
 {
 }
 
-bool TestClientManager::Connect(const std::string& address, Port port)
+TestClientManager::~TestClientManager()
 {
-    Logger::Info("Connecting to " + address + ":" + std::to_string(port) + "...");
+}
 
-    NetworkError result = client_->Connect(address, port, &handler_, 5000);
-    if (result != NetworkError::kSuccess)
-    {
-        Logger::Error("Failed to connect: " + NetworkUtils::GetErrorMessage(result));
-        return false;
-    }
+bool TestClientManager::Connect(const std::string& ip_address, uint16 port)
+{
+	client_manager_.OnConnected = std::bind(&TestClientManager::OnConnected, this, std::placeholders::_1);
+	client_manager_.OnDisconnected = std::bind(&TestClientManager::OnDisconnected, this, std::placeholders::_1);
+	client_manager_.OnPacketReceive = std::bind(&TestClientManager::OnPacketReceived, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-    Logger::Info("Connected successfully!");
-    return true;
+	return client_manager_.Connect(ip_address, port);
 }
 
 void TestClientManager::Disconnect()
 {
-    Logger::Info("Disconnecting...");
-    client_->Disconnect();
-}
-
-void TestClientManager::RunInteractiveSession()
-{
-    std::string input;
-    ShowHelp();
-
-    while (client_->IsConnected())
-    {
-        std::cout << "\nClient> ";
-        std::getline(std::cin, input);
-
-        if (input == "quit")
-        {
-            break;
-        }
-        else if (input == "status")
-        {
-            ShowStatus();
-        }
-        else if (input == "ping")
-        {
-            SendPing();
-        }
-        else if (input == "help")
-        {
-            ShowHelp();
-        }
-        else if (!input.empty())
-        {
-            SendMessage(input);
-        }
-    }
+	client_manager_.Disconnect();
 }
 
 void TestClientManager::RunAutomatedTest()
 {
-    Logger::Info("Running automated test sequence...");
-
-    // Send test messages
-    SendMessage("Hello Server!");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    SendPing();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    SendMessage("This is a test message from automated client");
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    SendMessage("Test complete");
-    Logger::Info("Automated test sequence completed");
+	std::cout << "Running automated test..." << std::endl;
+	// Example: Send a dummy packet
+	std::string test_message = "Hello from automated test!";
+	std::vector<char> data(test_message.begin(), test_message.end());
+	client_manager_.SendPacket(1001, data); // Assuming 1001 is a test packet ID
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-void TestClientManager::ShowStatus()
+void TestClientManager::RunInteractiveSession()
 {
-    std::cout << "=== Client Status ===" << std::endl;
-    std::cout << "Connected: " << (client_->IsConnected() ? "Yes" : "No") << std::endl;
-    if (client_->IsConnected())
-    {
-        // Note: We'd need to extend the interface to get remote endpoint info
-    }
+	std::cout << "Starting interactive session. Type 'exit' to quit." << std::endl;
+	std::string command;
+	while (std::getline(std::cin, command))
+	{
+		if (command == "exit")
+		{
+			break;
+		}
+		else
+		{
+			// Example: Send user input as a chat message
+			std::vector<char> data(command.begin(), command.end());
+			client_manager_.SendPacket(1002, data); // Assuming 1002 is a chat packet ID
+		}
+	}
 }
 
-void TestClientManager::SendPing()
+void TestClientManager::OnConnected(SessionPtr session)
 {
-    auto now = std::chrono::system_clock::now();
-    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-        now.time_since_epoch()).count();
-
-    std::string ping_message = "PING:" + std::to_string(timestamp);
-    NetworkError result = client_->Send(ping_message);
-
-    if (result == NetworkError::kSuccess)
-    {
-        std::cout << "Ping sent at " << timestamp << std::endl;
-    }
-    else
-    {
-        Logger::Error("Failed to send ping: " + NetworkUtils::GetErrorMessage(result));
-    }
+	std::cout << "Connected to server: " << session->GetRemoteIpAddress() << ":" << session->GetRemotePort() << std::endl;
 }
 
-void TestClientManager::SendMessage(const std::string& message)
+void TestClientManager::OnDisconnected(SessionPtr session)
 {
-    NetworkError result = client_->Send(message);
-    if (result != NetworkError::kSuccess)
-    {
-        Logger::Error("Failed to send message: " + NetworkUtils::GetErrorMessage(result));
-    }
+	std::cout << "Disconnected from server: " << session->GetRemoteIpAddress() << ":" << session->GetRemotePort() << std::endl;
 }
 
-void TestClientManager::ShowHelp()
+void TestClientManager::OnPacketReceived(SessionPtr session, int32 packet_id, const std::vector<char>& serialized_packet)
 {
-    std::cout << "\n=== Available Commands ===" << std::endl;
-    std::cout << "  quit    - Disconnect and exit" << std::endl;
-    std::cout << "  status  - Show connection status" << std::endl;
-    std::cout << "  ping    - Send ping to server" << std::endl;
-    std::cout << "  help    - Show this help" << std::endl;
-    std::cout << "  <text>  - Send text message to server" << std::endl;
+	std::cout << "Packet received from server: Packet ID: " << packet_id << ", Size: " << serialized_packet.size() << std::endl;
+	// For simplicity, just print received data as string
+	std::string received_data(serialized_packet.begin(), serialized_packet.end());
+	std::cout << "Data: " << received_data << std::endl;
 }
