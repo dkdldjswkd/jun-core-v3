@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="lib\base.h" />
+    <ClInclude Include="lib\CrashDump.h" />
+    <ClInclude Include="lib\LFObjectPool.h" />
+    <ClInclude Include="lib\LFObjectPoolTLS.h" />
+    <ClInclude Include="lib\LFQueue.h" />
+    <ClInclude Include="lib\LFStack.h" />
+    <ClInclude Include="lib\Logger.h" />
+    <ClInclude Include="lib\MachineCpuMonitor.h" />
+    <ClInclude Include="lib\MemoryLogger.h" />
+    <ClInclude Include="lib\ObjectPool.h" />
+    <ClInclude Include="lib\Parser.h" />
+    <ClInclude Include="lib\PerformanceCounter.h" />
+    <ClInclude Include="lib\ProcessCpuMonitor.h" />
+    <ClInclude Include="lib\Profiler.h" />
+    <ClInclude Include="lib\ProtocolBuffer.h" />
+    <ClInclude Include="lib\RecursiveLock.h" />
+    <ClInclude Include="lib\RingBuffer.h" />
+    <ClInclude Include="lib\StringUtils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="lib\CrashDump.cpp" />
+    <ClCompile Include="lib\Logger.cpp" />
+    <ClCompile Include="lib\MachineCpuMonitor.cpp" />
+    <ClCompile Include="lib\MemoryLogger.cpp" />
+    <ClCompile Include="lib\Parser.cpp" />
+    <ClCompile Include="lib\PerformanceCounter.cpp" />
+    <ClCompile Include="lib\ProcessCpuMonitor.cpp" />
+    <ClCompile Include="lib\Profiler.cpp" />
+    <ClCompile Include="lib\ProtocolBuffer.cpp" />
+    <ClCompile Include="lib\RecursiveLock.cpp" />
+    <ClCompile Include="lib\RingBuffer.cpp" />
+    <ClCompile Include="lib\StringUtils.cpp" />
+  </ItemGroup>
+</Project>

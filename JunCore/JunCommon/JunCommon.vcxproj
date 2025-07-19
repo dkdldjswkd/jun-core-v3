@@ -21,32 +21,32 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{6f53d1f9-27a7-4b75-9310-81fdb8dbb0ad}</ProjectGuid>
-    <RootNamespace>EchoServer</RootNamespace>
+    <ProjectGuid>{d6bec493-6610-417f-a90b-ef0cd4ac7411}</ProjectGuid>
+    <RootNamespace>JunCommon</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -76,7 +76,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -91,7 +91,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,7 +119,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,12 +127,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="lib\base.h" />
+    <ClInclude Include="lib\CrashDump.h" />
+    <ClInclude Include="lib\LFObjectPool.h" />
+    <ClInclude Include="lib\LFObjectPoolTLS.h" />
+    <ClInclude Include="lib\LFQueue.h" />
+    <ClInclude Include="lib\LFStack.h" />
+    <ClInclude Include="lib\Logger.h" />
+    <ClInclude Include="lib\MachineCpuMonitor.h" />
+    <ClInclude Include="lib\MemoryLogger.h" />
+    <ClInclude Include="lib\ObjectPool.h" />
+    <ClInclude Include="lib\Parser.h" />
+    <ClInclude Include="lib\PerformanceCounter.h" />
+    <ClInclude Include="lib\ProcessCpuMonitor.h" />
+    <ClInclude Include="lib\Profiler.h" />
+    <ClInclude Include="lib\ProtocolBuffer.h" />
+    <ClInclude Include="lib\RecursiveLock.h" />
+    <ClInclude Include="lib\RingBuffer.h" />
+    <ClInclude Include="lib\StringUtils.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\JunCore\JunCore.vcxproj">
-      <Project>{23033721-38db-4624-a7dc-891527669bbb}</Project>
-    </ProjectReference>
+    <ClCompile Include="lib\CrashDump.cpp" />
+    <ClCompile Include="lib\Logger.cpp" />
+    <ClCompile Include="lib\MachineCpuMonitor.cpp" />
+    <ClCompile Include="lib\MemoryLogger.cpp" />
+    <ClCompile Include="lib\Parser.cpp" />
+    <ClCompile Include="lib\PerformanceCounter.cpp" />
+    <ClCompile Include="lib\ProcessCpuMonitor.cpp" />
+    <ClCompile Include="lib\Profiler.cpp" />
+    <ClCompile Include="lib\ProtocolBuffer.cpp" />
+    <ClCompile Include="lib\RecursiveLock.cpp" />
+    <ClCompile Include="lib\RingBuffer.cpp" />
+    <ClCompile Include="lib\StringUtils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
