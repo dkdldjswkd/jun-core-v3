@@ -20,10 +20,10 @@ struct Pool_Node;
 template <typename T>
 class ObjectPool {
 public:
-	// node_num ¸¸Å­ node µ¿ÀûÇÒ´ç, flag set (true : Alloc ½Ã ¸¶´Ù »ı¼ºÀÚ call, false : ³ëµå »ı¼º ½Ã ÃÖÃÊ 1È¸ »ı¼ºÀÚ call)
+	// node_num ë§Œí¼ node ë¯¸ë¦¬í• ë‹¹, flag set (true : Alloc ì‹œ ê°ì²´ ìƒì„±ì call, false : ë°°ë¦¬ ì£¼ì†Œ ë° ë§¤ê°œ ë³€ìˆ˜ í• ë‹¹)
 	ObjectPool(int node_num = 0, bool flag_placementNew = false);
 
-	// ½ºÅÃ º¸À¯ node delete (½ºÅÃÀÌ º¸À¯ÇÏÁö ¾Ê´Â node´Â delete ºÒ°¡)
+	// ë‚˜ë¨¸ì§€ ë‚¨ì€ node delete (ë‹¤ë¥¸ ê³³ì— í• ë‹¹ëœ ê²ƒë“¤ nodeëŠ” delete ë¶ˆê°€)
 	~ObjectPool();
 
 private:
@@ -48,7 +48,7 @@ public:
 // ObjectPool
 //------------------------------
 
-// »ı¼ºÀÚ
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 template<typename T>
 ObjectPool<T>::ObjectPool(int node_num, bool flag_placementNew):
 	integrity((ULONG_PTR)this),
@@ -65,7 +65,7 @@ ObjectPool<T>::ObjectPool(int node_num, bool flag_placementNew):
 	}
 }
 
-// ¼Ò¸êÀÚ
+// ï¿½Ò¸ï¿½ï¿½ï¿½
 template<typename T>
 ObjectPool<T>::~ObjectPool(){
 	for (; top != nullptr;) {
@@ -88,12 +88,12 @@ T* ObjectPool<T>::Alloc() {
 
 		return &old_top->obejct;
 	}
-	// ¿ÀºêÁ§Æ® Ç® ºñ¾úÀ»¶§
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® Ç® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	else {
 		++capacity;
 		++use_count;
 
-		// Node Áß Object Æ÷ÀÎÅÍ ret
+		// Node ï¿½ï¿½ Object ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ret
 		return &(new Pool_Node<T>((ULONG_PTR)this))->obejct;
 	}
 }
@@ -127,7 +127,7 @@ struct Pool_Node {
 public:
 	Pool_Node(ULONG_PTR integrity) : integrity(integrity), under(MEM_GUARD), obejct(), over(MEM_GUARD), next_node(nullptr) {};
 
-	// [ÄÚµå][¾ğ´õ] [ OBJECT ] [¿À¹ö] [ NEXT* ]
+	// [ï¿½Úµï¿½][ï¿½ï¿½ï¿½] [ OBJECT ] [ï¿½ï¿½ï¿½ï¿½] [ NEXT* ]
 public:
 	const ULONG_PTR integrity;
 	const size_t under = MEM_GUARD;

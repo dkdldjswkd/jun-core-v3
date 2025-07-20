@@ -9,14 +9,14 @@ CrashDump::CrashDump() {
 	_invalid_parameter_handler oldHandler, newHandler;
 	newHandler = mylnvalidParameterHandler;
 
-	oldHandler = _set_invalid_parameter_handler(newHandler); // crt  Լ    null              ־     
-	_CrtSetReportMode(_CRT_WARN, 0);	// crt       ޽    ǥ    ߴ .  ٷ               
-	_CrtSetReportMode(_CRT_ASSERT, 0);	// crt       ޽    ǥ    ߴ .  ٷ               
-	_CrtSetReportMode(_CRT_ERROR, 0);	// crt       ޽    ǥ    ߴ .  ٷ               
+	oldHandler = _set_invalid_parameter_handler(newHandler); // crt 함수에 null 포인터 등을 넣었을 때
+	_CrtSetReportMode(_CRT_WARN, 0);	// crt 경고 메시지 표시하지 않음. 바로 정지.
+	_CrtSetReportMode(_CRT_ASSERT, 0);	// crt 어설션 메시지 표시하지 않음. 바로 정지.
+	_CrtSetReportMode(_CRT_ERROR, 0);	// crt 에러 메시지 표시하지 않음. 바로 정지.
 
 	_CrtSetReportHook(_custom_Report_hook);
 
-	// pure virtual function called       ڵ鷯             Լ      ȸ  Ų  .
+	// pure virtual function called 에러 핸들러를 설정하여 함수 포인터를 호출할 수 있게 함.
 	_set_purecall_handler(myPurecallHandler);
 
 	SetHandlerDump();
@@ -35,7 +35,7 @@ LONG WINAPI CrashDump::MyExceptionFilter(__in PEXCEPTION_POINTERS pExceptionPoin
 	SYSTEMTIME		stNowTime;
 	long DumpCount = InterlockedIncrement(&_DumpCount);
 
-	//         μ       ޸    뷮      ´ .
+	// 현재 프로세스가 사용하는 메모리 용량을 구한다.
 	HANDLE hProcess = 0;
 	PROCESS_MEMORY_COUNTERS pmc;
 
@@ -49,7 +49,7 @@ LONG WINAPI CrashDump::MyExceptionFilter(__in PEXCEPTION_POINTERS pExceptionPoin
 	}
 	CloseHandle(hProcess);
 
-	//        ¥    ð     ˾ƿ´ .
+	// 현재 시스템 시간을 알아온다.
 	WCHAR filename[MAX_PATH];
 
 	GetLocalTime(&stNowTime);

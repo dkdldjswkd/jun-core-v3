@@ -54,17 +54,17 @@ public:
 
 template<typename T>
 LFObjectPool<T>::LFObjectPool(int node_num, bool use_ctor) : integrity_((ULONG_PTR)this), use_ctor_(use_ctor), top_stamp_(NULL), capacity__(node_num), use_count_(0) {
-	// Stamp ��� ���� ���� Ȯ��
+	// Stamp 사용 가능 주소 확인
 	SYSTEM_INFO sysInfo;
 	GetSystemInfo(&sysInfo);
 	if (0 != ((ULONG_PTR)sysInfo.lpMaximumApplicationAddress & kStampMask))
 		throw std::exception("STAMP_N/A");
 
-	// object_offset �ʱ�ȭ
+	// object_offset 초기화
 	Node tmpNode((ULONG_PTR)this);
 	object_offset_ = static_cast<int>((ULONG_PTR)(&tmpNode.object) - (ULONG_PTR)&tmpNode);
 
-	// ����� ��û ��� ����
+	// 노드들을 미리 생성 및 연결
 	for (int i = 0; i < node_num; i++) {
 		Node* newNode = new Node((ULONG_PTR)this);
 		newNode->next = (Node*)top_stamp_;
@@ -83,7 +83,7 @@ LFObjectPool<T>::~LFObjectPool() {
 	}
 }
 
-// ������ ������ POP�� �ش�
+// 메모리 할당은 POP과 같음
 template<typename T>
 T* LFObjectPool<T>::Alloc() {
 	for (;;) {
@@ -92,11 +92,11 @@ T* LFObjectPool<T>::Alloc() {
 
 		// Not empty!!
 		if (topClean) {
-			// Stamp ���� �� newTopStamp ����
+			// Stamp 증가 후 newTopStamp 생성
 			DWORD64 nextStamp = (copyTopStamp + kStampCount) & kStampMask;
 			DWORD64 newTopStamp = nextStamp | (DWORD64)topClean->next;
 
-			// ���ÿ� ��ȭ�� �־��ٸ� �ٽýõ�
+			// 도중에 변화가 있었다면 다시시도
 			if (copyTopStamp != InterlockedCompareExchange64((LONG64*)&top_stamp_, (LONG64)newTopStamp, (LONG64)copyTopStamp))
 				continue;
 
@@ -112,16 +112,16 @@ T* LFObjectPool<T>::Alloc() {
 			InterlockedIncrement((LONG*)&capacity__);
 			InterlockedIncrement((LONG*)&use_count_);
 
-			// Node �� Object ������ ret
+			// Node 와 Object 생성하여 ret
 			return &(new Node((ULONG_PTR)this))->object;
 		}
 	}
 }
 
-// ������ ������ PUSH�� �ش�
+// 메모리 반납은 PUSH와 같음
 template<typename T>
 void LFObjectPool<T>::Free(T* object) {
-	// ������Ʈ ���� ��ȯ
+	// 오브젝트 주소 변환
 	Node* pushNode = (Node*)((char*)object - object_offset_);
 
 	if (integrity_ != pushNode->integrity)
@@ -138,14 +138,14 @@ void LFObjectPool<T>::Free(T* object) {
 	for (;;) {
 		DWORD64 copyTopStamp = top_stamp_;
 
-		// top�� �̾���
+		// top에 연결함
 		pushNode->next = (Node*)(copyTopStamp & kUseBitMask);
 
-		// Stamp ���� �� newTopStamp ����
+		// Stamp 증가 후 newTopStamp 생성
 		DWORD64 nextStamp = (copyTopStamp + kStampCount) & kStampMask;
 		DWORD64 newTopStamp = nextStamp | (DWORD64)pushNode;
 
-		// ���ÿ� ��ȭ�� �־��ٸ� �ٽýõ�
+		// 도중에 변화가 있었다면 다시시도
 		if (copyTopStamp != InterlockedCompareExchange64((LONG64*)&top_stamp_, (LONG64)newTopStamp, (LONG64)copyTopStamp))
 			continue;
 

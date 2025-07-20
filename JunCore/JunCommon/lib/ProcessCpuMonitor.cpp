@@ -1,7 +1,7 @@
-#include "ProcessCpuMonitor.h"
+ï»¿#include "ProcessCpuMonitor.h"
 #include <iostream>
 
-// È®ÀÎ ÇÁ·Î¼¼½º ÇÚµé
+// í”„ë¡œì„¸ìŠ¤ CPU ëª¨ë‹ˆí„°ë§
 ProcessCpuMonitor::ProcessCpuMonitor(HANDLE hProcess){
 	if (hProcess == INVALID_HANDLE_VALUE) {
 		h_process = GetCurrentProcess();
@@ -9,28 +9,28 @@ ProcessCpuMonitor::ProcessCpuMonitor(HANDLE hProcess){
 
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
-	NumOfCore = SystemInfo.dwNumberOfProcessors; // ³í¸® ÄÚ¾î °³¼ö
+	NumOfCore = SystemInfo.dwNumberOfProcessors; // ì „ì²´ ì½”ì–´ ê°œìˆ˜
 	UpdateCpuUsage();
 }
 
-// CPU »ç¿ë·ü °»½Å (500 ~ 1000 ms ÁÖ±â È£Ãâ)
+// CPU ì‚¬ìš©ë¥  ì—…ë°ì´íŠ¸ (500 ~ 1000 ms ì£¼ê¸°ë¡œ í˜¸ì¶œ)
 void ProcessCpuMonitor::UpdateCpuUsage() {
-	ULARGE_INTEGER none; // ¹Ì»ç¿ë
+	ULARGE_INTEGER none; // ë¯¸ì‚¬ìš©
 	ULARGE_INTEGER curTime;
 	ULARGE_INTEGER curkernelTime;
 	ULARGE_INTEGER curUserTime;
 
-	// ÇöÀç½Ã°£ & ´©Àû ÄÚ¾î »ç¿ë½Ã°£
+	// í˜„ì¬ì‹œê°„ & í˜„ì¬ ì½”ì–´ ì‚¬ìš©ì‹œê°„
 	GetSystemTimeAsFileTime((LPFILETIME)&curTime);
 	GetProcessTimes(h_process, (LPFILETIME)&none, (LPFILETIME)&none, (LPFILETIME)&curkernelTime, (LPFILETIME)&curUserTime);
 
-	// ÄÚ¾î »ç¿ë ½Ã°£ (ÇØ´ç ÇÁ·Î¼¼½ºÀÇ)
+	// ì½”ì–´ ì „ì²´ ì‹œê°„ (í•´ë‹¹ í”„ë¡œì„¸ìŠ¤ë§Œ)
 	ULONGLONG deltaTime			= curTime.QuadPart		 - prevTime.QuadPart;
 	ULONGLONG deltaUserTime		= curUserTime.QuadPart	 - prevUserTime.QuadPart;
 	ULONGLONG deltaKernelTime	= curkernelTime.QuadPart - prevKernelTime.QuadPart;
 	ULONGLONG totalTime = deltaKernelTime + deltaUserTime;
 
-	// ÄÚ¾î »ç¿ë ½Ã°£ ¹éºĞ·ü
+	// ì½”ì–´ ì „ì²´ ì‹œê°„ ì‚¬ìš©ë¥ 
 	coreTotal = (float)(totalTime / (double)NumOfCore / (double)deltaTime * 100.0f);
 	coreUser = (float)(deltaUserTime / (double)NumOfCore / (double)deltaTime * 100.0f);
 	coreKernel = (float)(deltaKernelTime / (double)NumOfCore / (double)deltaTime * 100.0f);
