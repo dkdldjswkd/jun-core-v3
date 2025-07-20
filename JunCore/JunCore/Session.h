@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Windows.h>
 #include "PacketBuffer.h"
 #include "../JunCommon/lib/LFQueue.h"
@@ -10,7 +10,8 @@
 //------------------------------
 // SessionId
 //------------------------------
-union SessionId {
+union SessionId
+{
 public:
 	struct { DWORD index, unique; } s;
 	DWORD64	sessionId = 0;
@@ -32,13 +33,14 @@ public:
 //------------------------------
 // Session
 //------------------------------
-class Session {
+class Session
+{
 public:
 	Session();
 	~Session();
 
 public:
-	// ���� ����
+	// 소켓 정보
 	SOCKET sock = INVALID_SOCKET;
 	in_addr ip;
 	WORD port;
@@ -63,7 +65,7 @@ public:
 	OVERLAPPED recvOverlapped = { 0, };
 	OVERLAPPED sendOverlapped = { 0, };
 
-	// ���� ���۷��� ī��Ʈ ���� (releaseFlag, ioCount�� ���ӵǴ� 8byte, ���� ĳ�ö��ο� ��ġ�ϰ� �ǵ�)
+	// 세션 해제여부와 카운트 관리 (releaseFlag, ioCount를 8byte로 정렬, false 캐시라인과 분리되게 유도)
 	alignas(64) BOOL releaseFlag = true;
 	LONG ioCount = 0;
 

@@ -3,30 +3,32 @@
 #include "../JunCommon/lib/CrashDump.h"
 using namespace std;
 
-void StartEchoClient() 
+int main() 
 {
+	static CrashDump dump;
+
 	EchoClient client("../ClientConfig.ini", "EchoClient");
 	client.Start();
 	printf("StartEchoClient \n");
 
-	for (;;) 
+	while (true) 
 	{
-		// 1초 주기 모니터링
-		Sleep(1000);
-		printf("EchoClient ---------------------------------------------------- \n");
-		printf("sendMsgTPS      : %d \n", client.GetSendTPS());
-		printf("recvMsgTPS      : %d \n", client.GetRecvTPS());
-		printf("\n\n\n\n\n\n\n\n\n\n \n\n\n\n\n\n\n\n\n\n \n\n");
-		
-		client.UpdateTPS();
+		std::string input;
+		cout << ">> ";
+		std::cin >> input;
+
+		if(input == "exit") 
+		{
+			break; 
+		}
+
+		// 서버에 테스트 메시지 전송
+		PacketBuffer* testPacket = PacketBuffer::Alloc();
+		testPacket->PutData(input.c_str(), input.length());
+		client.SendPacket(testPacket);
+		PacketBuffer::Free(testPacket);
 	}
 
 	client.Stop();
-}
-
-int main() 
-{
-	static CrashDump dump;
-	StartEchoClient();
 	Sleep(INFINITE);
 }

@@ -11,7 +11,8 @@
 #define MAX_PAYLOAD_LEN 8000
 #define MAX_HEADER_LEN 10
 
-struct PacketException : public std::exception {
+struct PacketException : public std::exception 
+{
 public:
 	PacketException(const char* error_code, bool type) : exception(error_code), errorType(type) {}
 	PacketException(bool type) : errorType(type) {}
@@ -24,7 +25,8 @@ public:
 
 class NetServer;
 class NetClient;
-class PacketBuffer {
+class PacketBuffer 
+{
 private:
 	PacketBuffer();
 public:

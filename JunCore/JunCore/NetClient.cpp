@@ -36,26 +36,32 @@ NetClient::NetClient(const char* systemFile, const char* server)
 	//////////////////////////////
 
 	WSADATA wsaData;
-	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) {
+	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) 
+	{
 		////LOG("NetClient", LOG_LEVEL_FATAL, "WSAStartup() Eror(%d)", WSAGetLastError());
 		//CRASH();
 	}
 
 	// Create IOCP
 	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 2);
-	if (INVALID_HANDLE_VALUE == h_iocp) { /*CRASH();*/ }
+	if (INVALID_HANDLE_VALUE == h_iocp) 
+	{ 
+		/*CRASH();*/ 
+	}
 
 	// Create IOCP Worker Thread
 	workerThread = thread([this] { WorkerFunc(); });
 }
 NetClient::~NetClient() {}
 
-void NetClient::Start() {
+void NetClient::Start() 
+{
 	connectThread = thread([this]() {ConnectFunc(); });
 	////LOG("NetClient", LOG_LEVEL_DEBUG, "Client Start");
 }
 
-void NetClient::WorkerFunc() {
+void NetClient::WorkerFunc()
+{
 	for (;;) {
 		DWORD	io_size = 0;
 		Session* p_session = 0;
@@ -132,7 +138,8 @@ void NetClient::ConnectFunc()
 {
 	// Create Socket
 	clientSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
-	if (INVALID_SOCKET == clientSock) {
+	if (INVALID_SOCKET == clientSock) 
+	{
 		////LOG("NetClient", LOG_LEVEL_FATAL, "WSASocket() Eror(%d)", WSAGetLastError());
 		//CRASH();
 	}
@@ -173,19 +180,25 @@ void NetClient::ConnectFunc()
 	DecrementIOCountPQCS();
 }
 
-void NetClient::ReleaseSession(){
+void NetClient::ReleaseSession()
+{
 	if (0 != clientSession.ioCount)
+	{
 		return;
+	}
 
 	// * release_flag(0), iocount(0) -> release_flag(1), iocount(0)
-	if (0 == InterlockedCompareExchange64((long long*)&clientSession.releaseFlag, 1, 0)) {
+	if (0 == InterlockedCompareExchange64((long long*)&clientSession.releaseFlag, 1, 0)) 
+	{
 		// ���ҽ� ���� (����, ��Ŷ)
 		closesocket(clientSession.sock);
 		PacketBuffer* packet;
-		while (clientSession.sendQ.Dequeue(&packet)) {
+		while (clientSession.sendQ.Dequeue(&packet)) 
+		{
 			PacketBuffer::Free(packet);
 		}
-		for (int i = 0; i < clientSession.sendPacketCount; i++) {
+		for (int i = 0; i < clientSession.sendPacketCount; i++) 
+		{
 			PacketBuffer::Free(clientSession.sendPacketArr[i]);
 		}
 
@@ -193,8 +206,10 @@ void NetClient::ReleaseSession(){
 		OnDisconnect();
 
 		// Conncet ��õ�
-		if (reconnectFlag) {
-			if (connectThread.joinable()) {
+		if (reconnectFlag) 
+		{
+			if (connectThread.joinable()) 
+			{
 				connectThread.join();
 			}
 			connectThread = thread([this]() {ConnectFunc(); });
@@ -202,9 +217,11 @@ void NetClient::ReleaseSession(){
 	}
 }
 
-void NetClient::SendCompletion(){
+void NetClient::SendCompletion()
+{
 	// Send Packet Free
-	for (int i = 0; i < clientSession.sendPacketCount; i++) {
+	for (int i = 0; i < clientSession.sendPacketCount; i++) 
+	{
 		PacketBuffer::Free(clientSession.sendPacketArr[i]);
 		InterlockedIncrement(&sendMsgCount);
 	}
@@ -220,21 +237,25 @@ void NetClient::SendCompletion(){
 }
 
 // SendQ Enqueue, SendPost
-void NetClient::SendPacket(PacketBuffer* send_packet) {
+void NetClient::SendPacket(PacketBuffer* send_packet) 
+{
 	if (false == ValidateSession())
 		return;
 
-	if (clientSession.disconnectFlag) {
+	if (clientSession.disconnectFlag) 
+	{
 		PostQueuedCompletionStatus(h_iocp, 1, (ULONG_PTR)&clientSession, (LPOVERLAPPED)PQCS_TYPE::RELEASE_SESSION);
 		return;
 	}
 
 	// LAN, NET ����
-	if (NetType::LAN == netType) {
+	if (NetType::LAN == netType) 
+	{
 		send_packet->SetLanHeader();
 		send_packet->IncrementRefCount();
 	}
-	else {
+	else 
+	{
 		send_packet->SetNetHeader(protocolCode, privateKey);
 		send_packet->IncrementRefCount();
 	}
@@ -244,7 +265,8 @@ void NetClient::SendPacket(PacketBuffer* send_packet) {
 }
 
 // AsyncSend Call �õ�
-bool NetClient::SendPost() {
+bool NetClient::SendPost() 
+{
 	// Empty return
 	if (clientSession.sendQ.GetUseCount() <= 0)
 		return false;
@@ -312,7 +334,8 @@ int NetClient::AsyncSend() {
 	return true;
 }
 
-bool NetClient::AsyncRecv() {
+bool NetClient::AsyncRecv() 
+{
 	DWORD flags = 0;
 	WSABUF wsaBuf[2];
 
@@ -325,7 +348,8 @@ bool NetClient::AsyncRecv() {
 
 	IncrementIOCount();
 	ZeroMemory(&clientSession.recvOverlapped, sizeof(clientSession.recvOverlapped));
-	if (SOCKET_ERROR == WSARecv(clientSession.sock, wsaBuf, 2, NULL, &flags, &clientSession.recvOverlapped, NULL)) {
+	if (SOCKET_ERROR == WSARecv(clientSession.sock, wsaBuf, 2, NULL, &flags, &clientSession.recvOverlapped, NULL)) 
+	{
 		if (WSAGetLastError() != ERROR_IO_PENDING) { // Recv ����
 			////LOG("NetClient", LOG_LEVEL_DEBUG, "WSARecv() Fail, Error code : %d", WSAGetLastError());
 			DecrementIOCount();
@@ -334,26 +358,33 @@ bool NetClient::AsyncRecv() {
 	}
 
 	// Disconnect üũ
-	if (clientSession.disconnectFlag) {
+	if (clientSession.disconnectFlag) 
+	{
 		CancelIoEx((HANDLE)clientSession.sock, NULL);
 		return false;
 	}
 	return true;
 }
 
-void NetClient::RecvCompletionLAN(){
+void NetClient::RecvCompletionLAN()
+{
 	// ��Ŷ ����
-	for (;;) {
+	for (;;) 
+	{
 		int recv_len = clientSession.recvBuf.GetUseSize();
 		if (recv_len <= LAN_HEADER_SIZE)
+		{
 			break;
+		}
 
 		LanHeader lanHeader;
 		clientSession.recvBuf.Peek(&lanHeader, LAN_HEADER_SIZE);
 
 		// ���̷ε� ������ ����
 		if (recv_len < lanHeader.len + LAN_HEADER_SIZE)
+		{
 			break;
+		}
 
 		//------------------------------
 		// OnRecv (��Ʈ��ũ ��� ����)
@@ -375,7 +406,8 @@ void NetClient::RecvCompletionLAN(){
 	//------------------------------
 	// Post Recv (Recv �ɾ�α�)
 	//------------------------------
-	if (false == clientSession.disconnectFlag) {
+	if (false == clientSession.disconnectFlag) 
+	{
 		AsyncRecv();
 	}
 }

@@ -23,18 +23,15 @@ void EchoClient::OnConnect()
 
 void EchoClient::OnRecv(PacketBuffer* csContentsPacket) 
 {
-	std::cout << "[EchoClient] Received echo from server, size: " << csContentsPacket->GetPayloadSize() << std::endl;
-	
-	// 받은 패킷을 다시 전송 (echo)
-	PacketBuffer* echoPacket = PacketBuffer::Alloc();
-	auto payloadSize = csContentsPacket->GetPayloadSize();
-	char* payloadData = new char[payloadSize];
-	csContentsPacket->GetData(payloadData, payloadSize);
-	echoPacket->PutData(payloadData, payloadSize);
+	auto csContentsPacket_len = csContentsPacket->GetPayloadSize();
+	char* payloadData = new char[csContentsPacket_len + 1];
+	payloadData[csContentsPacket_len] = 0;
+
+	csContentsPacket->GetData(OUT payloadData, csContentsPacket_len);
+	std::cout << "recv msg >> " << payloadData << std::endl;
 	delete[] payloadData;
-	
-	SendPacket(echoPacket);
-	PacketBuffer::Free(echoPacket);
+	csContentsPacket->MoveRp(csContentsPacket_len);
+	return;
 }
 
 void EchoClient::OnDisconnect() 

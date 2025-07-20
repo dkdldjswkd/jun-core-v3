@@ -8,7 +8,8 @@
 //------------------------------
 // NetworkLib
 //------------------------------
-class NetClient {
+class NetClient 
+{
 public:
 	NetClient(const char* systemFile, const char* client);
 	virtual ~NetClient();
@@ -113,24 +114,30 @@ public:
 	DWORD GetRecvTPS();
 };
 
-inline void NetClient::DecrementIOCount() {
-	if (0 == InterlockedDecrement((LONG*)&clientSession.ioCount)) {
+inline void NetClient::DecrementIOCount() 
+{
+	if (0 == InterlockedDecrement((LONG*)&clientSession.ioCount)) 
+	{
 		ReleaseSession();
 	}
 }
 
-inline void NetClient::DecrementIOCountPQCS() {
-	if (0 == InterlockedDecrement((LONG*)&clientSession.ioCount)) {
+inline void NetClient::DecrementIOCountPQCS() 
+{
+	if (0 == InterlockedDecrement((LONG*)&clientSession.ioCount)) 
+	{
 		PostQueuedCompletionStatus(h_iocp, 1, (ULONG_PTR)&clientSession, (LPOVERLAPPED)PQCS_TYPE::RELEASE_SESSION);
 	}
 }
 
-inline void NetClient::IncrementIOCount() {
+inline void NetClient::IncrementIOCount() 
+{
 	InterlockedIncrement((LONG*)&clientSession.ioCount);
 }
 
 // * 'IO Count == 0' �� �� �� ������ ����Ұ�. (�׷��� �ʴٸ�, �ٸ����� ���¹��� �߻�)
-inline void NetClient::DisconnectSession() {
+inline void NetClient::DisconnectSession() 
+{
 	clientSession.disconnectFlag = true;
 	CancelIoEx((HANDLE)clientSession.sock, NULL);
 }
@@ -139,7 +146,8 @@ inline void NetClient::DisconnectSession() {
 // Getter
 ////////////////////////////// 
 
-inline void NetClient::UpdateTPS() {
+inline void NetClient::UpdateTPS() 
+{
 	sendMsgTPS = sendMsgCount;
 	sendMsgCount = 0;
 
@@ -147,10 +155,12 @@ inline void NetClient::UpdateTPS() {
 	recvMsgCount = 0;
 }
 
-inline DWORD NetClient::GetRecvTPS() {
+inline DWORD NetClient::GetRecvTPS() 
+{
 	return recvMsgTPS;
 }
 
-inline DWORD NetClient::GetSendTPS() {
+inline DWORD NetClient::GetSendTPS() 
+{
 	return sendMsgTPS;
 }

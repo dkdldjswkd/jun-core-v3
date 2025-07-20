@@ -1,4 +1,4 @@
-#include "Session.h"
+﻿#include "Session.h"
 #include <timeapi.h>
 
 //------------------------------
@@ -6,24 +6,29 @@
 //------------------------------
 
 SessionId::SessionId() {}
-SessionId::SessionId(DWORD64 value) {
+SessionId::SessionId(DWORD64 value) 
+{
   sessionId = value;
 }
-SessionId::SessionId(DWORD index, DWORD unique_no) {
+SessionId::SessionId(DWORD index, DWORD unique_no) 
+{
   SESSION_INDEX = index;
   SESSION_UNIQUE = unique_no;
 }
 SessionId::~SessionId() {}
 
-void SessionId::operator=(const SessionId& other) {
+void SessionId::operator=(const SessionId& other) 
+{
 	sessionId = other.sessionId;
 }
 
-void SessionId::operator=(DWORD64 value) {
+void SessionId::operator=(DWORD64 value) 
+{
 	sessionId = value;
 }
 
-SessionId::operator DWORD64() {
+SessionId::operator DWORD64() 
+{
 	return sessionId;
 }
 
@@ -34,7 +39,8 @@ SessionId::operator DWORD64() {
 Session::Session() {}
 Session::~Session() {}
 
-void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId) {
+void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId) 
+{
 	this->sock = sock;
 	this->ip = ip;
 	this->port = port;
@@ -45,7 +51,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId) {
 	sendPacketCount = 0;
 	lastRecvTime = timeGetTime();
 
-	// �������� ���� ������ �Ǵ°��� ����
+	// 클라이언트의 접속 요청을 허용할지 여부
 	InterlockedIncrement(&ioCount);
 	this->releaseFlag = false;
 }

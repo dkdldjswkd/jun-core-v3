@@ -5,36 +5,46 @@
 
 LFObjectPoolTLS<PacketBuffer>  PacketBuffer::packetPool;
 
-PacketBuffer::PacketBuffer() : bufSize(MAX_HEADER_LEN + MAX_PAYLOAD_LEN) {
+PacketBuffer::PacketBuffer() : bufSize(MAX_HEADER_LEN + MAX_PAYLOAD_LEN) 
+{
 	begin = (char*)std::malloc(bufSize);
 	end = begin + bufSize;
 	payloadPos = begin + MAX_HEADER_LEN;
 	writePos = begin + MAX_HEADER_LEN;
 }
 
-void PacketBuffer::Set() {
+void PacketBuffer::Set() 
+{
 	payloadPos = begin + MAX_HEADER_LEN;
 	writePos = begin + MAX_HEADER_LEN;
 	encrypted = false;
 	refCount = 1;
 }
 
-PacketBuffer* PacketBuffer::Alloc() {
+PacketBuffer* PacketBuffer::Alloc() 
+{
 	PacketBuffer* p_packet = packetPool.Alloc();
 	p_packet->Set();
 	return p_packet;
 }
 
-void PacketBuffer::Free(PacketBuffer* instance) {
+void PacketBuffer::Free(PacketBuffer* instance) 
+{
 	if (0 == InterlockedDecrement((DWORD*)&instance->refCount))
+	{
 		packetPool.Free(instance);
+	}
 }
 
-void PacketBuffer::Free(PacketBuffer* instance, bool* isReleased) {
-	if (0 == InterlockedDecrement((DWORD*)&instance->refCount)) {
+void PacketBuffer::Free(PacketBuffer* instance, bool* isReleased) 
+{
+	if (0 == InterlockedDecrement((DWORD*)&instance->refCount)) 
+	{
 		packetPool.Free(instance);
 		*isReleased = true;
-	} else {
+	}
+	else 
+	{
 		*isReleased = false;
 	}
 }
@@ -100,7 +110,8 @@ bool PacketBuffer::DecryptPacket(char* encryptPacket, BYTE privateKey) {
 	MoveWp(encryptLen - 1); // ��ȣȭ �� ����� ���̷ε� �� ��ŭ move
 
 	// ��ȣ��Ŷ�� �ŷڼ� ��� ��ȯ
-	if (((NetHeader*)packetPos)->checkSum == GetChecksum()) {
+	if (((NetHeader*)packetPos)->checkSum == GetChecksum()) 
+	{
 		return true;
 	}
 	return false;
@@ -111,7 +122,8 @@ BYTE PacketBuffer::GetChecksum() {
 
 	DWORD checkSum = 0;
 	char* cpy_readPos = payloadPos;
-	for (int i = 0; i < len; i++) {
+	for (int i = 0; i < len; i++) 
+	{
 		checkSum += *cpy_readPos;
 		cpy_readPos++;
 	}
@@ -122,7 +134,8 @@ BYTE PacketBuffer::GetChecksum() {
 //	operator <<
 ///////////////////////////////
 
-PacketBuffer& PacketBuffer::operator<<(const char& data) {
+PacketBuffer& PacketBuffer::operator<<(const char& data) 
+{
 	if (writePos + sizeof(data) <= end) {
 		std::memcpy(writePos, &data, sizeof(data));
 		writePos += sizeof(data);
@@ -133,7 +146,34 @@ PacketBuffer& PacketBuffer::operator<<(const char& data) {
 	return *this;
 }
 
-PacketBuffer& PacketBuffer::operator<<(const unsigned char& data) {
+PacketBuffer& PacketBuffer::operator<<(const unsigned char& data) 
+{
+	if (writePos + sizeof(data) <= end) {
+		std::memcpy(writePos, &data, sizeof(data));
+		writePos += sizeof(data);
+	}
+	else 
+	{
+		throw PacketException(PUT_ERROR);
+	}
+	return *this;
+}
+
+PacketBuffer& PacketBuffer::operator<<(const int& data) 
+{
+	if (writePos + sizeof(data) <= end) {
+		std::memcpy(writePos, &data, sizeof(data));
+		writePos += sizeof(data);
+	}
+	else 
+	{
+		throw PacketException(PUT_ERROR);
+	}
+	return *this;
+}
+
+PacketBuffer& PacketBuffer::operator<<(const unsigned int& data) 
+{
 	if (writePos + sizeof(data) <= end) {
 		std::memcpy(writePos, &data, sizeof(data));
 		writePos += sizeof(data);
@@ -144,7 +184,8 @@ PacketBuffer& PacketBuffer::operator<<(const unsigned char& data) {
 	return *this;
 }
 
-PacketBuffer& PacketBuffer::operator<<(const int& data) {
+PacketBuffer& PacketBuffer::operator<<(const long& data) 
+{
 	if (writePos + sizeof(data) <= end) {
 		std::memcpy(writePos, &data, sizeof(data));
 		writePos += sizeof(data);
@@ -155,7 +196,8 @@ PacketBuffer& PacketBuffer::operator<<(const int& data) {
 	return *this;
 }
 
-PacketBuffer& PacketBuffer::operator<<(const unsigned int& data) {
+PacketBuffer& PacketBuffer::operator<<(const unsigned long& data) 
+{
 	if (writePos + sizeof(data) <= end) {
 		std::memcpy(writePos, &data, sizeof(data));
 		writePos += sizeof(data);
@@ -166,7 +208,8 @@ PacketBuffer& PacketBuffer::operator<<(const unsigned int& data) {
 	return *this;
 }
 
-PacketBuffer& PacketBuffer::operator<<(const long& data) {
+PacketBuffer& PacketBuffer::operator<<(const short& data) 
+{
 	if (writePos + sizeof(data) <= end) {
 		std::memcpy(writePos, &data, sizeof(data));
 		writePos += sizeof(data);
@@ -177,29 +220,8 @@ PacketBuffer& PacketBuffer::operator<<(const long& data) {
 	return *this;
 }
 
-PacketBuffer& PacketBuffer::operator<<(const unsigned long& data) {
-	if (writePos + sizeof(data) <= end) {
-		std::memcpy(writePos, &data, sizeof(data));
-		writePos += sizeof(data);
-	}
-	else {
-		throw PacketException(PUT_ERROR);
-	}
-	return *this;
-}
-
-PacketBuffer& PacketBuffer::operator<<(const short& data) {
-	if (writePos + sizeof(data) <= end) {
-		std::memcpy(writePos, &data, sizeof(data));
-		writePos += sizeof(data);
-	}
-	else {
-		throw PacketException(PUT_ERROR);
-	}
-	return *this;
-}
-
-PacketBuffer& PacketBuffer::operator<<(const unsigned short& data) {
+PacketBuffer& PacketBuffer::operator<<(const unsigned short& data) 
+{
 	if (writePos + sizeof(data) <= end) {
 		std::memcpy(writePos, &data, sizeof(data));
 		writePos += sizeof(data);

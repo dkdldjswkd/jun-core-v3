@@ -1,25 +1,25 @@
-#include <iostream>
+﻿#include <iostream>
 #include "EchoServer.h"
 #include "../JunCommon/lib/CrashDump.h"
 using namespace std;
 
-// EchoServer.cpp, Define Ȯ��
-void StartEchoServer() 
+// EchoServer.cpp, Define 확인
+void StartEchoServer()
 {
 	EchoServer server("../ServerConfig.ini", "EchoServer");
 	server.Start();
-	printf("StartEchoServer \n");
+	printf("StartEchoServer\n");
 
 	for (;;) {
-		// 1�� �ֱ� ����͸�
+		// 1초 주기로 출력
 		Sleep(1000);
 		printf("NetworkLib ---------------------------------------------------- \n");
-		printf("sessionCount    : %d \n", server.GetSessionCount()); 
-		printf("PacketCount     : %d \n", 0); // PacketBuffer::Get_UseCount() not available
-		printf("acceptTotal     : %d \n", server.GetAcceptTotal());
-		printf("acceptTPS       : %d \n", server.GetAcceptTPS());
-		printf("sendMsgTPS      : %d \n", server.GetSendTPS());
-		printf("recvMsgTPS      : %d \n", server.GetRecvTPS());
+		printf("세션 수          : %d \n", server.GetSessionCount());
+		printf("패킷 수          : %d \n", 0); // PacketBuffer::Get_UseCount() 사용 불가
+		printf("총 접속 수       : %d \n", server.GetAcceptTotal());
+		printf("초당 접속 수     : %d \n", server.GetAcceptTPS());
+		printf("초당 전송 메시지 : %d \n", server.GetSendTPS());
+		printf("초당 수신 메시지 : %d \n", server.GetRecvTPS());
 		printf("\n\n\n\n\n\n\n\n\n\n \n\n\n\n\n\n\n\n\n\n \n\n");
 	}
 

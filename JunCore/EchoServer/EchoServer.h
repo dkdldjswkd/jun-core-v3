@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 #include "../JunCore/NetServer.h"
 
-class EchoServer : public NetServer {
+class EchoServer : public NetServer 
+{
 public:
 	EchoServer(const char* systemFile, const char* server);
 	~EchoServer();

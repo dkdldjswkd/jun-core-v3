@@ -1,22 +1,22 @@
-#include "EchoServer.h"
-
-// ���� 5:29 2023-02-21
+﻿#include "EchoServer.h"
 
 EchoServer::EchoServer(const char* systemFile, const char* server) : NetServer(systemFile, server)
 {
 }
 
-EchoServer::~EchoServer() {
+EchoServer::~EchoServer() 
+{
 }
 
-void EchoServer::OnRecv(SessionId session_id, PacketBuffer* cs_contentsPacket) {
+void EchoServer::OnRecv(SessionId session_id, PacketBuffer* cs_contentsPacket) 
+{
 	//------------------------------
 	// var set
 	//------------------------------
 	PacketBuffer* sc_contentsPacket = PacketBuffer::Alloc();
 
 	//------------------------------
-	// SC Contents Packet ����
+	// SC Contents Packet 생성
 	//------------------------------
 	auto cs_contentsPacket_len = cs_contentsPacket->GetPayloadSize();
 	char* payloadData = new char[cs_contentsPacket_len];
@@ -37,19 +37,19 @@ void EchoServer::OnRecv(SessionId session_id, PacketBuffer* cs_contentsPacket) {
 	return;
 }
 
-bool EchoServer::OnConnectionRequest(in_addr ip, WORD port){
+bool EchoServer::OnConnectionRequest(in_addr ip, WORD port) {
 	//printf("[Accept] IP(%s), PORT(%u) \n", inet_ntoa(ip), port);
 	return true;
 }
 
-void EchoServer::OnClientJoin(SessionId session_id){
+void EchoServer::OnClientJoin(SessionId session_id) {
 	//------------------------------
 	// var set
 	//------------------------------
 	PacketBuffer* sc_packet = PacketBuffer::Alloc();
 
 	//------------------------------
-	// sc packet ����
+	// sc packet 생성
 	//------------------------------
 	*sc_packet << 0x7fffffffffffffff;
 
@@ -65,11 +65,14 @@ void EchoServer::OnClientJoin(SessionId session_id){
 	return;
 }
 
-void EchoServer::OnClientLeave(SessionId session_id){
+void EchoServer::OnClientLeave(SessionId session_id) 
+{
 }
 
-void EchoServer::OnServerStop(){
+void EchoServer::OnServerStop() 
+{
 }
 
-void EchoServer::OnError(int errorcode){
+void EchoServer::OnError(int errorcode) 
+{
 }
