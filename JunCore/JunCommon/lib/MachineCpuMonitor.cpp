@@ -1,28 +1,27 @@
-#include "MachineCpuMonitor.h"
+ï»¿#include "MachineCpuMonitor.h"
 #include <iostream>
 
-// È®ÀÎ ÇÁ·Î¼¼½º ÇÚµé
+// È®ï¿½ï¿½ ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½ ï¿½Úµï¿½
 MachineCpuMonitor::MachineCpuMonitor() {
-	// ÇÁ·Î¼¼½º ½ÇÇà·ü == (»ç¿ë½Ã°£ / ³í¸®ÄÚ¾î ¼ö)
+	// ï¿½ï¿½ï¿½Î¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ == (ï¿½ï¿½ï¿½Ã°ï¿½ / ï¿½ï¿½ï¿½ï¿½ï¿½Ú¾ï¿½ ï¿½ï¿½)
 	SYSTEM_INFO SystemInfo;
 	GetSystemInfo(&SystemInfo);
-	NumOfCore = SystemInfo.dwNumberOfProcessors; // ³í¸® ÄÚ¾î °³¼ö
+	NumOfCore = SystemInfo.dwNumberOfProcessors; // ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¾ï¿½ ï¿½ï¿½ï¿½ï¿½
 	UpdateCpuUsage();
 }
 
-// CPU »ç¿ë·ü °»½Å (500 ~ 1000 ms ÁÖ±â È£Ãâ)
+// CPU ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (500 ~ 1000 ms ï¿½Ö±ï¿½ È£ï¿½ï¿½)
 void MachineCpuMonitor::UpdateCpuUsage() {
-	ULONGLONG deltaTime;
 	ULARGE_INTEGER curIdleTime;
 	ULARGE_INTEGER curkernelTime;
 	ULARGE_INTEGER curUserTime;
 
-	// ´©Àû ÄÚ¾î »ç¿ë ½Ã°£ (Ä¿³Î, À¯Àú, idle)
+	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¾ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ (Ä¿ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½, idle)
 	if (GetSystemTimes((PFILETIME)&curIdleTime, (PFILETIME)&curkernelTime, (PFILETIME)&curUserTime) == false) {
 		return;
 	}
 
-	// ÄÚ¾î »ç¿ë ½Ã°£ (µ¨Å¸, ÇöÀç - ¸¶Áö¸· È£Ãâ)
+	// ï¿½Ú¾ï¿½ ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ (ï¿½ï¿½Å¸, ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½)
 	ULONGLONG deltaIdleTime = curIdleTime.QuadPart - prevIdleTime.QuadPart;
 	ULONGLONG deltaKernelTime = curkernelTime.QuadPart - prevKernelTime.QuadPart;
 	ULONGLONG deltaUserTime = curUserTime.QuadPart - prevUserTime.QuadPart;
@@ -34,7 +33,7 @@ void MachineCpuMonitor::UpdateCpuUsage() {
 		coreTotal = 0.0f;
 	}
 	else {
-		// ÄÚ¾î »ç¿ë ¹éºÐ·ü °è»ê
+		// ï¿½Ú¾ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½Ð·ï¿½ ï¿½ï¿½ï¿½
 		coreTotal = (float)((double)(Total - deltaIdleTime) / Total * 100.0f);
 		coreUser = (float)((double)deltaUserTime / Total * 100.0f);
 		coreKernel = (float)((double)(deltaKernelTime - deltaIdleTime) / Total * 100.0f);

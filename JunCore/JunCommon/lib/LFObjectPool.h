@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "base.h"
 #include <Windows.h>
 #include <stdarg.h>
@@ -62,7 +62,7 @@ LFObjectPool<T>::LFObjectPool(int node_num, bool use_ctor) : integrity_((ULONG_P
 
 	// object_offset �ʱ�ȭ
 	Node tmpNode((ULONG_PTR)this);
-	object_offset_ = ((ULONG_PTR)(&tmpNode.object) - (ULONG_PTR)&tmpNode);
+	object_offset_ = static_cast<int>((ULONG_PTR)(&tmpNode.object) - (ULONG_PTR)&tmpNode);
 
 	// ����� ��û ��� ����
 	for (int i = 0; i < node_num; i++) {

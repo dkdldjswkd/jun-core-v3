@@ -1,4 +1,4 @@
-#include "Profiler.h"
+﻿#include "Profiler.h"
 #include <string>
 #pragma comment(lib, "Winmm.lib")
 

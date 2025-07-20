@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // define Func
 #define CRASH() do{ *((volatile int*)0) = 0; }while(false)

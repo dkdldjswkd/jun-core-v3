@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <memory>
 #include <BaseTsd.h>
 
@@ -9,7 +9,7 @@
 #define MASKING_12BIT(n)	(0x0fff & (n)) // 4096
 #define MASKING_13BIT(n)	(0x1fff & (n)) // 8192
 
-// ¹öÆÛ Å©±â ¼¼ÆÃ
+// ï¿½ï¿½ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 #define MASKING_BIT(n)		MASKING_13BIT(n)
 #define BUF_SIZE			8192
 
@@ -48,7 +48,7 @@ public:
 	inline int RemainEnqueueSize() const;
 	inline int RemainDequeueSize() const;
 
-	// inline Àû¿ë ¾ÈµÊ
+	// inline ï¿½ï¿½ï¿½ï¿½ ï¿½Èµï¿½
 	inline int GetFreeSize() const;
 	inline int GetUseSize() const;
 
@@ -63,14 +63,14 @@ public:
 
 inline int RingBuffer::MustEnqueue(const void* src, size_t size) {
 	memmove(writePos, src, size);
-	MoveRear(size);
-	return size;
+	MoveRear(static_cast<int>(size));
+	return static_cast<int>(size);
 }
 
 inline int RingBuffer::MustDequeue(void* dst, size_t size) {
 	memmove(dst, readPos, size);
-	MoveFront(size);
-	return size;
+	MoveFront(static_cast<int>(size));
+	return static_cast<int>(size);
 }
 
 inline void RingBuffer::Clear(){
@@ -82,30 +82,30 @@ inline void RingBuffer::Clear(){
 }
 
 ///////////////////////////////////////////////////////////////////////
-// Enqueue, Dequeue Size ´Â Ã¹¹øÂ° º®±îÁö °è»êÇØ¾ßÇÔ 
+// Enqueue, Dequeue Size ï¿½ï¿½ Ã¹ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½ 
 // 
-// ex. Ã¹¹øÂ° º®ÀÌ ½ÃÀÛÁ¡(wp, rp) º¸´Ù ¾Õ¿¡ ÀÖ´Ù¸é, end ±îÁö °è»ê ÈÄ
-// ´Ù½Ã begin ºÎÅÍ Ã¹¹øÂ° º®(wp, rp)±îÁö °è»êÇØ¾ßÇÔ
+// ex. Ã¹ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(wp, rp) ï¿½ï¿½ï¿½ï¿½ ï¿½Õ¿ï¿½ ï¿½Ö´Ù¸ï¿½, end ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½
+// ï¿½Ù½ï¿½ begin ï¿½ï¿½ï¿½ï¿½ Ã¹ï¿½ï¿½Â° ï¿½ï¿½(wp, rp)ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ø¾ï¿½ï¿½ï¿½
 ///////////////////////////////////////////////////////////////////////
 
 inline int RingBuffer::DirectEnqueueSize() const {
-	if (front < writePos) return end - writePos; // Ã¹¹øÂ° º® (front) ÀÌÈÄ
-	else return front - writePos;
+	if (front < writePos) return static_cast<int>(end - writePos); // Ã¹ï¿½ï¿½Â° ï¿½ï¿½ (front) ï¿½ï¿½ï¿½ï¿½
+	else return static_cast<int>(front - writePos);
 }
 
 inline int RingBuffer::RemainEnqueueSize() const {
-	if (writePos <= front) return 0; // Ã¹¹øÂ° º® ÀÌÀü
-	else return front - begin;
+	if (writePos <= front) return 0; // Ã¹ï¿½ï¿½Â° ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	else return static_cast<int>(front - begin);
 }
 
 inline int RingBuffer::DirectDequeueSize() const {
-	if (writePos < readPos) return end - readPos; // Ã¹¹øÂ° º®  (write pos) ÀÌÈÄ
-	else return writePos - readPos;
+	if (writePos < readPos) return static_cast<int>(end - readPos); // Ã¹ï¿½ï¿½Â° ï¿½ï¿½  (write pos) ï¿½ï¿½ï¿½ï¿½
+	else return static_cast<int>(writePos - readPos);
 }
 
 inline int RingBuffer::RemainDequeueSize() const {
-	if (readPos <= writePos) return 0; // Ã¹¹øÂ° º® ÀÌÀü
-	else return writePos - begin;
+	if (readPos <= writePos) return 0; // Ã¹ï¿½ï¿½Â° ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+	else return static_cast<int>(writePos - begin);
 }
 
 int RingBuffer::GetFreeSize() const {
@@ -117,5 +117,5 @@ inline int RingBuffer::GetUseSize() const {
 
 inline static int MustPeek(void* dst, const void* src, size_t size) {
 	memmove(dst, src, size);
-	return size;
+	return static_cast<int>(size);
 }

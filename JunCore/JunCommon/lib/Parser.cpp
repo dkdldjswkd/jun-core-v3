@@ -1,4 +1,4 @@
-#include "Parser.h"
+ï»¿#include "Parser.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -12,17 +12,17 @@ Parser::~Parser(){
     }
 }
 
-// °ø¹é°ú ÁÖ¼®À» Á¦¿ÜÇÑ ¹®ÀÚ°¡ ³ª¿Ã¶§±îÁö fileCurÀ» ÀÌµ¿½ÃÅ´
+//        Ö¼              Ú°     Ã¶      fileCur    Ìµ   Å´
 bool Parser::FindChar() {
     for (; fileCur < fileEnd; fileCur++) {
-        // ÁÖ¼® ¹ß°ß. °³Çà¹®ÀÚ°¡ ³ª¿Ã¶§±îÁö ¶Ù¾î³Ñ±â
+        //  Ö¼   ß° .    à¹® Ú°     Ã¶       Ù¾ Ñ± 
         if (*fileCur == '/' && *(fileCur + 1) == '/') {
             for (; fileCur < fileEnd - 1; fileCur++) {
                 if (*fileCur == '\n')
                     break;
             }
         }
-        // °ø¹é ¹®ÀÚ ¶Ù¾î³Ñ±â
+        //            Ù¾ Ñ± 
         else if (*fileCur == ' ' || *fileCur == '\n' || *fileCur == '\t') {
             continue;
         }
@@ -35,14 +35,14 @@ bool Parser::FindChar() {
 
 bool Parser::FindSpace() {
     for (; fileCur < fileEnd; fileCur++) {
-        // ÁÖ¼® ¹ß°ß. °³Çà¹®ÀÚ°¡ ³ª¿Ã¶§±îÁö ¶Ù¾î³Ñ±â
+        //  Ö¼   ß° .    à¹® Ú°     Ã¶       Ù¾ Ñ± 
         if (*fileCur == '/' && *(fileCur + 1) == '/') {
             for (; fileCur < fileEnd - 1; fileCur++) {
                 if (*fileCur == '\n')
                     break;
             }
         }
-        // °ø¹é ¹ß°ß
+        //       ß° 
         else if (*fileCur == ' ' || *fileCur == '\n' || *fileCur == '\t') {
             return true;
         }
@@ -51,12 +51,12 @@ bool Parser::FindSpace() {
 }
 
 bool Parser::FindWord(const char* word) {
-    int wordLen = strlen(word);
+    int wordLen = static_cast<int>(strlen(word));
 
     if (!FindChar()) return false;
     for (;;) {
         if (0 == strncmp(fileCur, word, wordLen)) {
-            // ´Ü¾î Ã£À½
+            //  Ü¾  Ã£  
             if (*(fileCur + wordLen) == ' ' || *(fileCur + wordLen) == '\t' || *(fileCur + wordLen) == '\n') {
                 return true;
             }
@@ -76,7 +76,7 @@ bool Parser::GetValueInt(int* value) {
     *value = 0;
 
     for (;;) {
-        // ¼ýÀÚ ¾Æ´Ô.
+        //       Æ´ .
         if (*fileCur < '0' || '9' < *fileCur) {
             return false;
         }
@@ -95,9 +95,9 @@ bool Parser::GetValueInt(int* value) {
 bool Parser::GetValueStr(char* value) {
     int offset = 0;
 
-    // value Ã£±â
+    // value Ã£  
     for (;;) {
-        // ¹®ÀÚ¿­ ¾Æ´Ô
+        //    Ú¿   Æ´ 
         if (*fileCur != '"') {
             return false;
         }
@@ -140,56 +140,56 @@ int Parser::LoadFile(const char* file) {
 
 bool Parser::GetValue(const char* section, const char* key, int* value) {
     fileCur = fileBegin;
-    int sectionLen = strlen(section);
-    int keyLen = strlen(key);
+    int sectionLen = static_cast<int>(strlen(section));
+    int keyLen = static_cast<int>(strlen(key));
 
-    // Section Ã£±â
+    // Section Ã£  
     if (false == FindWord(section)) return false;
 
-    // { Ã£±â
+    // { Ã£  
     NextChar();
     if (*fileCur != '{') {
         return false;
     }
 
-    // Section Ã£±â
+    // Section Ã£  
     if (false == FindWord(key)) return false;
 
-    // = Ã£±â
+    // = Ã£  
     NextChar();
     if (*fileCur != '=') {
         return false;
     }
 
-    // value Ã£±â
+    // value Ã£  
     NextChar();
     return GetValueInt(value);
 }
 
 bool Parser::GetValue(const char* section, const char* key, char* value) {
     fileCur = fileBegin;
-    int sectionLen = strlen(section);
-    int keyLen = strlen(key);
+    int sectionLen = static_cast<int>(strlen(section));
+    int keyLen = static_cast<int>(strlen(key));
 
-    // Section Ã£±â
+    // Section Ã£  
     if (false == FindWord(section)) return false;
 
-    // { Ã£±â
+    // { Ã£  
     NextChar();
     if (*fileCur != '{') {
         return false;
     }
 
-    // Section Ã£±â
+    // Section Ã£  
     if (false == FindWord(key)) return false;
 
-    // = Ã£±â
+    // = Ã£  
     NextChar();
     if (*fileCur != '=') {
         return false;
     }
 
-    // value Ã£±â
+    // value Ã£  
     NextChar();
     return GetValueStr(value);
 }

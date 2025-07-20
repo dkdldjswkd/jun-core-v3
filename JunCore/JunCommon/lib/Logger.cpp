@@ -33,16 +33,16 @@ void Logger::SetLogLevel(const LogLevel& logLevel) {
 	this->logLevel = logLevel;
 }
 
-// ·Î±× ½º·¹µå¿¡ ÀÛ¾÷ Å¥À×
+// ï¿½Î±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½å¿¡ ï¿½Û¾ï¿½ Å¥ï¿½ï¿½
 void Logger::Log(const char* fileName, const LogLevel& logLevel, const char* format, ...) {
 	// loglevel Ã¼Å©
 	if (logLevel > this->logLevel) return;
 
-	// logData ÇÒ´ç
+	// logData ï¿½Ò´ï¿½
 	LogData* p_logData = logDataPool.Alloc();
 
 	/////////////////////
-	// logData ¼ÂÆÃ
+	// logData ï¿½ï¿½ï¿½ï¿½
 	/////////////////////
 
 	// Set fileName, logLevel
@@ -54,11 +54,11 @@ void Logger::Log(const char* fileName, const LogLevel& logLevel, const char* for
 	StringCchVPrintfA(p_logData->logStr, LOG_SIZE, format, var_list);
 	va_end(var_list);
 
-	// LogThread Å¥À×
+	// LogThread Å¥ï¿½ï¿½
 	QueueUserAPC((PAPCFUNC)LogAPC, logThread.native_handle(), (ULONG_PTR)p_logData);
 }
 
-// ÆÄÀÏ ·Î±ë ÇÔ¼ö (½ÇÁúÀû, File I/O)
+// ï¿½ï¿½ï¿½ï¿½ ï¿½Î±ï¿½ ï¿½Ô¼ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, File I/O)
 void Logger::LogAPC(ULONG_PTR p_logData) {
 	FILE* fp;
 	const auto& logData = *((Logger::LogData*)p_logData);
@@ -96,11 +96,11 @@ void Logger::LogAPC(ULONG_PTR p_logData) {
 	}
 
 	// file Logging
-	int logOffset = strlen(logBuf);
+	int logOffset = static_cast<int>(strlen(logBuf));
 	snprintf(logBuf + logOffset, LOG_SIZE - logOffset, "%s", logData.logStr);
 	fprintf(fp, "%s\n", logBuf);
 
-	// ¸®¼Ò½º Á¤¸®
+	// ï¿½ï¿½ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½
 	fclose(fp);
 	GetInst().logDataPool.Free((Logger::LogData*)p_logData);
 }

@@ -8,5 +8,5 @@ void UTF8ToUTF16(const char* src, std::wstring& dst) {
 }
 
 void UTF8ToUTF16(const char* src, const wchar_t* dst) {
-    MultiByteToWideChar(CP_UTF8, 0, src, -1, (LPWSTR)dst, strlen(src) + 1);
+    MultiByteToWideChar(CP_UTF8, 0, src, -1, (LPWSTR)dst, static_cast<int>(strlen(src) + 1));
 }  

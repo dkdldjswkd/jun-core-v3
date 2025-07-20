@@ -145,7 +145,7 @@ ProtocolBuffer& ProtocolBuffer::operator<<(const unsigned long long& data) {
 }
 
 ProtocolBuffer& ProtocolBuffer::operator<<(const char* str) {
-	int size = strlen(str);
+	int size = static_cast<int>(strlen(str));
 
 	if (write_pos + size <= end) {
 		memmove(write_pos, str, size);
@@ -158,7 +158,7 @@ ProtocolBuffer& ProtocolBuffer::operator<<(const char* str) {
 }
 
 ProtocolBuffer& ProtocolBuffer::operator<<(const wchar_t* str) {
-	int size = wcslen(str) * 2;
+	int size = static_cast<int>(wcslen(str) * 2);
 
 	if (write_pos + size <= end) {
 		memmove(write_pos, str, size);

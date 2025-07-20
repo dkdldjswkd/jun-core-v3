@@ -1,4 +1,4 @@
-#include "CrashDump.h"
+ï»¿#include "CrashDump.h"
 
 long CrashDump::_DumpCount;
 bool CrashDump::wait = false;
@@ -9,14 +9,14 @@ CrashDump::CrashDump() {
 	_invalid_parameter_handler oldHandler, newHandler;
 	newHandler = mylnvalidParameterHandler;
 
-	oldHandler = _set_invalid_parameter_handler(newHandler); // crt ÇÔ¼ö¿¡ null Æ÷ÀÎÅÍ µîÀ» ³Ö¾úÀ»¶§
-	_CrtSetReportMode(_CRT_WARN, 0);	// crt ¿À·ù ¸Þ½ÃÁö Ç¥½Ã Áß´Ü. ¹Ù·Î ´ýÇÁ·Î ³²µµ·Ï
-	_CrtSetReportMode(_CRT_ASSERT, 0);	// crt ¿À·ù ¸Þ½ÃÁö Ç¥½Ã Áß´Ü. ¹Ù·Î ´ýÇÁ·Î ³²µµ·Ï
-	_CrtSetReportMode(_CRT_ERROR, 0);	// crt ¿À·ù ¸Þ½ÃÁö Ç¥½Ã Áß´Ü. ¹Ù·Î ´ýÇÁ·Î ³²µµ·Ï
+	oldHandler = _set_invalid_parameter_handler(newHandler); // crt  Ô¼    null              Ö¾     
+	_CrtSetReportMode(_CRT_WARN, 0);	// crt       Þ½    Ç¥    ß´ .  Ù·               
+	_CrtSetReportMode(_CRT_ASSERT, 0);	// crt       Þ½    Ç¥    ß´ .  Ù·               
+	_CrtSetReportMode(_CRT_ERROR, 0);	// crt       Þ½    Ç¥    ß´ .  Ù·               
 
 	_CrtSetReportHook(_custom_Report_hook);
 
-	// pure virtual function called ¿¡·¯ ÇÚµé·¯ »ç¿ëÀÚ Á¤ÀÇ ÇÔ¼ö·Î ¿ìÈ¸½ÃÅ²´Ù.
+	// pure virtual function called       Úµé·¯             Ô¼      È¸  Å²  .
 	_set_purecall_handler(myPurecallHandler);
 
 	SetHandlerDump();
@@ -28,14 +28,14 @@ void CrashDump::Crash() {
 }
 
 LONG WINAPI CrashDump::MyExceptionFilter(__in PEXCEPTION_POINTERS pExceptionPointer) {
-	if (InterlockedExchange8((CHAR*)&wait, true) == true)
+	if (InterlockedExchange8((CHAR*)&wait, true) != 0)
 		Sleep(INFINITE);
 
 	int iWorkingMemory = 0;
 	SYSTEMTIME		stNowTime;
 	long DumpCount = InterlockedIncrement(&_DumpCount);
 
-	// ÇöÀç ÇÁ·Î¼¼½ºÀÇ ¸Þ¸ð¸® »ç¿ë·®À» ¾ò¾î¿Â´Ù.
+	//         Î¼       Þ¸    ë·®      Â´ .
 	HANDLE hProcess = 0;
 	PROCESS_MEMORY_COUNTERS pmc;
 
@@ -49,7 +49,7 @@ LONG WINAPI CrashDump::MyExceptionFilter(__in PEXCEPTION_POINTERS pExceptionPoin
 	}
 	CloseHandle(hProcess);
 
-	// ÇöÀç ³¯Â¥¿Í ½Ã°£À» ¾Ë¾Æ¿Â´Ù.
+	//        Â¥    Ã°     Ë¾Æ¿Â´ .
 	WCHAR filename[MAX_PATH];
 
 	GetLocalTime(&stNowTime);

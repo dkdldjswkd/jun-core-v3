@@ -88,11 +88,11 @@ bool ProtocolBuffer::Full() const {
 }
 
 inline int ProtocolBuffer::Get_FreeSize() const {
-	return end - write_pos;
+	return static_cast<int>(end - write_pos);
 }
 
 inline int ProtocolBuffer::Get_UseSize() const {
-	return write_pos - read_pos;
+	return static_cast<int>(write_pos - read_pos);
 }
 
 inline int ProtocolBuffer::Get_BufSize() const {
