@@ -17,11 +17,13 @@ NetClient::NetClient(const char* systemFile, const char* server)
 {
 	// Read SystemFile
 	parser.LoadFile(systemFile);
-	parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
-	parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
-	parser.GetValue(server, "NET_TYPE", (int*)&netType);
-	parser.GetValue(server, "IP", serverIP);
-	parser.GetValue(server, "PORT", (int*)&serverPort);
+
+	// json parser로 변경할것
+	protocolCode	= 0xFF;				// parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
+	privateKey		= 0xFF;				// parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
+	netType			= NetType::NET;		// parser.GetValue(server, "NET_TYPE", (int*)&netType);
+	strcpy_s(serverIP, "127.0.0.1");	// parser.GetValue(server, "IP", serverIP);
+	serverPort		= 7777;				// parser.GetValue(server, "PORT", (int*)&serverPort);
 
 	// Check system
 	if (1 < (BYTE)netType)
@@ -126,7 +128,8 @@ void NetClient::WorkerFunc() {
 	}
 }
 
-void NetClient::ConnectFunc() {
+void NetClient::ConnectFunc() 
+{
 	// Create Socket
 	clientSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
 	if (INVALID_SOCKET == clientSock) {
@@ -142,13 +145,15 @@ void NetClient::ConnectFunc() {
 	std::memset(&server_address, 0, sizeof(server_address));
 	server_address.sin_family = AF_INET;
 	server_address.sin_port = htons(serverPort);
-	if (inet_pton(AF_INET, serverIP, &server_address.sin_addr) != 1) {
+	if (inet_pton(AF_INET, serverIP, &server_address.sin_addr) != 1) 
+	{
 		////LOG("NetClient", LOG_LEVEL_WARN, "inet_pton() Error(%d)", WSAGetLastError());
 		return;
 	}
 
 	// Try Connect
-	while (connect(clientSock, (struct sockaddr*)&server_address, sizeof(server_address)) == SOCKET_ERROR) {
+	while (connect(clientSock, (struct sockaddr*)&server_address, sizeof(server_address)) == SOCKET_ERROR) 
+	{
 		////LOG("NetClient", LOG_LEVEL_WARN, "connect() Error(%d)", WSAGetLastError());
 		if (!reconnectFlag) {
 			closesocket(clientSock);

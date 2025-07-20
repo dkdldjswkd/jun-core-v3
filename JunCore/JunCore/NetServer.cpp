@@ -15,30 +15,36 @@ using namespace std;
 //------------------------------
 // Server Func
 //------------------------------
-NetServer::NetServer(const char* system_file, const char* server) {
+NetServer::NetServer(const char* system_file, const char* server) 
+{
 	int serverPort;
 	int nagle;
 
 	// Read SystemFile
 	parser.LoadFile(system_file);
-	parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
-	parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
-	parser.GetValue(server, "NET_TYPE", (int*)&netType);
-	parser.GetValue(server, "PORT", (int*)&serverPort);
-	parser.GetValue(server, "MAX_SESSION", (int*)&maxSession);
-	parser.GetValue(server, "NAGLE", (int*)&nagle);
-	parser.GetValue(server, "TIME_OUT_FLAG", (int*)&timeoutFlag);
-	parser.GetValue(server, "TIME_OUT", (int*)&timeOut);
-	parser.GetValue(server, "TIME_OUT_CYCLE", (int*)&timeoutCycle);
-	parser.GetValue(server, "MAX_WORKER", (int*)&maxWorker);
-	parser.GetValue(server, "ACTIVE_WORKER", (int*)&activeWorker);
+
+	// json parser로 변경할것
+	protocolCode	= 0xFF;			// parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
+	privateKey		= 0xFF;			// parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
+	netType			= NetType::NET; // parser.GetValue(server, "NET_TYPE", (int*)&netType);
+	serverPort		= 7777;			// parser.GetValue(server, "PORT", (int*)&serverPort);
+	maxSession		= 10000;		// parser.GetValue(server, "MAX_SESSION", (int*)&maxSession);
+	nagle			= TRUE;			// parser.GetValue(server, "NAGLE", (int*)&nagle);
+	timeoutFlag		= TRUE;			// parser.GetValue(server, "TIME_OUT_FLAG", (int*)&timeoutFlag);
+	timeOut			= 60000/*1m*/;	// parser.GetValue(server, "TIME_OUT", (int*)&timeOut);
+	timeoutCycle	= 10000/*10s*/; // parser.GetValue(server, "TIME_OUT_CYCLE", (int*)&timeoutCycle);
+	maxWorker		= 4;			// parser.GetValue(server, "MAX_WORKER", (int*)&maxWorker);
+	activeWorker	= 2;			// parser.GetValue(server, "ACTIVE_WORKER", (int*)&activeWorker);
 
 	// Check system
-	if (maxWorker < activeWorker) {
+	if (maxWorker < activeWorker) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "WORKER_NUM_ERROR");
 		throw std::exception("WORKER_NUM_ERROR");
 	} 
-	if (1 < (BYTE)netType) {
+
+	if (1 < (BYTE)netType) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "NET_TYPE_ERROR");
 		throw std::exception("NET_TYPE_ERROR");
 	}
@@ -48,21 +54,25 @@ NetServer::NetServer(const char* system_file, const char* server) {
 	//////////////////////////////
 
 	WSADATA wsaData;
-	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) {
+	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "WSAStartup()_ERROR : %d", WSAGetLastError());
 		throw std::exception("WSAStartup_ERROR");
 	}
 
 	listenSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
-	if (INVALID_SOCKET == listenSock) {
+	if (INVALID_SOCKET == listenSock) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "WSASocket()_ERROR : %d", WSAGetLastError());
 		throw std::exception("WSASocket_ERROR");
 	}
 
 	// Reset nagle
-	if (!nagle) {
+	if (!nagle) 
+	{
 		int opt_val = TRUE;
-		if (setsockopt(listenSock, IPPROTO_TCP, TCP_NODELAY, (const char*)&opt_val, sizeof(opt_val)) != 0) {
+		if (setsockopt(listenSock, IPPROTO_TCP, TCP_NODELAY, (const char*)&opt_val, sizeof(opt_val)) != 0) 
+		{
 			//LOG("NetServer", LOG_LEVEL_FATAL, "SET_NAGLE_ERROR : %d", WSAGetLastError());
 			throw std::exception("SET_NAGLE_ERROR");
 		}
@@ -70,7 +80,8 @@ NetServer::NetServer(const char* system_file, const char* server) {
 
 	// Set Linger
 	LINGER linger = { 1, 0 };
-	if (setsockopt(listenSock, SOL_SOCKET, SO_LINGER, (char*)&linger, sizeof linger) != 0) {
+	if (setsockopt(listenSock, SOL_SOCKET, SO_LINGER, (char*)&linger, sizeof linger) != 0) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "SET_LINGER_ERROR : %d", WSAGetLastError());
 		throw std::exception("SET_LINGER_ERROR");
 	}
@@ -80,7 +91,8 @@ NetServer::NetServer(const char* system_file, const char* server) {
 	server_addr.sin_family = AF_INET;
 	server_addr.sin_port = htons(serverPort);
 	server_addr.sin_addr.s_addr = INADDR_ANY;
-	if (0 != bind(listenSock, (SOCKADDR*)&server_addr, sizeof(SOCKADDR_IN))) {
+	if (0 != bind(listenSock, (SOCKADDR*)&server_addr, sizeof(SOCKADDR_IN))) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "bind()_ERROR : %d", WSAGetLastError());
 		throw std::exception("bind()_ERROR");
 	}
@@ -88,18 +100,22 @@ NetServer::NetServer(const char* system_file, const char* server) {
 	// Set Session
 	sessionArray = new Session[maxSession];
 	for (int i = 0; i < maxSession; i++)
+	{
 		sessionIdxStack.Push(maxSession - (1 + i));
+	}
 
 	// Create IOCP
 	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, activeWorker);
-	if (h_iocp == INVALID_HANDLE_VALUE || h_iocp == NULL) {
+	if (h_iocp == INVALID_HANDLE_VALUE || h_iocp == NULL) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "CreateIoCompletionPort()_ERROR : %d", GetLastError());
 		throw std::exception("CreateIoCompletionPort()_ERROR");
 	}
 
 	// Create IOCP Worker
 	workerThreadArr = new thread[maxWorker];
-	for (int i = 0; i < maxWorker; i++) {
+	for (int i = 0; i < maxWorker; i++) 
+	{
 		workerThreadArr[i] = thread([this] {WorkerFunc(); });
 	}
 }
@@ -111,14 +127,16 @@ NetServer::~NetServer() {
 
 void NetServer::Start() {
 	// listen
-	if (0 != listen(listenSock, SOMAXCONN_HINT(65535))) {
+	if (0 != listen(listenSock, SOMAXCONN_HINT(65535))) 
+	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "listen()_ERROR : %d", WSAGetLastError());
 		throw std::exception("listen()_ERROR");
 	}
 
 	// Create Thread
 	acceptThread = thread([this] {AcceptFunc(); });
-	if (timeoutFlag) {
+	if (timeoutFlag) 
+	{
 		timeOutThread = thread([this] {TimeoutFunc(); });
 	}
 
@@ -126,8 +144,10 @@ void NetServer::Start() {
 	//LOG("NetServer", LOG_LEVEL_INFO, "Start NetServer");
 }
 
-void NetServer::AcceptFunc() {
-	for (;;) {
+void NetServer::AcceptFunc() 
+{
+	for (;;) 
+	{
 		sockaddr_in clientAddr;
 		int addrLen = sizeof(clientAddr);
 
@@ -198,8 +218,10 @@ void NetServer::AcceptFunc() {
 	}
 }
 
-void NetServer::TimeoutFunc() {
-	for (;;) {
+void NetServer::TimeoutFunc() 
+{
+	for (;;) 
+	{
 		Sleep(timeoutCycle);
 		INT64 cur_time = timeGetTime();
 		for (int i = 0; i < maxSession; i++) {
@@ -230,7 +252,8 @@ void NetServer::TimeoutFunc() {
 	}
 }
 
-void NetServer::WorkerFunc() {
+void NetServer::WorkerFunc() 
+{
 	for (;;) {
 		DWORD ioSize = 0;
 		Session* session = 0;
@@ -271,7 +294,8 @@ void NetServer::WorkerFunc() {
 		}
 
 		// recv �Ϸ�����
-		if (&session->recvOverlapped == p_overlapped) {
+		if (&session->recvOverlapped == p_overlapped) 
+		{
 			if (retGQCS) {
 				session->recvBuf.MoveRear(ioSize);
 				session->lastRecvTime = timeGetTime();
@@ -283,16 +307,20 @@ void NetServer::WorkerFunc() {
 					RecvCompletionNet(session);
 				}
 			}
-			else {
+			else 
+			{
 				//LOG("NetServer", LOG_LEVEL_DEBUG, "Overlapped Recv Fail");
 			}
 		}
 		// send �Ϸ�����
-		else if (&session->sendOverlapped == p_overlapped) {
-			if (retGQCS) {
+		else if (&session->sendOverlapped == p_overlapped) 
+		{
+			if (retGQCS) 
+			{
 				SendCompletion(session);
 			}
-			else {
+			else 
+			{
 				//LOG("NetServer", LOG_LEVEL_DEBUG, "Overlapped Send Fail");
 			}
 		}
@@ -305,9 +333,12 @@ void NetServer::WorkerFunc() {
 	}
 }
 
-bool NetServer::ReleaseSession(Session* session) {
+bool NetServer::ReleaseSession(Session* session) 
+{
 	if (0 != session->ioCount)
+	{
 		return false;
+	}
 
 	// * releaseFlag(0), iocount(0) -> releaseFlag(1), iocount(0)
 	if (0 == InterlockedCompareExchange64((long long*)&session->releaseFlag, 1, 0)) 
