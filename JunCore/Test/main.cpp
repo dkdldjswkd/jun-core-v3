@@ -1,18 +1,14 @@
 #include <iostream>
-#include "../JunCommon/lib/LFQueue.h"
+#include "game_message.pb.h"
 using namespace std;
 
 int main()
 {
-	LFQueue<int> lfq;
-	lfq.Enqueue(1);
-	lfq.Enqueue(2);
-	lfq.Enqueue(3);
+	game::Player _player;
+	_player.set_name("John Doe");
+	std::cout << "Player Name: " << _player.name() << std::endl;
 
-	int a;
-
-	for (; lfq.Dequeue(&a);)
-	{
-		cout << a << endl;
-	}
+	game::Item _item;
+	_item.set_name("bow");
+	_item.set_value(1);
 }

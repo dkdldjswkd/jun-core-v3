@@ -2,5 +2,23 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="game_message.pb.cc">
+      <Filter>proto</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="game_message.proto">
+      <Filter>proto</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="proto">
+      <UniqueIdentifier>{e7474368-59a4-4135-abcb-e9e8462f2867}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="game_message.pb.h">
+      <Filter>proto</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

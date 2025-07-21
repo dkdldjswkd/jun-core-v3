@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package game;
+
+message Player 
+{
+  int32 id = 1;
+  string name = 2;
+  int32 level = 3;
+}
+
+message Item
+{
+  int32 id = 1;
+  string name = 2;
+  int32 value = 3;
+}

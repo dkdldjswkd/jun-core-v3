@@ -611,7 +611,9 @@ void NetServer::RecvCompletionNet(Session* session)
 	{
 		int recvLen = session->recvBuf.GetUseSize();
 		if (recvLen <= NET_HEADER_SIZE)
+		{
 			break;
+		}
 
 		// 암호 카피
 		char encryptPacket[NET_HEADER_SIZE + MAX_PAYLOAD_LEN];
