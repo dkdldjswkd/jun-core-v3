@@ -70,6 +70,9 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -145,12 +148,16 @@
   <ItemGroup>
     <ClCompile Include="game_message.pb.cc" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="CryptoExample.cpp" />
+    <ClCompile Include="ProtobufExample.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="game_message.proto" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_message.pb.h" />
+    <ClInclude Include="CryptoExample.h" />
+    <ClInclude Include="ProtobufExample.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

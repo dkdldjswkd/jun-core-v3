@@ -5,6 +5,12 @@
     <ClCompile Include="game_message.pb.cc">
       <Filter>proto</Filter>
     </ClCompile>
+    <ClCompile Include="CryptoExample.cpp">
+      <Filter>openssl</Filter>
+    </ClCompile>
+    <ClCompile Include="ProtobufExample.cpp">
+      <Filter>proto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="game_message.proto">
@@ -15,9 +21,18 @@
     <Filter Include="proto">
       <UniqueIdentifier>{e7474368-59a4-4135-abcb-e9e8462f2867}</UniqueIdentifier>
     </Filter>
+    <Filter Include="openssl">
+      <UniqueIdentifier>{a1b2c3d4-e5f6-7890-1234-567890abcdef}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_message.pb.h">
+      <Filter>proto</Filter>
+    </ClInclude>
+    <ClInclude Include="CryptoExample.h">
+      <Filter>openssl</Filter>
+    </ClInclude>
+    <ClInclude Include="ProtobufExample.h">
       <Filter>proto</Filter>
     </ClInclude>
   </ItemGroup>

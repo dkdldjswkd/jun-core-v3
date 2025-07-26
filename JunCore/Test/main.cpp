@@ -1,14 +1,15 @@
 #include <iostream>
-#include "game_message.pb.h"
+#include "CryptoExample.h"
+#include "ProtobufExample.h"
 using namespace std;
 
 int main()
 {
-	game::Player _player;
-	_player.set_name("John Doe");
-	std::cout << "Player Name: " << _player.name() << std::endl;
+	// Protobuf example
+	ProtobufExample();
 
-	game::Item _item;
-	_item.set_name("bow");
-	_item.set_value(1);
+	// Crypto example
+	CryptoExample::RunCryptoExample();
+	
+	return 0;
 }
