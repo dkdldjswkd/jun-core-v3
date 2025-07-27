@@ -1,15 +1,16 @@
 #include <iostream>
-#include "CryptoExample.h"
 #include "ProtobufExample.h"
-using namespace std;
+
+// AES128 테스트 함수 선언
+void TestAES();
 
 int main()
 {
 	// Protobuf example
 	ProtobufExample();
 
-	// Crypto example
-	CryptoExample::RunCryptoExample();
+	// AES128 Interactive Test
+	TestAES();
 	
 	return 0;
 }
