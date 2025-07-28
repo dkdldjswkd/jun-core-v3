@@ -147,3 +147,27 @@ Network packet wrapper providing:
 - **openssl**: Cryptographic functions (recently added)
 - **Windows SDK**: Required for IOCP and WinSock2 APIs
 - **Visual Studio 2022**: Primary development environment
+
+## Coding Standards
+
+### Naming Conventions
+- Follow **Google C++ Style Guide** for variable naming
+- Use `snake_case` for variables and functions
+- Use `PascalCase` for class names
+- Use `UPPER_CASE` for constants and macros
+
+### Code Formatting
+- **Brace Style**: Place opening braces on new line for functions
+  ```cpp
+  void MyFunction()
+  {
+      // function body
+  }
+  ```
+- Use consistent indentation (4 spaces or tabs)
+
+### Build Requirements
+- **Zero Warnings Policy**: All code must compile without warnings
+- Fix any compiler warnings before proceeding with development
+- **Always build after completing work** to verify no compilation issues
+- Use appropriate warning level settings in project configuration

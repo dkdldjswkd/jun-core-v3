@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{599b5b8e-5925-458b-bfee-aceceb427965}</ProjectGuid>
-    <RootNamespace>Test</RootNamespace>
+    <ProjectGuid>{f5b5b8e-5925-458b-bfee-aceceb427966}</ProjectGuid>
+    <RootNamespace>HandshakeExample</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -86,9 +86,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>..\generate_protobuf.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -105,9 +102,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>..\generate_protobuf.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -122,9 +116,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>..\generate_protobuf.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -141,32 +132,15 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PreBuildEvent>
-      <Command>..\generate_protobuf.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="game_message.pb.cc" />
-    <ClCompile Include="crypto_protocol.pb.cc" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="AES128.cpp" />
-    <ClCompile Include="ProtobufExample.cpp" />
-    <ClCompile Include="AESExample.cpp" />
-    <ClCompile Include="RSA2048.cpp" />
-    <ClCompile Include="RSAExample.cpp" />
     <ClCompile Include="HandshakeExample.cpp" />
+    <ClCompile Include="AES128.cpp" />
+    <ClCompile Include="RSA2048.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="game_message.proto" />
-    <None Include="crypto_protocol.proto" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="game_message.pb.h" />
-    <ClInclude Include="crypto_protocol.pb.h" />
     <ClInclude Include="AES128.h" />
-    <ClInclude Include="ProtobufExample.h" />
     <ClInclude Include="RSA2048.h" />
-    <ClInclude Include="SecureProtocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

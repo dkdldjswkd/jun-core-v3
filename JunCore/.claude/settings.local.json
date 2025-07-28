@@ -39,7 +39,12 @@
       "Bash(./generate_protobuf.bat)",
       "Bash(\"C:/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" Test/Test.vcxproj /p:Configuration=Debug /p:Platform=x64 /m:1)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" Test/Test.vcxproj /p:Configuration=Debug /p:Platform=x64 /m:1)",
-      "Bash(./x64/Debug/Test.exe)"
+      "Bash(./x64/Debug/Test.exe)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" Test/Test.vcxproj /p:Configuration=Debug /p:Platform=x64)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" Test/HandshakeExample.vcxproj /p:Configuration=Debug /p:Platform=x64)",
+      "Bash(./x64/Debug/HandshakeExample.exe)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" Test.vcxproj /p:Configuration=Debug /p:Platform=x64)",
+      "Bash(./Test/x64/Debug/Test.exe)"
     ],
     "deny": []
   }
