@@ -1,39 +1,92 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- 필터 정의 -->
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="game_message.pb.cc">
-      <Filter>proto</Filter>
-    </ClCompile>
-    <ClCompile Include="CryptoExample.cpp">
-      <Filter>openssl</Filter>
-    </ClCompile>
-    <ClCompile Include="ProtobufExample.cpp">
-      <Filter>proto</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="game_message.proto">
-      <Filter>proto</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="proto">
-      <UniqueIdentifier>{e7474368-59a4-4135-abcb-e9e8462f2867}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="openssl">
+    <Filter Include="1. Crypto Classes">
       <UniqueIdentifier>{a1b2c3d4-e5f6-7890-1234-567890abcdef}</UniqueIdentifier>
     </Filter>
+    <Filter Include="2. Examples">
+      <UniqueIdentifier>{b2c3d4e5-f6g7-8901-2345-678901bcdefg}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Protobuf Messages">
+      <UniqueIdentifier>{c3d4e5f6-g7h8-9012-3456-789012cdefgh}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3. Protobuf Messages\Generated">
+      <UniqueIdentifier>{d4e5f6g7-h8i9-0123-4567-890123defghi}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="4. Legacy Examples">
+      <UniqueIdentifier>{e5f6g7h8-i9j0-1234-5678-901234efghij}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
+
+  <!-- C++ 소스 파일 -->
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    
+    <!-- 암호화 핵심 클래스 -->
+    <ClCompile Include="AES128.cpp">
+      <Filter>1. Crypto Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="RSA2048.cpp">
+      <Filter>1. Crypto Classes</Filter>
+    </ClCompile>
+    
+    <!-- 예제 코드 -->
+    <ClCompile Include="AESExample.cpp">
+      <Filter>2. Examples</Filter>
+    </ClCompile>
+    <ClCompile Include="RSAExample.cpp">
+      <Filter>2. Examples</Filter>
+    </ClCompile>
+    
+    <!-- Protobuf 생성 파일 -->
+    <ClCompile Include="game_message.pb.cc">
+      <Filter>3. Protobuf Messages\Generated</Filter>
+    </ClCompile>
+    <ClCompile Include="crypto_protocol.pb.cc">
+      <Filter>3. Protobuf Messages\Generated</Filter>
+    </ClCompile>
+    
+    <!-- 기존 예제 -->
+    <ClCompile Include="ProtobufExample.cpp">
+      <Filter>4. Legacy Examples</Filter>
+    </ClCompile>
+  </ItemGroup>
+
+  <!-- 헤더 파일 -->
+  <ItemGroup>
+    <!-- 암호화 핵심 클래스 -->
+    <ClInclude Include="AES128.h">
+      <Filter>1. Crypto Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="RSA2048.h">
+      <Filter>1. Crypto Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="SecureProtocol.h">
+      <Filter>1. Crypto Classes</Filter>
+    </ClInclude>
+    
+    <!-- Protobuf 생성 파일 -->
     <ClInclude Include="game_message.pb.h">
-      <Filter>proto</Filter>
+      <Filter>3. Protobuf Messages\Generated</Filter>
     </ClInclude>
-    <ClInclude Include="CryptoExample.h">
-      <Filter>openssl</Filter>
+    <ClInclude Include="crypto_protocol.pb.h">
+      <Filter>3. Protobuf Messages\Generated</Filter>
     </ClInclude>
+    
+    <!-- 기존 예제 -->
     <ClInclude Include="ProtobufExample.h">
-      <Filter>proto</Filter>
+      <Filter>4. Legacy Examples</Filter>
     </ClInclude>
+  </ItemGroup>
+
+  <!-- Proto 파일 -->
+  <ItemGroup>
+    <None Include="game_message.proto">
+      <Filter>3. Protobuf Messages</Filter>
+    </None>
+    <None Include="crypto_protocol.proto">
+      <Filter>3. Protobuf Messages</Filter>
+    </None>
   </ItemGroup>
 </Project>

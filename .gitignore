@@ -452,9 +452,6 @@ FodyWeavers.xsd
 *.pb.h
 *.pb.cc
 
-# Claude Code local settings
-.claude/
-
 # Additional build artifacts
 *.idb
 build.log

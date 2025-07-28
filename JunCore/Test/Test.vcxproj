@@ -147,18 +147,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="game_message.pb.cc" />
+    <ClCompile Include="crypto_protocol.pb.cc" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="CryptoExample.cpp" />
+    <ClCompile Include="AES128.cpp" />
     <ClCompile Include="ProtobufExample.cpp" />
-    <ClCompile Include="TestGameAES.cpp" />
+    <ClCompile Include="AESExample.cpp" />
+    <ClCompile Include="RSA2048.cpp" />
+    <ClCompile Include="RSAExample.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="game_message.proto" />
+    <None Include="crypto_protocol.proto" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="game_message.pb.h" />
-    <ClInclude Include="CryptoExample.h" />
+    <ClInclude Include="crypto_protocol.pb.h" />
+    <ClInclude Include="AES128.h" />
     <ClInclude Include="ProtobufExample.h" />
+    <ClInclude Include="RSA2048.h" />
+    <ClInclude Include="SecureProtocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
