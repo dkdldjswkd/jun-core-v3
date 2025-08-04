@@ -44,14 +44,14 @@ struct ClientRSAKeyPayload
 {
     uint32_t protocol_code;
     uint16_t rsa_key_len;
-    // RSA public key data follows
+    char rsa_public_key_data[2048];  // Fixed size RSA public key data (DER format)
 };
 
 // Server → Client: RSA public key
 struct ServerRSAKeyPayload
 {
     uint16_t rsa_key_len;
-    // RSA public key data follows
+    char rsa_public_key_data[2048];  // Fixed size RSA public key data (DER format)
 };
 
 // Server → Client: AES key (RSA encrypted)
@@ -59,7 +59,8 @@ struct AESKeyDeliveryPayload
 {
     uint16_t encrypted_key_len;
     uint16_t encrypted_iv_len;
-    // Encrypted AES key + IV follows
+    char encrypted_aes_key[256];     // RSA encrypted AES key
+    char encrypted_aes_iv[256];      // RSA encrypted AES IV
 };
 
 #pragma pack(pop)
@@ -236,17 +237,13 @@ bool ClientHandshake(SessionData& session)
     
     // 2. Send client RSA public key with protocol code
     std::cout << "[Client] Sending RSA public key..." << std::endl;
-    std::vector<unsigned char> payload;
-    ClientRSAKeyPayload key_payload;
+    ClientRSAKeyPayload key_payload = {0};
     key_payload.protocol_code = PROTOCOL_CODE;
     key_payload.rsa_key_len = session.client_rsa_public_key.size();
+    memcpy(key_payload.rsa_public_key_data, session.client_rsa_public_key.data(), 
+           std::min(session.client_rsa_public_key.size(), sizeof(key_payload.rsa_public_key_data)));
     
-    payload.resize(sizeof(key_payload) + session.client_rsa_public_key.size());
-    memcpy(payload.data(), &key_payload, sizeof(key_payload));
-    memcpy(payload.data() + sizeof(key_payload), 
-           session.client_rsa_public_key.data(), session.client_rsa_public_key.size());
-    
-    SendPlainPacket(client_to_server_packets, payload.data(), payload.size());
+    SendPlainPacket(client_to_server_packets, &key_payload, sizeof(key_payload));
     session.state = HandshakeState::CONNECTED;
     
     // 3. Receive server RSA public key
@@ -266,8 +263,8 @@ bool ClientHandshake(SessionData& session)
     
     ServerRSAKeyPayload* server_key_payload = (ServerRSAKeyPayload*)server_response.data();
     session.server_rsa_public_key.assign(
-        server_response.data() + sizeof(ServerRSAKeyPayload),
-        server_response.data() + server_response.size()
+        (unsigned char*)server_key_payload->rsa_public_key_data,
+        (unsigned char*)server_key_payload->rsa_public_key_data + server_key_payload->rsa_key_len
     );
     
     std::cout << "[Client] Received server RSA key" << std::endl;
@@ -291,16 +288,14 @@ bool ClientHandshake(SessionData& session)
     
     // 5. Decrypt AES key using client private RSA key
     std::cout << "[Client] Decrypting AES key..." << std::endl;
-    size_t offset = sizeof(AESKeyDeliveryPayload);
     std::vector<unsigned char> encrypted_aes_key(
-        aes_response.data() + offset,
-        aes_response.data() + offset + aes_payload->encrypted_key_len
+        (unsigned char*)aes_payload->encrypted_aes_key,
+        (unsigned char*)aes_payload->encrypted_aes_key + aes_payload->encrypted_key_len
     );
     
-    offset += aes_payload->encrypted_key_len;
     std::vector<unsigned char> encrypted_aes_iv(
-        aes_response.data() + offset,
-        aes_response.data() + offset + aes_payload->encrypted_iv_len
+        (unsigned char*)aes_payload->encrypted_aes_iv,
+        (unsigned char*)aes_payload->encrypted_aes_iv + aes_payload->encrypted_iv_len
     );
     
     if (!client_rsa.DecryptWithPrivateKey(encrypted_aes_key, session.aes_key) ||
@@ -349,8 +344,8 @@ bool ServerHandshake(SessionData& session)
     }
     
     session.client_rsa_public_key.assign(
-        client_data.data() + sizeof(ClientRSAKeyPayload),
-        client_data.data() + client_data.size()
+        (unsigned char*)client_payload->rsa_public_key_data,
+        (unsigned char*)client_payload->rsa_public_key_data + client_payload->rsa_key_len
     );
     session.state = HandshakeState::CLIENT_KEY_RECEIVED;
     
@@ -366,16 +361,12 @@ bool ServerHandshake(SessionData& session)
     
     // 4. Send server RSA public key
     std::cout << "[Server] Sending server RSA public key..." << std::endl;
-    std::vector<unsigned char> server_payload;
-    ServerRSAKeyPayload server_key_payload;
+    ServerRSAKeyPayload server_key_payload = {0};
     server_key_payload.rsa_key_len = session.server_rsa_public_key.size();
+    memcpy(server_key_payload.rsa_public_key_data, session.server_rsa_public_key.data(),
+           std::min(session.server_rsa_public_key.size(), sizeof(server_key_payload.rsa_public_key_data)));
     
-    server_payload.resize(sizeof(server_key_payload) + session.server_rsa_public_key.size());
-    memcpy(server_payload.data(), &server_key_payload, sizeof(server_key_payload));
-    memcpy(server_payload.data() + sizeof(server_key_payload),
-           session.server_rsa_public_key.data(), session.server_rsa_public_key.size());
-    
-    SendPlainPacket(server_to_client_packets, server_payload.data(), server_payload.size());
+    SendPlainPacket(server_to_client_packets, &server_key_payload, sizeof(server_key_payload));
     session.state = HandshakeState::SERVER_KEY_SENT;
     
     // 5. Generate AES key and IV
@@ -403,18 +394,15 @@ bool ServerHandshake(SessionData& session)
     
     // 7. Send encrypted AES key
     std::cout << "[Server] Sending encrypted AES credentials..." << std::endl;
-    std::vector<unsigned char> aes_payload;
-    AESKeyDeliveryPayload aes_delivery;
+    AESKeyDeliveryPayload aes_delivery = {0};
     aes_delivery.encrypted_key_len = encrypted_key.size();
     aes_delivery.encrypted_iv_len = encrypted_iv.size();
+    memcpy(aes_delivery.encrypted_aes_key, encrypted_key.data(),
+           std::min(encrypted_key.size(), sizeof(aes_delivery.encrypted_aes_key)));
+    memcpy(aes_delivery.encrypted_aes_iv, encrypted_iv.data(),
+           std::min(encrypted_iv.size(), sizeof(aes_delivery.encrypted_aes_iv)));
     
-    aes_payload.resize(sizeof(aes_delivery) + encrypted_key.size() + encrypted_iv.size());
-    memcpy(aes_payload.data(), &aes_delivery, sizeof(aes_delivery));
-    memcpy(aes_payload.data() + sizeof(aes_delivery), encrypted_key.data(), encrypted_key.size());
-    memcpy(aes_payload.data() + sizeof(aes_delivery) + encrypted_key.size(), 
-           encrypted_iv.data(), encrypted_iv.size());
-    
-    SendPlainPacket(server_to_client_packets, aes_payload.data(), aes_payload.size());
+    SendPlainPacket(server_to_client_packets, &aes_delivery, sizeof(aes_delivery));
     session.state = HandshakeState::AES_KEY_SENT;
     
     session.state = HandshakeState::HANDSHAKE_COMPLETE;

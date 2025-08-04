@@ -1,6 +1,6 @@
 ﻿#include <iostream>
 #include "EchoClient.h"
-#include "../JunCommon/lib/CrashDump.h"
+#include "../JunCommon/system/CrashDump.h"
 using namespace std;
 
 int main() 

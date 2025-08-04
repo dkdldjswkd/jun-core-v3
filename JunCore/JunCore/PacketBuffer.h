@@ -6,7 +6,7 @@
 #include <cstdlib>
 #include "protocol.h"
 #include <exception>
-#include "../JunCommon/lib/LFObjectPoolTLS.h"
+#include "../JunCommon/pool/LFObjectPoolTLS.h"
 
 #define MAX_PAYLOAD_LEN 8000
 #define MAX_HEADER_LEN 10

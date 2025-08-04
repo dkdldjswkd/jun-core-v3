@@ -127,38 +127,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="lib\base.h" />
-    <ClInclude Include="lib\CrashDump.h" />
-    <ClInclude Include="lib\LFObjectPool.h" />
-    <ClInclude Include="lib\LFObjectPoolTLS.h" />
-    <ClInclude Include="lib\LFQueue.h" />
-    <ClInclude Include="lib\LFStack.h" />
-    <ClInclude Include="lib\Logger.h" />
-    <ClInclude Include="lib\MachineCpuMonitor.h" />
-    <ClInclude Include="lib\MemoryLogger.h" />
-    <ClInclude Include="lib\ObjectPool.h" />
-    <ClInclude Include="lib\Parser.h" />
-    <ClInclude Include="lib\PerformanceCounter.h" />
-    <ClInclude Include="lib\ProcessCpuMonitor.h" />
-    <ClInclude Include="lib\Profiler.h" />
-    <ClInclude Include="lib\ProtocolBuffer.h" />
-    <ClInclude Include="lib\RecursiveLock.h" />
-    <ClInclude Include="lib\RingBuffer.h" />
-    <ClInclude Include="lib\StringUtils.h" />
+    <ClInclude Include="algorithm\Parser.h" />
+    <ClInclude Include="algorithm\StringUtils.h" />
+    <ClInclude Include="container\LFQueue.h" />
+    <ClInclude Include="container\LFStack.h" />
+    <ClInclude Include="container\RingBuffer.h" />
+    <ClInclude Include="core\base.h" />
+    <ClInclude Include="log\Logger.h" />
+    <ClInclude Include="log\MemoryLogger.h" />
+    <ClInclude Include="network\ProtocolBuffer.h" />
+    <ClInclude Include="pool\LFObjectPool.h" />
+    <ClInclude Include="pool\LFObjectPoolTLS.h" />
+    <ClInclude Include="pool\ObjectPool.h" />
+    <ClInclude Include="synchronization\RecursiveLock.h" />
+    <ClInclude Include="system\CrashDump.h" />
+    <ClInclude Include="timer\MachineCpuMonitor.h" />
+    <ClInclude Include="timer\PerformanceCounter.h" />
+    <ClInclude Include="timer\ProcessCpuMonitor.h" />
+    <ClInclude Include="timer\Profiler.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="lib\CrashDump.cpp" />
-    <ClCompile Include="lib\Logger.cpp" />
-    <ClCompile Include="lib\MachineCpuMonitor.cpp" />
-    <ClCompile Include="lib\MemoryLogger.cpp" />
-    <ClCompile Include="lib\Parser.cpp" />
-    <ClCompile Include="lib\PerformanceCounter.cpp" />
-    <ClCompile Include="lib\ProcessCpuMonitor.cpp" />
-    <ClCompile Include="lib\Profiler.cpp" />
-    <ClCompile Include="lib\ProtocolBuffer.cpp" />
-    <ClCompile Include="lib\RecursiveLock.cpp" />
-    <ClCompile Include="lib\RingBuffer.cpp" />
-    <ClCompile Include="lib\StringUtils.cpp" />
+    <ClCompile Include="algorithm\Parser.cpp" />
+    <ClCompile Include="algorithm\StringUtils.cpp" />
+    <ClCompile Include="container\RingBuffer.cpp" />
+    <ClCompile Include="log\Logger.cpp" />
+    <ClCompile Include="log\MemoryLogger.cpp" />
+    <ClCompile Include="network\ProtocolBuffer.cpp" />
+    <ClCompile Include="synchronization\RecursiveLock.cpp" />
+    <ClCompile Include="system\CrashDump.cpp" />
+    <ClCompile Include="timer\MachineCpuMonitor.cpp" />
+    <ClCompile Include="timer\PerformanceCounter.cpp" />
+    <ClCompile Include="timer\ProcessCpuMonitor.cpp" />
+    <ClCompile Include="timer\Profiler.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

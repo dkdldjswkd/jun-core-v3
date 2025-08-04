@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include <Windows.h>
 #include "PacketBuffer.h"
-#include "../JunCommon/lib/LFQueue.h"
-#include "../JunCommon/lib/RingBuffer.h"
+#include "../JunCommon/container/LFQueue.h"
+#include "../JunCommon/container/RingBuffer.h"
 
 #define MAX_SEND_MSG		100
 #define	INVALID_SESSION_ID	-1

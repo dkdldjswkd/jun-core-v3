@@ -38,6 +38,9 @@
     <ClCompile Include="ProtobufExample.cpp">
       <Filter>Examples</Filter>
     </ClCompile>
+    <ClCompile Include="HandshakeExample.cpp">
+      <Filter>Examples</Filter>
+    </ClCompile>
     
     <!-- Protobuf 생성 파일 -->
     <ClCompile Include="game_message.pb.cc">

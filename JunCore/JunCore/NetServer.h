@@ -3,8 +3,8 @@
 #include <thread>
 #include "Session.h"
 #include "PacketBuffer.h"
-#include "../JunCommon/lib/LFStack.h"
-#include "../JunCommon/lib/Parser.h"
+#include "../JunCommon/container/LFStack.h"
+#include "../JunCommon/algorithm/Parser.h"
 
 #define PQCS_SEND	1	// 1 : SendPacket::WSASend() worker 스레드에서 처리, 0 : SendPacket 호출 스레드에서 WSASend() call
 

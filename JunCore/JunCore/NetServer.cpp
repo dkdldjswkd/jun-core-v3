@@ -6,7 +6,7 @@
 #include <iostream>
 #include "NetServer.h"
 #include "protocol.h"
-#include "../JunCommon/lib/RingBuffer.h"
+#include "../JunCommon/container/RingBuffer.h"
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Winmm.lib")
 

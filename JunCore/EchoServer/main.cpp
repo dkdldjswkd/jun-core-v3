@@ -1,6 +1,6 @@
 ﻿#include <iostream>
 #include "EchoServer.h"
-#include "../JunCommon/lib/CrashDump.h"
+#include "../JunCommon/system/CrashDump.h"
 using namespace std;
 
 // EchoServer.cpp, Define 확인

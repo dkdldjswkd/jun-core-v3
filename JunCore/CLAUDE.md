@@ -91,11 +91,43 @@ Network packet wrapper providing:
 - Throws `PacketException` for buffer overruns (GET_ERROR/PUT_ERROR types)
 - Max payload size: 8000 bytes, max header size: 10 bytes
 
-### Lock-Free Data Structures (`JunCommon/lib/`)
-- `LFStack`: Lock-free stack with ABA problem prevention
-- `LFQueue`: Lock-free queue implementation
-- `LFObjectPool`: Lock-free object pool for high-performance allocation
-- Uses memory stamping technique to prevent ABA problems
+### JunCommon Library Structure
+
+JunCommon is organized using **Boost-style** folder structure for better maintainability and code organization:
+
+#### Core Components (`JunCommon/`)
+- **`core/`**: Essential definitions, macros, and constants
+  - `base.h`: Memory guards, crash macros, lock-free constants
+- **`container/`**: Data structures and containers
+  - `LFStack.h`: Lock-free stack with ABA problem prevention
+  - `LFQueue.h`: Lock-free queue implementation  
+  - `RingBuffer.h/.cpp`: Circular buffer for I/O operations
+- **`pool/`**: Object pooling and memory management
+  - `LFObjectPool.h`: Lock-free object pool for high-performance allocation
+  - `LFObjectPoolTLS.h`: Thread-local storage object pool
+  - `ObjectPool.h`: Standard object pool implementation
+- **`log/`**: All logging systems
+  - `Logger.h/.cpp`: Thread-safe logging with multiple levels
+  - `MemoryLogger.h/.cpp`: Memory usage tracking and profiling
+- **`timer/`**: Performance measurement and system monitoring
+  - `Profiler.h/.cpp`: Code profiling and performance analysis
+  - `PerformanceCounter.h/.cpp`: System performance monitoring via PDH
+  - `MachineCpuMonitor.h/.cpp`: System-wide CPU usage monitoring
+  - `ProcessCpuMonitor.h/.cpp`: Process-specific CPU monitoring
+- **`network/`**: Network-related utilities
+  - `ProtocolBuffer.h/.cpp`: Network packet management
+- **`synchronization/`**: Thread synchronization primitives
+  - `RecursiveLock.h/.cpp`: Recursive mutex implementation
+- **`system/`**: System diagnostics and debugging
+  - `CrashDump.h/.cpp`: Automatic crash dump generation
+- **`algorithm/`**: Algorithms and utility functions
+  - `Parser.h/.cpp`: Configuration file parsing
+  - `StringUtils.h/.cpp`: String manipulation utilities
+
+#### Memory Management Philosophy
+- Uses object pools for high-performance memory allocation
+- Lock-free data structures avoid mutex overhead in high-concurrency scenarios
+- Memory stamping technique prevents ABA problems in lock-free implementations
 
 ### Development Notes
 
@@ -127,6 +159,34 @@ Network packet wrapper providing:
 - Built-in TPS (Transactions Per Second) counters for accepts, sends, receives
 - Session count tracking
 - Call `UpdateTPS()` regularly to refresh performance metrics
+
+#### Include Path Examples
+When using JunCommon classes, use the new Boost-style folder structure:
+```cpp
+// Core utilities
+#include "../JunCommon/core/base.h"
+
+// Data structures and containers  
+#include "../JunCommon/container/LFStack.h"
+#include "../JunCommon/container/LFQueue.h"
+#include "../JunCommon/container/RingBuffer.h"
+
+// Object pooling
+#include "../JunCommon/pool/LFObjectPool.h"
+#include "../JunCommon/pool/LFObjectPoolTLS.h"
+
+// Logging systems
+#include "../JunCommon/log/Logger.h"
+#include "../JunCommon/log/MemoryLogger.h"
+
+// Performance monitoring
+#include "../JunCommon/timer/Profiler.h"
+#include "../JunCommon/timer/PerformanceCounter.h"
+
+// System utilities
+#include "../JunCommon/system/CrashDump.h"
+#include "../JunCommon/algorithm/Parser.h"
+```
 
 #### Key Utility Classes
 - `Logger`: Thread-safe logging system with log levels (FATAL, ERROR, WARN, INFO, DEBUG)

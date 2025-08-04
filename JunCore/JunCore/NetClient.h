@@ -3,7 +3,7 @@
 #include <thread>
 #include "Session.h"
 #include "PacketBuffer.h"
-#include "../JunCommon/lib/Parser.h"
+#include "../JunCommon/algorithm/Parser.h"
 
 //------------------------------
 // NetworkLib

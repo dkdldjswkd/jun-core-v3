@@ -1,7 +1,7 @@
 #pragma once
 #include <Windows.h>
-#include "LFObjectPool.h"
-#include "base.h"
+#include "../pool/LFObjectPool.h"
+#include "../core/base.h"
 
 template <typename T>
 class LFQueue {
