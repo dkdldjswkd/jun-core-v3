@@ -3,8 +3,8 @@
 #include <memory>
 #include <string>
 #include <cstring>
-#include "AES128.h"
-#include "RSA2048.h"
+#include "../JunCommon/crypto/AES128.h"
+#include "../JunCommon/crypto/RSA2048.h"
 
 // ============================================================================
 // Network Headers

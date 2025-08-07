@@ -50,7 +50,8 @@
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" JunCommon/JunCommon.vcxproj /p:Configuration=Debug /p:Platform=x64)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" JunCore/JunCore.vcxproj /p:Configuration=Debug /p:Platform=x64)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" EchoServer/EchoServer.vcxproj /p:Configuration=Debug /p:Platform=x64)",
-      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64)"
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64)",
+      "Bash(./Test.exe)"
     ],
     "deny": []
   }

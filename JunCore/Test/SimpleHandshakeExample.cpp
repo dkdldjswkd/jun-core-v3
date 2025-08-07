@@ -5,7 +5,7 @@
 #include <random>
 #include <iomanip>
 #include <sstream>
-#include "AES128.h"
+#include "../JunCommon/crypto/AES128.h"
 
 // ============================================================================
 // Protocol Configuration

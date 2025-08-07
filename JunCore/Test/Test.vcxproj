@@ -165,10 +165,8 @@
     <ClCompile Include="game_message.pb.cc" />
     <ClCompile Include="crypto_protocol.pb.cc" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="AES128.cpp" />
     <ClCompile Include="ProtobufExample.cpp" />
     <ClCompile Include="AESExample.cpp" />
-    <ClCompile Include="RSA2048.cpp" />
     <ClCompile Include="RSAExample.cpp" />
     <ClCompile Include="HandshakeExample.cpp" />
   </ItemGroup>
@@ -179,10 +177,13 @@
   <ItemGroup>
     <ClInclude Include="game_message.pb.h" />
     <ClInclude Include="crypto_protocol.pb.h" />
-    <ClInclude Include="AES128.h" />
     <ClInclude Include="ProtobufExample.h" />
-    <ClInclude Include="RSA2048.h" />
     <ClInclude Include="SecureProtocol.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JunCommon\JunCommon.vcxproj">
+      <Project>{d6bec493-6610-417f-a90b-ef0cd4ac7411}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

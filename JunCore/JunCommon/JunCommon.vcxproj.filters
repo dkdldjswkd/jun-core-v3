@@ -28,6 +28,9 @@
     <Filter Include="algorithm">
       <UniqueIdentifier>{B2E5G8F3-D1C8-4f6h-E3F1-1D6D7D8D9D1D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="crypto">
+      <UniqueIdentifier>{C3F6H9G4-E2D9-5g7i-F4G2-2E7E8E9E1E2E}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h">
@@ -84,6 +87,12 @@
     <ClInclude Include="algorithm\StringUtils.h">
       <Filter>algorithm</Filter>
     </ClInclude>
+    <ClInclude Include="crypto\AES128.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="crypto\RSA2048.h">
+      <Filter>crypto</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="container\RingBuffer.cpp">
@@ -121,6 +130,12 @@
     </ClCompile>
     <ClCompile Include="algorithm\StringUtils.cpp">
       <Filter>algorithm</Filter>
+    </ClCompile>
+    <ClCompile Include="crypto\AES128.cpp">
+      <Filter>crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="crypto\RSA2048.cpp">
+      <Filter>crypto</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
