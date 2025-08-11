@@ -3,6 +3,7 @@
 #include "PacketBuffer.h"
 #include "../JunCommon/container/LFQueue.h"
 #include "../JunCommon/container/RingBuffer.h"
+#include <vector>
 
 #define MAX_SEND_MSG		100
 #define	INVALID_SESSION_ID	-1
@@ -51,9 +52,9 @@ public:
 	bool disconnectFlag = false;
 
 	// Send
-	LFQueue<PacketBuffer*> sendQ;
-	PacketBuffer* sendPacketArr[MAX_SEND_MSG];
-	LONG sendPacketCount = 0;
+	LFQueue<PacketBuffer*> sendQ;				// 송신 대기 큐
+	PacketBuffer* sendPacketArr[MAX_SEND_MSG];	// 현재 전송중인 패킷 (Send 완료 통지까지 보관되어야한다.)
+	LONG sendPacketCount = 0;					// 현재 전송중인 패킷 개수
 
 	// Recv
 	RingBuffer recvBuf;
@@ -68,6 +69,10 @@ public:
 	// 세션 해제여부와 카운트 관리 (releaseFlag, ioCount를 8byte로 정렬, false 캐시라인과 분리되게 유도)
 	alignas(64) BOOL releaseFlag = true;
 	LONG ioCount = 0;
+
+	// 암호화
+	std::vector<char> AESkey;
+	unsigned long long send_seq_number_ = 0;
 
 public:
 	void Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId);

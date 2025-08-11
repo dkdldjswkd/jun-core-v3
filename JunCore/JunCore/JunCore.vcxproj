@@ -25,6 +25,7 @@
     <ClCompile Include="Session.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="core\base.h" />
     <ClInclude Include="NetClient.h" />
     <ClInclude Include="NetServer.h" />
     <ClInclude Include="PacketBuffer.h" />

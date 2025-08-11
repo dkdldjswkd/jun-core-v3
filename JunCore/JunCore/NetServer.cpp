@@ -20,9 +20,6 @@ NetServer::NetServer(const char* system_file, const char* server)
 	int serverPort;
 	int nagle;
 
-	// Read SystemFile
-	parser.LoadFile(system_file);
-
 	// json parser로 변경할것
 	protocolCode	= 0xFF;			// parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
 	privateKey		= 0xFF;			// parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
@@ -281,35 +278,38 @@ void NetServer::WorkerFunc()
 			PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
 			return;
 		}
+
 		// FIN
 		if (ioSize == 0)
 		{
 			if (&session->sendOverlapped == p_overlapped)
 			{
 				//LOG("NetServer", LOG_LEVEL_FATAL, "Zero Byte Send !!");
-				goto Decrement_IOCount;
 			}
+			goto Decrement_IOCount;
 		}
+
 		// PQCS
 		else if ((ULONG_PTR)p_overlapped < (ULONG_PTR)PQCS_TYPE::NONE)
 		{
 			switch ((PQCS_TYPE)(unsigned char)p_overlapped)
 			{
-			case PQCS_TYPE::SEND_POST:
-			{
-				SendPost(session);
-				goto Decrement_IOCount;
-			}
+				case PQCS_TYPE::SEND_POST:
+				{
+					SendPost(session);
+					goto Decrement_IOCount;
+				} break;
 
-			case PQCS_TYPE::RELEASE_SESSION:
-			{
-				ReleaseSession(session);
-				continue;
-			}
+				case PQCS_TYPE::RELEASE_SESSION:
+				{
+					ReleaseSession(session);
+					continue;
+				} break;
 
-			default:
-				//LOG("NetServer", LOG_LEVEL_FATAL, "PQCS Default");
-				break;
+				default:
+				{
+					//LOG("NetServer", LOG_LEVEL_FATAL, "PQCS Default");
+				} break;
 			}
 		}
 
@@ -462,21 +462,34 @@ bool NetServer::SendPost(Session* session)
 {
 	// Empty return
 	if (session->sendQ.GetUseCount() <= 0)
+	{
 		return false;
+	}
 
 	// Send 1회 체크 (send flag, true 면 send 진행 중)
 	if (session->sendFlag == true)
+	{
 		return false;
-	if (InterlockedExchange8((char*)&session->sendFlag, true) == true)
-		return false;
+	}
 
-	// Empty continue
+	if (InterlockedExchange8((char*)&session->sendFlag, true) == true)
+	{
+		return false;
+	}
+
+	// 다른 스레드에서 SendQ를 비웠을 수 있으므로 SendQ의 Size를 더블체크한다.
 	if (session->sendQ.GetUseCount() <= 0)
 	{
 		InterlockedExchange8((char*)&session->sendFlag, false);
+
+		// 플래그를 휙득한 사이 다른 스레드에서 SendQ를 채웠을 수 있으므로 다시 Send 시도해본다.
 		return SendPost(session);
 	}
 
+	// 송신 시 마다 send_seq_number 증가
+	++session->send_seq_number_;
+
+	// 패킷 송신
 	AsyncSend(session);
 	return true;
 }

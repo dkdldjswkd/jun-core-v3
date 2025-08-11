@@ -17,6 +17,15 @@ public:
 	NetServer(const char* systemFile, const char* server);
 	virtual ~NetServer();
 
+public:
+	// 서버 ON/OFF
+	void Start();
+	void Stop();
+
+	// 라이브러리 외부 API
+	void SendPacket(SessionId sessionId, PacketBuffer* sendPacket);
+	void Disconnect(SessionId sessionId);
+
 private:
 	friend PacketBuffer;
 
@@ -66,18 +75,14 @@ private:
 	DWORD timeOut;
 
 	// 모니터링
-	DWORD acceptCount = 0;
-	DWORD acceptTPS= 0;
-	DWORD acceptTotal = 0;
-	DWORD recvMsgTPS = 0;
-	DWORD sendMsgTPS = 0;
+	DWORD acceptCount	= 0;
+	DWORD acceptTPS		= 0;
+	DWORD acceptTotal	= 0;
+	DWORD recvMsgTPS	= 0;
+	DWORD sendMsgTPS	= 0;
 	alignas(64) DWORD sessionCount = 0;
 	alignas(64) DWORD recvMsgCount = 0;
 	alignas(64) DWORD sendMsgCount = 0;
-
-public:
-	// 파서
-	Parser parser;
 
 private:
 	// 스레드
@@ -100,7 +105,7 @@ private:
 	bool ReleaseSession(Session* session);
 
 	// Send/Recv
-	bool SendPost(Session* session);
+	bool SendPost(Session* session); // 실질적인 Send 처리 함수
 	int	 AsyncSend(Session* session);
 	bool AsyncRecv(Session* session);
 
@@ -117,14 +122,6 @@ protected:
 	// virtual void OnWorkerThreadEnd() = 0;                     
 
 public:
-	// 서버 ON/OFF
-	void Start();
-	void Stop();
-
-	// 라이브러리 외부 API
-	void SendPacket(SessionId sessionId, PacketBuffer* sendPacket);
-	void Disconnect(SessionId sessionId);
-
 	// Getter
 	void UpdateTPS();
 	DWORD GetSessionCount();

@@ -62,7 +62,8 @@ void NetClient::Start()
 
 void NetClient::WorkerFunc()
 {
-	for (;;) {
+	for (;;) 
+	{
 		DWORD	io_size = 0;
 		Session* p_session = 0;
 		LPOVERLAPPED p_overlapped = 0;
@@ -70,38 +71,49 @@ void NetClient::WorkerFunc()
 		BOOL ret_GQCS = GetQueuedCompletionStatus(h_iocp, &io_size, (PULONG_PTR)&p_session, &p_overlapped, INFINITE);
 
 		// ��Ŀ ������ ����
-		if (io_size == 0 && p_session == 0 && p_overlapped == 0) {
+		if (io_size == 0 && p_session == 0 && p_overlapped == 0) 
+		{
 			PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
 			return;
 		}
+
 		// FIN
-		if (io_size == 0) {
+		if (io_size == 0) 
+		{
 			if (&p_session->sendOverlapped == p_overlapped)
+			{
 				////LOG("NetClient", LOG_LEVEL_FATAL, "Zero Byte Send !!");
+			}
 			goto Decrement_IOCount;
 		}
 		// PQCS
-		else if ((ULONG_PTR)p_overlapped < (ULONG_PTR)PQCS_TYPE::NONE) {
-			switch ((PQCS_TYPE)(BYTE)p_overlapped) {
-			case PQCS_TYPE::SEND_POST: {
-				SendPost();
-				goto Decrement_IOCount;
-			}
+		else if ((ULONG_PTR)p_overlapped < (ULONG_PTR)PQCS_TYPE::NONE) 
+		{
+			switch ((PQCS_TYPE)(BYTE)p_overlapped) 
+			{
+				case PQCS_TYPE::SEND_POST: 
+				{
+					SendPost();
+					goto Decrement_IOCount;
+				}
 
-			case PQCS_TYPE::RELEASE_SESSION: {
-				ReleaseSession();
-				continue;
-			}
+				case PQCS_TYPE::RELEASE_SESSION: 
+				{
+					ReleaseSession();
+					continue;
+				}
 
-			default:
-				////LOG("NetServer", LOG_LEVEL_FATAL, "PQCS Default");
-				break;
+				default:
+					////LOG("NetServer", LOG_LEVEL_FATAL, "PQCS Default");
+					break;
 			}
 		}
 
 		// recv �Ϸ�����
-		if (&p_session->recvOverlapped == p_overlapped) {
-			if (ret_GQCS) {
+		if (&p_session->recvOverlapped == p_overlapped) 
+		{
+			if (ret_GQCS) 
+			{
 				p_session->recvBuf.MoveRear(io_size);
 				p_session->lastRecvTime = timeGetTime();
 				// ���� ��� �ܺ� ��� ����
@@ -112,20 +124,25 @@ void NetClient::WorkerFunc()
 					RecvCompletionNET();
 				}
 			}  
-			else {
+			else 
+			{
 				////LOG("NetClient", LOG_LEVEL_DEBUG, "Overlapped Recv Fail");
 			}
 		}
 		// send �Ϸ�����
-		else if (&p_session->sendOverlapped == p_overlapped) {
-			if (ret_GQCS) {
+		else if (&p_session->sendOverlapped == p_overlapped) 
+		{
+			if (ret_GQCS) 
+			{
 				SendCompletion();
 			}
-			else {
+			else 
+			{
 				////LOG("NetClient", LOG_LEVEL_DEBUG, "Overlapped Send Fail");
 			}
 		}
-		else {
+		else 
+		{
 			////LOG("NetClient", LOG_LEVEL_FATAL, "GQCS INVALID Overlapped!!");
 		}
 
@@ -240,7 +257,9 @@ void NetClient::SendCompletion()
 void NetClient::SendPacket(PacketBuffer* send_packet) 
 {
 	if (false == ValidateSession())
+	{
 		return;
+	}
 
 	if (clientSession.disconnectFlag) 
 	{
@@ -273,12 +292,18 @@ bool NetClient::SendPost()
 
 	// Send 1ȸ üũ (send flag, true �� send ���� ��)
 	if (clientSession.sendFlag == true)
+	{
 		return false;
+	}
+
 	if (InterlockedExchange8((char*)&clientSession.sendFlag, true) == true)
+	{
 		return false;
+	}
 
 	// Empty continue
-	if (clientSession.sendQ.GetUseCount() <= 0) {
+	if (clientSession.sendQ.GetUseCount() <= 0) 
+	{
 		InterlockedExchange8((char*)&clientSession.sendFlag, false);
 		return SendPost();
 	}
