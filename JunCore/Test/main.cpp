@@ -7,6 +7,7 @@
 void TestAES();
 void TestRSA();
 void RunHandshakeSimulation();
+int packet_test();
 
 void ShowMainMenu()
 {
@@ -18,10 +19,11 @@ void ShowMainMenu()
     std::cout << "  2. AES-128 Encryption Test" << std::endl;
     std::cout << "  3. Protobuf Example Test" << std::endl;
     std::cout << "  4. Handshake Simulation Test" << std::endl;
-    std::cout << "  5. Run All Tests" << std::endl;
+    std::cout << "  5. Packet Test" << std::endl;
+    std::cout << "  6. Run All Tests" << std::endl;
     std::cout << "  0. Exit" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "Enter your choice (0-5): ";
+    std::cout << "Enter your choice (0-6): ";
 }
 
 void ClearInputBuffer()
@@ -78,6 +80,12 @@ int main()
                 break;
                 
             case 5:
+                std::cout << "\n[RUNNING] Packet Test\n" << std::endl;
+                packet_test();
+                PressAnyKeyToContinue();
+                break;
+                
+            case 6:
                 std::cout << "\n[RUNNING] All Tests\n" << std::endl;
                 
                 std::cout << ">>> Starting Protobuf Test..." << std::endl;
@@ -92,6 +100,9 @@ int main()
                 std::cout << "\n>>> Starting Handshake Simulation..." << std::endl;
                 RunHandshakeSimulation();
                 
+                std::cout << "\n>>> Starting Packet Test..." << std::endl;
+                packet_test();
+                
                 std::cout << "\n=== All Tests Complete ===" << std::endl;
                 PressAnyKeyToContinue();
                 break;
@@ -102,7 +113,7 @@ int main()
                 break;
                 
             default:
-                std::cout << "\nInvalid choice! Please select 0-5.\n" << std::endl;
+                std::cout << "\nInvalid choice! Please select 0-6.\n" << std::endl;
                 break;
         }
     }

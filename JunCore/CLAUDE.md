@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication Language
+- **Always communicate in Korean (한글)** when interacting with the user
+- Use Korean for explanations, comments, and all user-facing communication
+- Technical terms may be used in English when appropriate, but explanations should be in Korean
+
 ## Build Commands
 
 ### Building the Solution

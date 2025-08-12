@@ -165,6 +165,7 @@
     <ClCompile Include="game_message.pb.cc" />
     <ClCompile Include="crypto_protocol.pb.cc" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="PacketTest.cpp" />
     <ClCompile Include="ProtobufExample.cpp" />
     <ClCompile Include="AESExample.cpp" />
     <ClCompile Include="RSAExample.cpp" />

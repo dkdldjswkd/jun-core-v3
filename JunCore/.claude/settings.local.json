@@ -51,7 +51,10 @@
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" JunCore/JunCore.vcxproj /p:Configuration=Debug /p:Platform=x64)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" EchoServer/EchoServer.vcxproj /p:Configuration=Debug /p:Platform=x64)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/amd64/MSBuild.exe\" EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64)",
-      "Bash(./Test.exe)"
+      "Bash(./Test.exe)",
+      "Bash(apt list:*)",
+      "Bash(g++:*)",
+      "Bash(./Test/build/bin/x64/Debug/Test.exe)"
     ],
     "deny": []
   }

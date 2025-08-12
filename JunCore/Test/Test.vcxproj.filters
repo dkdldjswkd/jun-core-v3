@@ -13,6 +13,7 @@
     <ClCompile Include="ProtobufExample.cpp" />
     <ClCompile Include="crypto_protocol.pb.cc" />
     <ClCompile Include="game_message.pb.cc" />
+    <ClCompile Include="PacketTest.cpp" />
   </ItemGroup>
   <!-- 헤더 파일 -->
   <ItemGroup>
