@@ -1,5 +1,6 @@
 #include "ProtobufExample.h"
 #include "game_message.pb.h"
+#include <iostream>
 
 void ProtobufExample() 
 {

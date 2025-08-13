@@ -1,17 +1,20 @@
-#include <array>
+﻿#include <array>
 #include <functional>
 #include <unordered_map>
 #include <vector>
 #include "game_message.pb.h"
 #include <iostream>
 #include <cstring>
+#include <random>
+#include "../JunCommon/crypto/AES128.h"
 
 #define OUT
 
 struct Session;
 
 // 단순 FNV-1a 32bit 해시 예제
-constexpr uint32_t fnv1a(const char* s) {
+constexpr uint32_t fnv1a(const char* s) 
+{
 	uint32_t hash = 2166136261u;
 	while (*s) {
 		hash ^= static_cast<uint8_t>(*s++);
@@ -24,36 +27,30 @@ constexpr uint32_t fnv1a(const char* s) {
 #define PACKET_ID(T) fnv1a(T::descriptor()->full_name().c_str())
 
 #pragma pack(push, 1)
+// 헤더 중 암호화 되지않는 부분
+struct NonCryptoHeader
+{
+	unsigned int len_;           // 평문 - 패킷 파싱용
+	unsigned long long iv_;     // 평문 - 복호화용
+};
+
+// 헤더 중 암호화 되는 부분
+struct CryptoHeader
+{
+	unsigned int packet_id_;     // 암호화됨
+};
+
 struct NetHeader
 {
-	unsigned int len_;
-	std::array<char, 8> iv_;
-	unsigned int packet_id_;
+	NonCryptoHeader non_crypto_header_; // 암호화 되지 않는 헤더 (복호화 시 필요)
+	CryptoHeader crypto_header_;		// 암호화 되는 헤더 
 };
 #pragma pack(pop)
 
 #define NET_HEADER_SIZE  ((int)sizeof(NetHeader))
+#define PLAIN_HEADER_SIZE  (sizeof(unsigned int) + 8)  // len + iv만
 
-template<typename T>
-class PacketSerializer
-{
-public:
-	NetHeader header_;
-	T payload_; // google protobuf 사용
-
-public:
-	void Serialize(std::vector<char>& buffer)
-	{
-		// 페이로드 직렬화
-		payload_.SerializeToArray(buffer.data() + NET_HEADER_SIZE, buffer.size() - NET_HEADER_SIZE);
-
-		header_.len_ = NET_HEADER_SIZE + payload_.ByteSizeLong(); // 전체 패킷 길이
-		header_.packet_id_ = PACKET_ID(T);
-
-		// 헤더 직렬화
-		std::memcpy(buffer.data(), &header_, NET_HEADER_SIZE);
-	}
-};
+// PacketSerializer 제거 - Session::send에서 직접 처리
 
 std::unordered_map<unsigned int, std::function<void(const std::vector<char>&/*serialized packet*/)>> g_packet_handler;
 
@@ -70,24 +67,125 @@ void RegisterPacketHandler(std::function<void(const T&)> _packet_handle)
 	};
 }
 
-std::vector<char> recv_buffer; // 상대의 수신 버퍼라고 가정
+std::vector<char> recv_buffer; // 복호화된 수신 버퍼
+std::vector<char> encrypted_buffer; // 암호화된 네트워크 버퍼
 
 // 코어단에서 지원해주는 Session
 struct Session
 {
-	template<typename T>
-	void send(const T& packet) 
+private:
+	std::vector<unsigned char> session_aes_key_;  // 세션별 AES128 키
+	uint64_t send_seq_;                       // 송신 시퀀스 (IV로 사용)
+	
+public:
+	Session() 
 	{
-		PacketSerializer<T> serializer;
-		serializer.payload_ = packet;
-		
-		std::vector<char> buffer(NET_HEADER_SIZE + packet.ByteSizeLong());
-		serializer.Serialize(buffer);
+		// Session 생성 시 AES128 키 생성
+		session_aes_key_ = AES128::GenerateRandomKey();
+	}
 
-		// 실제 send call 및 송신 성공으로 인해 상대의 수신 버퍼에 저장을 가정
-		recv_buffer = buffer;
+	template<typename T>
+	void send(const T& msg) 
+	{
+		++send_seq_;
+		unsigned long long _iv = send_seq_; // send_seq_를 iv로 사용
+
+		// 크기 계산
+		size_t payload_size			= msg.ByteSizeLong();
+		size_t crypto_size			= sizeof(CryptoHeader) + payload_size;
+		size_t encrypted_size		= AES128::GetEncryptedSize(crypto_size);
+		size_t total_packet_size	= sizeof(NonCryptoHeader) + encrypted_size;
+		
+		// 버퍼 할당
+		std::vector<char> packet_data(total_packet_size);
+		std::vector<char> crypto_data(crypto_size);
+
+		// CryptoHeader 설정
+		CryptoHeader* crypto_header = reinterpret_cast<CryptoHeader*>(crypto_data.data());
+		crypto_header->packet_id_ = PACKET_ID(T);
+
+		// Payload 직렬화
+		msg.SerializeToArray(crypto_data.data() + sizeof(CryptoHeader), payload_size);
+
+		// 암호화
+		bool encrypt_success = AES128::Encrypt(
+			reinterpret_cast<const unsigned char*>(crypto_data.data()),
+			crypto_data.size(),
+			session_aes_key_.data(),
+			reinterpret_cast<const unsigned char*>(&_iv),
+			reinterpret_cast<unsigned char*>(packet_data.data() + sizeof(NonCryptoHeader)),
+			encrypted_size
+		);
+
+		if (!encrypt_success) {
+			std::cout << "암호화 실패!" << std::endl;
+			return;
+		}
+
+		// NonCryptoHeader 설정
+		NonCryptoHeader* header = reinterpret_cast<NonCryptoHeader*>(packet_data.data());
+		header->len_ = total_packet_size;
+		header->iv_ = _iv;
+
+		// 네트워크 전송 (테스트용: encrypted_buffer에 저장)
+		encrypted_buffer = packet_data;
+		
+		std::cout << "send complte (seq: " << send_seq_ << ")" << std::endl;
+	}
+	
+	// 암호화된 패킷을 복호화해서 recv_buffer에 저장
+	void decrypt_and_process()
+	{
+		if (encrypted_buffer.empty()) {
+			std::cout << "암호화된 데이터가 없습니다!" << std::endl;
+			return;
+		}
+
+		// NonCryptoHeader 읽기
+		NonCryptoHeader* non_crypto_header = reinterpret_cast<NonCryptoHeader*>(encrypted_buffer.data());
+
+		// 암호화된 데이터 추출
+		size_t encrypted_size = non_crypto_header->len_ - sizeof(NonCryptoHeader);
+		std::vector<unsigned char> ciphertext(encrypted_size);
+		memcpy(ciphertext.data(), encrypted_buffer.data() + sizeof(NonCryptoHeader), encrypted_size);
+
+		// 복호화된 데이터를 저장할 버퍼 준비
+		std::vector<unsigned char> plaintext(ciphertext.size());
+		size_t actual_plaintext_size = 0;
+
+		// 복호화
+		bool decrypt_success = AES128::Decrypt(
+			ciphertext.data(),
+			ciphertext.size(),
+			session_aes_key_.data(),
+			reinterpret_cast<const unsigned char*>(&non_crypto_header->iv_),
+			plaintext.data(),
+			plaintext.size(),
+			&actual_plaintext_size
+		);
+
+		if (!decrypt_success) {
+			std::cout << "복호화 실패!" << std::endl;
+			return;
+		}
+
+		// 5. 실제 크기에 맞게 버퍼 리사이즈
+		plaintext.resize(actual_plaintext_size);
+
+		// recv_buffer에 복호화된 데이터 저장
+		recv_buffer.assign(plaintext.begin(), plaintext.end());
+		std::cout << "복호화 완료, 크기: " << plaintext.size() << "B" << std::endl;
+	}
+
+	// 복호화에서 세션 키 접근을 위한 getter
+	const std::vector<unsigned char>& GetSessionKey() const 
+	{
+		return session_aes_key_;
 	}
 };
+
+// 글로벌 send_seq 저장소 (테스트용)
+uint64_t session_send_seq;
 
 Session session;
 
@@ -113,21 +211,25 @@ int packet_test()
 		session.send(_item);
 	}
 
-	// 2. 서버 측 패킷 조립
+	// 2. 서버 측 패킷 처리
 	{
-		NetHeader header;
-
-		// 헤더 카피 (recv된 데이터가 몇바이트인지 체크 등등 패킷 분리 작업 및 복호화 작업은 제외. 패킷 조립 조건 만족 및 복호화 가정)
-		std::memcpy(&header, recv_buffer.data(), NET_HEADER_SIZE);
-
-		// 페이로드 버퍼 마련
-		std::vector<char> packet_data(header.len_ - NET_HEADER_SIZE);
+		// 암호화된 패킷 복호화
+		session.decrypt_and_process();
 		
-		// 페이로드 추출
-		std::memcpy(packet_data.data(), recv_buffer.data() + NET_HEADER_SIZE, packet_data.size());
+		// recv_buffer에서 CryptoHeader 추출
+		if (recv_buffer.empty()) {
+			std::cout << "복호화된 데이터가 없습니다!" << std::endl;
+			return 0;
+		}
+
+		CryptoHeader crypto_header;
+		std::memcpy(&crypto_header, recv_buffer.data(), sizeof(CryptoHeader));
+		
+		// payload만 추출
+		std::vector<char> packet_data(recv_buffer.begin() + sizeof(CryptoHeader), recv_buffer.end());
 
 		// 패킷 핸들러 호출
-		g_packet_handler[header.packet_id_](packet_data);
+		g_packet_handler[crypto_header.packet_id_](packet_data);
 	}
 	
 	return 0;

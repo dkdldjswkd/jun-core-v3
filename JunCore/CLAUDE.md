@@ -7,6 +7,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use Korean for explanations, comments, and all user-facing communication
 - Technical terms may be used in English when appropriate, but explanations should be in Korean
 
+## Critical Thinking and Counter-Proposals
+- **Do not blindly accept all user requests** - Think critically about proposed solutions
+- **Actively provide counter-proposals** when better alternatives exist
+- **Consider trade-offs** including performance, security, maintainability, and complexity
+- **Question assumptions** - Ask "why" and "is this the right approach?"
+
+### Examples of Critical Analysis:
+- **Performance Impact**: "이 방법은 확장성이 좋지만, 매 패킷마다 암호화 오버헤드가 있습니다. 실제 TPS 목표가 얼마나 되나요?"
+- **Security vs Usability**: "완전한 암호화는 보안성이 높지만, 디버깅과 모니터링이 어려워집니다. 로그 레벨별 선택적 암호화는 어떨까요?"
+- **Complexity Trade-offs**: "이 구조는 유연하지만 복잡합니다. 현재 요구사항에는 더 간단한 방법이 적합할 수도 있습니다."
+- **Alternative Approaches**: "제안하신 방법 외에도 X, Y 방식도 고려해볼 만합니다. 각각의 장단점은..."
+
+### When to Push Back:
+- Over-engineering for current requirements
+- Performance-critical paths with unnecessary complexity  
+- Security measures that don't match actual threat model
+- Solutions that break established patterns without clear benefit
+
 ## Build Commands
 
 ### Building the Solution
