@@ -13,7 +13,7 @@
 struct Session;
 
 // 단순 FNV-1a 32bit 해시 예제
-constexpr uint32_t fnv1a(const char* s) 
+constexpr uint32_t fnv1a(const char* s)
 {
 	uint32_t hash = 2166136261u;
 	while (*s) {
@@ -57,14 +57,17 @@ std::unordered_map<unsigned int, std::function<void(const std::vector<char>&/*se
 template<typename T>
 void RegisterPacketHandler(std::function<void(const T&)> _packet_handle)
 {
-	g_packet_handler[PACKET_ID(T)] = [_packet_handle](const std::vector<char>& _serialized_packet)
-	{
-		T message;
-		if (message.ParseFromArray(_serialized_packet.data(), _serialized_packet.size()))
+	const auto _packet_id = PACKET_ID(T);
+	std::cout << "Registering packet handler for ID: " << _packet_id << std::endl;
+
+	g_packet_handler[_packet_id] = [_packet_handle](const std::vector<char>& _serialized_packet)
 		{
-			_packet_handle(message);
-		}
-	};
+			T message;
+			if (message.ParseFromArray(_serialized_packet.data(), _serialized_packet.size()))
+			{
+				_packet_handle(message);
+			}
+		};
 }
 
 std::vector<char> recv_buffer; // 복호화된 수신 버퍼
@@ -76,26 +79,26 @@ struct Session
 private:
 	std::vector<unsigned char> session_aes_key_;  // 세션별 AES128 키
 	uint64_t send_seq_;                       // 송신 시퀀스 (IV로 사용)
-	
+
 public:
-	Session() 
+	Session()
 	{
 		// Session 생성 시 AES128 키 생성
 		session_aes_key_ = AES128::GenerateRandomKey();
 	}
 
 	template<typename T>
-	void send(const T& msg) 
+	void send(const T& msg)
 	{
 		++send_seq_;
 		unsigned long long _iv = send_seq_; // send_seq_를 iv로 사용
 
 		// 크기 계산
-		size_t payload_size			= msg.ByteSizeLong();
-		size_t crypto_size			= sizeof(CryptoHeader) + payload_size;
-		size_t encrypted_size		= AES128::GetEncryptedSize(crypto_size);
-		size_t total_packet_size	= sizeof(NonCryptoHeader) + encrypted_size;
-		
+		size_t payload_size = msg.ByteSizeLong();
+		size_t crypto_size = sizeof(CryptoHeader) + payload_size;
+		size_t encrypted_size = AES128::GetEncryptedSize(crypto_size);
+		size_t total_packet_size = sizeof(NonCryptoHeader) + encrypted_size;
+
 		// 버퍼 할당
 		std::vector<char> packet_data(total_packet_size);
 		std::vector<char> crypto_data(crypto_size);
@@ -129,10 +132,10 @@ public:
 
 		// 네트워크 전송 (테스트용: encrypted_buffer에 저장)
 		encrypted_buffer = packet_data;
-		
+
 		std::cout << "send complte (seq: " << send_seq_ << ")" << std::endl;
 	}
-	
+
 	// 암호화된 패킷을 복호화해서 recv_buffer에 저장
 	void decrypt_and_process()
 	{
@@ -142,10 +145,15 @@ public:
 		}
 
 		// NonCryptoHeader 읽기
-		NonCryptoHeader* non_crypto_header = reinterpret_cast<NonCryptoHeader*>(encrypted_buffer.data());
+		NetHeader* net_header = reinterpret_cast<NetHeader*>(encrypted_buffer.data());
+		std::array<unsigned char, 16> iv;
+		memcpy(iv.data(), &net_header->non_crypto_header_.iv_, sizeof(net_header->non_crypto_header_.iv_));
+
+		std::cout << "수신 패킷 크기: " << net_header->non_crypto_header_.len_ << "Byte" << std::endl;
+		std::cout << "IV : " << net_header->non_crypto_header_.iv_ << std::endl;
 
 		// 암호화된 데이터 추출
-		size_t encrypted_size = non_crypto_header->len_ - sizeof(NonCryptoHeader);
+		size_t encrypted_size = net_header->non_crypto_header_.len_ - sizeof(NonCryptoHeader);
 		std::vector<unsigned char> ciphertext(encrypted_size);
 		memcpy(ciphertext.data(), encrypted_buffer.data() + sizeof(NonCryptoHeader), encrypted_size);
 
@@ -158,7 +166,7 @@ public:
 			ciphertext.data(),
 			ciphertext.size(),
 			session_aes_key_.data(),
-			reinterpret_cast<const unsigned char*>(&non_crypto_header->iv_),
+			reinterpret_cast<const unsigned char*>(iv.data()),
 			plaintext.data(),
 			plaintext.size(),
 			&actual_plaintext_size
@@ -178,7 +186,7 @@ public:
 	}
 
 	// 복호화에서 세션 키 접근을 위한 getter
-	const std::vector<unsigned char>& GetSessionKey() const 
+	const std::vector<unsigned char>& GetSessionKey() const
 	{
 		return session_aes_key_;
 	}
@@ -195,7 +203,9 @@ int packet_test()
 	{
 		RegisterPacketHandler<game::Item>([](const game::Item& item)
 			{
-				std::cout << "Received Item: " << item.name() << ", Value: " << item.value() << std::endl;
+				std::cout << "Item id    : " << item.id() << std::endl;
+				std::cout << "Item name  : " << item.name() << std::endl;
+				std::cout << "Item value : " << item.value() << std::endl;
 			});
 	}
 
@@ -203,9 +213,24 @@ int packet_test()
 	{
 		// 패킷 생성
 		game::Item _item;
-		_item.set_id(33);
-		_item.set_name("test item");
-		_item.set_value(100);
+
+		// 패킷 세팅
+		{
+			int id;
+			std::cout << "input item id >> ";
+			std::cin >> id;
+			_item.set_id(id);
+
+			std::string name;
+			std::cout << "input item name >> ";
+			std::cin >> name;
+			_item.set_name(name);
+
+			int value;
+			std::cout << "input item value >> ";
+			std::cin >> value;
+			_item.set_value(value);
+		}
 
 		// 패킷 송신
 		session.send(_item);
@@ -215,7 +240,7 @@ int packet_test()
 	{
 		// 암호화된 패킷 복호화
 		session.decrypt_and_process();
-		
+
 		// recv_buffer에서 CryptoHeader 추출
 		if (recv_buffer.empty()) {
 			std::cout << "복호화된 데이터가 없습니다!" << std::endl;
@@ -224,13 +249,15 @@ int packet_test()
 
 		CryptoHeader crypto_header;
 		std::memcpy(&crypto_header, recv_buffer.data(), sizeof(CryptoHeader));
-		
+
 		// payload만 추출
 		std::vector<char> packet_data(recv_buffer.begin() + sizeof(CryptoHeader), recv_buffer.end());
+
+		std::cout << "패킷 ID: " << crypto_header.packet_id_ << std::endl;
 
 		// 패킷 핸들러 호출
 		g_packet_handler[crypto_header.packet_id_](packet_data);
 	}
-	
+
 	return 0;
 }
