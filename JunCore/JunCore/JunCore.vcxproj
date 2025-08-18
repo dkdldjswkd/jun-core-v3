@@ -23,12 +23,14 @@
     <ClCompile Include="network\server.cpp" />
     <ClCompile Include="buffer\packet.cpp" />
     <ClCompile Include="network\Session.cpp" />
+    <ClCompile Include="protocol\handshake.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h" />
     <ClInclude Include="network\client.h" />
     <ClInclude Include="network\server.h" />
     <ClInclude Include="buffer\packet.h" />
+    <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />
     <ClInclude Include="network\Session.h" />
   </ItemGroup>
@@ -36,6 +38,9 @@
     <ProjectReference Include="..\JunCommon\JunCommon.vcxproj">
       <Project>{d6bec493-6610-417f-a90b-ef0cd4ac7411}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="protocol\handshake.proto" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

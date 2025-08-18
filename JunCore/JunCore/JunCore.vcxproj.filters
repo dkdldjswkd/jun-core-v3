@@ -27,6 +27,9 @@
     <ClCompile Include="network\Session.cpp">
       <Filter>network</Filter>
     </ClCompile>
+    <ClCompile Include="protocol\handshake.pb.cc">
+      <Filter>protocol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network\client.h">
@@ -47,5 +50,13 @@
     <ClInclude Include="core\base.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="protocol\handshake.pb.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="protocol\handshake.proto">
+      <Filter>protocol</Filter>
+    </None>
   </ItemGroup>
 </Project>

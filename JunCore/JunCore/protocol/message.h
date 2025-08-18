@@ -2,11 +2,13 @@
 #include <Windows.h>
 
 #pragma pack(push, 1)
-struct LanHeader {
+struct LanHeader 
+{
 	WORD len;
 };
 
-struct NetHeader {
+struct NetHeader 
+{
 	BYTE code;
 	WORD len;
 	BYTE randKey;

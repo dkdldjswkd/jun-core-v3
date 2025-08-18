@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package jun_core;
+
+// 클라이언트 연결 요청 - 프로토콜 코드 송신
+message CS_CONNECT_REQ 
+{
+    uint32 protocol_code = 1;      // 프로토콜 버전 코드
+}
+
+// 서버 연결 응답 - AES 키 전달 
+message SC_CONNECT_RES 
+{
+    bytes encrypted_aes_key = 1;   // 프로토콜 코드로 XOR 암호화된 16바이트 AES 키 (고정 16바이트)
+}
