@@ -29,6 +29,7 @@
     <ClInclude Include="core\base.h" />
     <ClInclude Include="network\client.h" />
     <ClInclude Include="network\server.h" />
+    <ClInclude Include="network\IoCommon.h" />
     <ClInclude Include="buffer\packet.h" />
     <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />

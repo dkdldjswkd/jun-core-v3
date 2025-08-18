@@ -4,6 +4,7 @@
 #include <timeapi.h>
 #include <cstring>
 #include "client.h"
+#include "IoCommon.h"
 #include "../protocol/message.h"
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Winmm.lib")
@@ -314,81 +315,16 @@ bool NetClient::SendPost()
 
 // WSASend() call
 int NetClient::AsyncSend() {
-	WSABUF wsaBuf[MAX_SEND_MSG];
-
-	if (NetType::LAN == netType) {
-		for (int i = 0; i < MAX_SEND_MSG; i++) {
-			if (clientSession.sendQ.GetUseCount() <= 0) {
-				clientSession.sendPacketCount = i;
-				break;
-			}
-			clientSession.sendQ.Dequeue((PacketBuffer**)&clientSession.sendPacketArr[i]);
-			wsaBuf[i].buf = clientSession.sendPacketArr[i]->GetLanPacketPos();
-			wsaBuf[i].len = clientSession.sendPacketArr[i]->GetLanPacketSize();
-		}
-	}
-	else {
-		for (int i = 0; i < MAX_SEND_MSG; i++) {
-			if (clientSession.sendQ.GetUseCount() <= 0) {
-				clientSession.sendPacketCount = i;
-				break;
-			}
-			clientSession.sendQ.Dequeue((PacketBuffer**)&clientSession.sendPacketArr[i]);
-			wsaBuf[i].buf = clientSession.sendPacketArr[i]->GetNetPacketPos();
-			wsaBuf[i].len = clientSession.sendPacketArr[i]->GetNetPacketSize();
-		}
-	}
-	// MAX SEND 패킷 초과
-	if (clientSession.sendPacketCount == 0) {
-		clientSession.sendPacketCount = MAX_SEND_MSG;
-		DisconnectSession();
-		return false;
-	}
-
-	IncrementIOCount();
-	ZeroMemory(&clientSession.sendOverlapped, sizeof(clientSession.sendOverlapped));
-	if (SOCKET_ERROR == WSASend(clientSession.sock, wsaBuf, clientSession.sendPacketCount, NULL, 0, &clientSession.sendOverlapped, NULL)) {
-		const auto err_no = WSAGetLastError();
-		if (ERROR_IO_PENDING != err_no) { // Send 실패
-			////LOG("NetClient", LOG_LEVEL_DEBUG, "WSASend() Fail, Error code : %d", WSAGetLastError());
-			DisconnectSession();
-			DecrementIOCount();
-			return false;
-		}
-	}
-	return true;
+	const bool isLan = (NetType::LAN == netType);
+	auto disconnect = [this](Session*) { DisconnectSession(); };
+	auto decIo = [this](Session*) { DecrementIOCount(); };
+	return IoCommon::AsyncSend(clientSession, isLan, disconnect, decIo) ? 1 : 0;
 }
 
 bool NetClient::AsyncRecv() 
 {
-	DWORD flags = 0;
-	WSABUF wsaBuf[2];
-
-	// Recv Write Pos
-	wsaBuf[0].buf = clientSession.recvBuf.GetWritePos();
-	wsaBuf[0].len = clientSession.recvBuf.DirectEnqueueSize();
-	// Recv Remain Pos
-	wsaBuf[1].buf = clientSession.recvBuf.GetBeginPos();
-	wsaBuf[1].len = clientSession.recvBuf.RemainEnqueueSize();
-
-	IncrementIOCount();
-	ZeroMemory(&clientSession.recvOverlapped, sizeof(clientSession.recvOverlapped));
-	if (SOCKET_ERROR == WSARecv(clientSession.sock, wsaBuf, 2, NULL, &flags, &clientSession.recvOverlapped, NULL)) 
-	{
-		if (WSAGetLastError() != ERROR_IO_PENDING) { // Recv 실패
-			////LOG("NetClient", LOG_LEVEL_DEBUG, "WSARecv() Fail, Error code : %d", WSAGetLastError());
-			DecrementIOCount();
-			return false;
-		}
-	}
-
-	// Disconnect üũ
-	if (clientSession.disconnectFlag) 
-	{
-		CancelIoEx((HANDLE)clientSession.sock, NULL);
-		return false;
-	}
-	return true;
+	auto decIo = [this](Session*) { DecrementIOCount(); };
+	return IoCommon::AsyncRecv(clientSession, decIo);
 }
 
 void NetClient::RecvCompletionLAN()

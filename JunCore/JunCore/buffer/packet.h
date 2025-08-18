@@ -65,6 +65,7 @@ private:
 	// ��Ŷ ��ȣȭ
 	bool DecryptPacket(char* encryptPacket, BYTE privateKey);
 
+	public:
 	// ��Ŷ ���� �ּ� ��ȯ (payLoadPos - headerLen)
 	char* GetLanPacketPos();
 	char* GetNetPacketPos();
@@ -73,6 +74,7 @@ private:
 	inline int GetLanPacketSize();
 	inline int GetNetPacketSize();
 
+	private:
 	// üũ�� ��ȯ
 	BYTE GetChecksum();
 

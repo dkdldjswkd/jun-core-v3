@@ -5,6 +5,7 @@
 #include <atomic>
 #include <iostream>
 #include "server.h"
+#include "IoCommon.h"
 #include "../protocol/message.h"
 #include "../../JunCommon/container/RingBuffer.h"
 #pragma comment(lib, "ws2_32.lib")
@@ -457,7 +458,7 @@ void NetServer::SendPacket(SessionId session_id, PacketBuffer* send_packet)
 #endif
 }
 
-// AsyncSend Call �õ�
+// AsyncSend Call 시도
 bool NetServer::SendPost(Session* session)
 {
 	// Empty return
@@ -497,82 +498,16 @@ bool NetServer::SendPost(Session* session)
 // WSASend() call
 int NetServer::AsyncSend(Session* session)
 {
-	WSABUF wsaBuf[MAX_SEND_MSG];
-
-	// MAX SEND 개수 초과
-	if (MAX_SEND_MSG < session->sendQ.GetUseCount())
-	{
-		DisconnectSession(session);
-		return false;
-	}
-	if (NetType::LAN == netType)
-	{
-		for (int i = 0; (i < MAX_SEND_MSG && 0 < session->sendQ.GetUseCount()); i++)
-		{
-			session->sendQ.Dequeue((PacketBuffer**)&session->sendPacketArr[i]);
-			session->sendPacketCount++;
-			wsaBuf[i].buf = session->sendPacketArr[i]->GetLanPacketPos();
-			wsaBuf[i].len = session->sendPacketArr[i]->GetLanPacketSize();
-		}
-	}
-	else
-	{
-		for (int i = 0; (i < MAX_SEND_MSG && 0 < session->sendQ.GetUseCount()); i++)
-		{
-			session->sendQ.Dequeue((PacketBuffer**)&session->sendPacketArr[i]);
-			session->sendPacketCount++;
-			wsaBuf[i].buf = session->sendPacketArr[i]->GetNetPacketPos();
-			wsaBuf[i].len = session->sendPacketArr[i]->GetNetPacketSize();
-		}
-	}
-
-	IncrementIOCount(session);
-	ZeroMemory(&session->sendOverlapped, sizeof(session->sendOverlapped));
-	if (SOCKET_ERROR == WSASend(session->sock, wsaBuf, session->sendPacketCount , NULL, 0, &session->sendOverlapped, NULL))
-	{
-		const auto err_no = WSAGetLastError();
-		if (ERROR_IO_PENDING != err_no) // Send 실패
-		{
-			//LOG("NetServer", LOG_LEVEL_DEBUG, "WSASend() Fail, Error code : %d", WSAGetLastError());
-			DisconnectSession(session);
-			DecrementIOCount(session);
-			return false;
-		}
-	}
-	return true;
+	const bool isLan = (NetType::LAN == netType);
+	auto disconnect = [this](Session* s) { DisconnectSession(s); };
+	auto decIo = [this](Session* s) { DecrementIOCount(s); };
+	return IoCommon::AsyncSend(*session, isLan, disconnect, decIo) ? 1 : 0;
 }
 
 bool NetServer::AsyncRecv(Session* session)
 {
-	DWORD flags = 0;
-	WSABUF wsaBuf[2];
-
-	// Recv Write Pos
-	wsaBuf[0].buf = session->recvBuf.GetWritePos();
-	wsaBuf[0].len = session->recvBuf.DirectEnqueueSize();
-	// Recv Remain Pos
-	wsaBuf[1].buf = session->recvBuf.GetBeginPos();
-	wsaBuf[1].len = session->recvBuf.RemainEnqueueSize();
-
-	IncrementIOCount(session);
-	ZeroMemory(&session->recvOverlapped, sizeof(session->recvOverlapped));
-	if (SOCKET_ERROR == WSARecv(session->sock, wsaBuf, 2, NULL, &flags, &session->recvOverlapped, NULL))
-	{
-		if (WSAGetLastError() != ERROR_IO_PENDING) // Recv 실패
-		{
-			//LOG("NetServer", LOG_LEVEL_DEBUG, "WSARecv() Fail, Error code : %d", WSAGetLastError());
-			DecrementIOCount(session);
-			return false;
-		}
-	}
-
-	// Disconnect 체크
-	if (session->disconnectFlag)
-	{
-		CancelIoEx((HANDLE)session->sock, NULL);
-		return false;
-	}
-	return true;
+	auto decIo = [this](Session* s) { DecrementIOCount(s); };
+	return IoCommon::AsyncRecv(*session, decIo);
 }
 
 void NetServer::RecvCompletionLan(Session* session)
