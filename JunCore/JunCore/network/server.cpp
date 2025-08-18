@@ -4,9 +4,9 @@
 #include <timeapi.h>
 #include <atomic>
 #include <iostream>
-#include "NetServer.h"
-#include "protocol.h"
-#include "../JunCommon/container/RingBuffer.h"
+#include "server.h"
+#include "../protocol/message.h"
+#include "../../JunCommon/container/RingBuffer.h"
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Winmm.lib")
 

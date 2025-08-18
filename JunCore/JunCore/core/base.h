@@ -1,22 +1,35 @@
 ﻿#pragma once
 
 #include <cstdint>
+#include <cstddef>
 
-// FNV-1a 해쉬 알고리즘
+// FNV-1a 32bit 해시 함수
+constexpr uint32_t fnv1a(const char* s)
+{
+	uint32_t hash = 2166136261u;
+	while (*s) {
+		hash ^= static_cast<uint8_t>(*s++);
+		hash *= 16777619u;
+	}
+	return hash;
+}
+
+// 바이트 배열용 FNV-1a 해시 함수
+constexpr uint32_t fnv1a(const uint8_t* data, size_t len)
+{
+	uint32_t hash = 2166136261u;
+	for (size_t i = 0; i < len; ++i) {
+		hash ^= data[i];
+		hash *= 16777619u;
+	}
+	return hash;
+}
+
+// FNV-1a 해쉬 알고리즘을 사용한 프로토콜 코드 생성
 constexpr uint32_t make_protocol_code(uint8_t game_ver, uint8_t protocol_ver, uint8_t build_id) noexcept
 {
-	constexpr uint32_t FNV_OFFSET_BASIS = 2166136261u;
-	constexpr uint32_t FNV_PRIME = 16777619u;
-
-	uint32_t hash = FNV_OFFSET_BASIS;
-	hash ^= game_ver;
-	hash *= FNV_PRIME;
-	hash ^= protocol_ver;
-	hash *= FNV_PRIME;
-	hash ^= build_id;
-	hash *= FNV_PRIME;
-	
-	return hash;
+	uint8_t data[3] = { game_ver, protocol_ver, build_id };
+	return fnv1a(data, 3);
 }
 
 constexpr uint8_t GAME_VERSION		= 1;

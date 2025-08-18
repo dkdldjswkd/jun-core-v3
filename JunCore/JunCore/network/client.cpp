@@ -3,8 +3,8 @@
 #include <memory.h>
 #include <timeapi.h>
 #include <cstring>
-#include "NetClient.h"
-#include "protocol.h"
+#include "client.h"
+#include "../protocol/message.h"
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "Winmm.lib")
 

@@ -4,9 +4,9 @@
 #include <Windows.h>
 #include <winnt.h>
 #include <cstdlib>
-#include "protocol.h"
+#include "../protocol/message.h"
 #include <exception>
-#include "../JunCommon/pool/LFObjectPoolTLS.h"
+#include "../../JunCommon/pool/LFObjectPoolTLS.h"
 
 #define MAX_PAYLOAD_LEN 8000
 #define MAX_HEADER_LEN 10

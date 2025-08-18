@@ -95,6 +95,69 @@ public:
                        const std::vector<unsigned char>& iv,
                        std::vector<unsigned char>& plaintext) noexcept;
 
+    // ========================================================================
+    // ECB Mode Functions (IV 없이 사용 - 간단한 데이터용)
+    // ========================================================================
+    
+    /**
+     * @brief ECB 모드 데이터 암호화 (IV 불필요)
+     * @param plaintext 원본 데이터 포인터
+     * @param plaintext_size 원본 데이터 크기
+     * @param key AES-128 키 (16바이트)
+     * @param ciphertext 암호화된 데이터 출력 버퍼
+     * @param max_ciphertext_size 출력 버퍼 크기
+     * @return 성공 시 true, 실패 시 false
+     * 
+     * @warning ECB 모드는 동일한 평문이 동일한 암호문을 생성합니다
+     * @warning 보안이 중요한 경우 IV를 사용하는 CBC 모드 권장
+     */
+    static bool EncryptECB(const unsigned char* plaintext, size_t plaintext_size,
+                          const unsigned char* key,
+                          unsigned char* ciphertext, size_t max_ciphertext_size) noexcept;
+
+    /**
+     * @brief ECB 모드 데이터 복호화 (IV 불필요)
+     * @param ciphertext 암호화된 데이터 포인터
+     * @param ciphertext_size 암호화된 데이터 크기
+     * @param key AES-128 키 (16바이트)
+     * @param plaintext 복호화된 데이터 출력 버퍼
+     * @param max_plaintext_size 출력 버퍼 최대 크기
+     * @param actual_plaintext_size 실제 복호화된 데이터 크기 (출력)
+     * @return 성공 시 true, 실패 시 false
+     * 
+     * @warning ECB 모드는 동일한 평문이 동일한 암호문을 생성합니다
+     */
+    static bool DecryptECB(const unsigned char* ciphertext, size_t ciphertext_size,
+                          const unsigned char* key,
+                          unsigned char* plaintext, size_t max_plaintext_size,
+                          size_t* actual_plaintext_size) noexcept;
+
+    /**
+     * @brief ECB 모드 데이터 암호화 (vector 기반)
+     * @param plaintext 원본 데이터
+     * @param key AES-128 키 (16바이트)
+     * @param ciphertext 암호화된 데이터 (출력)
+     * @return 성공 시 true, 실패 시 false
+     * 
+     * @warning ECB 모드는 동일한 평문이 동일한 암호문을 생성합니다
+     */
+    static bool EncryptECB(const std::vector<unsigned char>& plaintext,
+                          const std::vector<unsigned char>& key,
+                          std::vector<unsigned char>& ciphertext) noexcept;
+
+    /**
+     * @brief ECB 모드 데이터 복호화 (vector 기반)
+     * @param ciphertext 암호화된 데이터
+     * @param key AES-128 키 (16바이트)
+     * @param plaintext 복호화된 데이터 (출력)
+     * @return 성공 시 true, 실패 시 false
+     * 
+     * @warning ECB 모드는 동일한 평문이 동일한 암호문을 생성합니다
+     */
+    static bool DecryptECB(const std::vector<unsigned char>& ciphertext,
+                          const std::vector<unsigned char>& key,
+                          std::vector<unsigned char>& plaintext) noexcept;
+
     
     /**
      * @brief 안전한 랜덤 키 생성 (AES-128용)
@@ -128,6 +191,16 @@ private:
                           const unsigned char* iv,
                           unsigned char* plaintext, size_t max_plaintext_size,
                           size_t* actual_plaintext_size) noexcept;
+
+        // ECB 모드 내부 구현
+        bool EncryptAES128_ECB(const unsigned char* plaintext, size_t plaintext_size,
+                              const unsigned char* key,
+                              unsigned char* ciphertext, size_t max_ciphertext_size) noexcept;
+        
+        bool DecryptAES128_ECB(const unsigned char* ciphertext, size_t ciphertext_size,
+                              const unsigned char* key,
+                              unsigned char* plaintext, size_t max_plaintext_size,
+                              size_t* actual_plaintext_size) noexcept;
                           
     private:
         EVP_CIPHER_CTX* ctx_;

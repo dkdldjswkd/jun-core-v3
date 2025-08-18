@@ -1,8 +1,8 @@
 ﻿#pragma once
 #include <Windows.h>
-#include "PacketBuffer.h"
-#include "../JunCommon/container/LFQueue.h"
-#include "../JunCommon/container/RingBuffer.h"
+#include "../buffer/packet.h"
+#include "../../JunCommon/container/LFQueue.h"
+#include "../../JunCommon/container/RingBuffer.h"
 #include <vector>
 
 #define MAX_SEND_MSG		100

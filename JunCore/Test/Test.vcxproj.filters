@@ -1,32 +1,78 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- 필터 정의 -->
-  <!-- C++ 소스 파일 -->
+  <ItemGroup>
+    <Filter Include="examples">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\crypto">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\protocol">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="examples\network">
+      <UniqueIdentifier>{C1F6E2B7-F9DB-4c29-8F8B-5E9F9E1E2E3E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="protobuf">
+      <UniqueIdentifier>{D4A5E7F8-F4A8-4c2d-9A8B-6F2F3F4F5F6F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="protobuf\generated">
+      <UniqueIdentifier>{E8B9F2C6-A7D9-4c3e-B9C8-7A3A4A5A6A7A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="protobuf\proto">
+      <UniqueIdentifier>{F9C2E3D7-B8A6-4d4f-C9D8-8B4B5B6B7B8B}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <!-- 암호화 핵심 클래스 -->
-    <!-- 예제 코드 -->
-    <!-- Protobuf 생성 파일 -->
-    <ClCompile Include="RSAExample.cpp" />
-    <ClCompile Include="AESExample.cpp" />
-    <ClCompile Include="HandshakeExample.cpp" />
-    <ClCompile Include="ProtobufExample.cpp" />
-    <ClCompile Include="crypto_protocol.pb.cc" />
-    <ClCompile Include="game_message.pb.cc" />
-    <ClCompile Include="PacketTest.cpp" />
+    <ClCompile Include="RSAExample.cpp">
+      <Filter>examples\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="AESExample.cpp">
+      <Filter>examples\crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="HandshakeExample.cpp">
+      <Filter>examples\network</Filter>
+    </ClCompile>
+    <ClCompile Include="SimpleHandshakeExample.cpp">
+      <Filter>examples\network</Filter>
+    </ClCompile>
+    <ClCompile Include="ProtobufExample.cpp">
+      <Filter>examples\protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketTest.cpp">
+      <Filter>examples\network</Filter>
+    </ClCompile>
+    <ClCompile Include="crypto_protocol.pb.cc">
+      <Filter>protobuf\generated</Filter>
+    </ClCompile>
+    <ClCompile Include="game_message.pb.cc">
+      <Filter>protobuf\generated</Filter>
+    </ClCompile>
   </ItemGroup>
-  <!-- 헤더 파일 -->
+  
   <ItemGroup>
-    <!-- 암호화 핵심 클래스 -->
-    <!-- Protobuf 생성 파일 -->
-    <ClInclude Include="ProtobufExample.h" />
-    <ClInclude Include="SecureProtocol.h" />
-    <ClInclude Include="game_message.pb.h" />
-    <ClInclude Include="crypto_protocol.pb.h" />
+    <ClInclude Include="ProtobufExample.h">
+      <Filter>examples\protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="SecureProtocol.h">
+      <Filter>examples\network</Filter>
+    </ClInclude>
+    <ClInclude Include="game_message.pb.h">
+      <Filter>protobuf\generated</Filter>
+    </ClInclude>
+    <ClInclude Include="crypto_protocol.pb.h">
+      <Filter>protobuf\generated</Filter>
+    </ClInclude>
   </ItemGroup>
-  <!-- Proto 파일 -->
+  
   <ItemGroup>
-    <None Include="crypto_protocol.proto" />
-    <None Include="game_message.proto" />
+    <None Include="crypto_protocol.proto">
+      <Filter>protobuf\proto</Filter>
+    </None>
+    <None Include="game_message.proto">
+      <Filter>protobuf\proto</Filter>
+    </None>
   </ItemGroup>
 </Project>

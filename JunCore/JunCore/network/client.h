@@ -2,8 +2,8 @@
 #include <Windows.h>
 #include <thread>
 #include "Session.h"
-#include "PacketBuffer.h"
-#include "../JunCommon/algorithm/Parser.h"
+#include "../buffer/packet.h"
+#include "../../JunCommon/algorithm/Parser.h"
 
 //------------------------------
 // NetworkLib

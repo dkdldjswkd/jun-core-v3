@@ -1,16 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="NetClient.cpp" />
-    <ClCompile Include="NetServer.cpp" />
-    <ClCompile Include="PacketBuffer.cpp" />
-    <ClCompile Include="Session.cpp" />
+    <Filter Include="network">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="buffer">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="protocol">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{f2e94480-91bc-4a56-9f5b-9e42c7c7c07e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NetClient.h" />
-    <ClInclude Include="NetServer.h" />
-    <ClInclude Include="PacketBuffer.h" />
-    <ClInclude Include="protocol.h" />
-    <ClInclude Include="Session.h" />
+    <ClCompile Include="network\client.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="network\server.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="buffer\packet.cpp">
+      <Filter>buffer</Filter>
+    </ClCompile>
+    <ClCompile Include="network\Session.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="network\client.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\server.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="buffer\packet.h">
+      <Filter>buffer</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol\message.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="network\Session.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="core\base.h">
+      <Filter>core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

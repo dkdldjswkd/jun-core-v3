@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../JunCore/NetClient.h"
+#include "../JunCore/network/client.h"
 
 class EchoClient : public NetClient 
 {

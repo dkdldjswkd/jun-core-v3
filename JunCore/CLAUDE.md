@@ -27,16 +27,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
+### MSBuild Path (WSL Environment)
+```bash
+# MSBuild 실행 파일 경로 (매번 찾지 말고 이 경로 사용)
+MSBUILD_PATH="/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe"
+
+# 사용 예시
+"$MSBUILD_PATH" JunCore.sln /p:Configuration=Debug /p:Platform=x64
+```
+
 ### Building the Solution
 ```bash
-# Build entire solution
-msbuild JunCore.sln /p:Configuration=Debug /p:Platform=x64
-msbuild JunCore.sln /p:Configuration=Release /p:Platform=x64
+# Build entire solution (WSL에서 실행)
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" JunCore.sln /p:Configuration=Debug /p:Platform=x64
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" JunCore.sln /p:Configuration=Release /p:Platform=x64
+
+# Build with error-only output (빠른 빌드 확인)
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" JunCore.sln /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly
 
 # Build specific project
-msbuild JunCore/JunCore.vcxproj /p:Configuration=Debug /p:Platform=x64
-msbuild EchoServer/EchoServer.vcxproj /p:Configuration=Debug /p:Platform=x64
-msbuild EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" JunCore/JunCore.vcxproj /p:Configuration=Debug /p:Platform=x64
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" EchoServer/EchoServer.vcxproj /p:Configuration=Debug /p:Platform=x64
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64
 ```
 
 ### Protobuf Code Generation
@@ -60,6 +72,26 @@ This script automatically searches for all `.proto` files in the project and gen
 ```
 
 ## Project Architecture
+
+### New Directory Structure (2025-08 Reorganization)
+JunCore has been reorganized using **Boost/STL-style** directory structure for better maintainability:
+
+#### JunCore Structure
+```
+JunCore/
+├── network/          # 네트워크 관련 (boost::asio 스타일)
+│   ├── server.h/.cpp    (기존 NetServer)
+│   ├── client.h/.cpp    (기존 NetClient) 
+│   └── Session.h/.cpp   (세션 관리)
+├── buffer/           # 버퍼/컨테이너 (std::container 스타일)
+│   └── packet.h/.cpp    (기존 PacketBuffer)
+├── protocol/         # 프로토콜 정의 (boost::protocol 스타일)
+│   └── message.h        (기존 protocol.h)
+└── core/            # 핵심 유틸리티
+    └── base.h           (fnv1a, make_protocol_code 등)
+```
+
+**Important**: 파일명은 변경되었지만 클래스명은 그대로 유지 (NetServer, NetClient, PacketBuffer 등)
 
 ### Component Overview
 This is a Windows C++ IOCP-based game server framework with the following components:
@@ -146,6 +178,9 @@ JunCommon is organized using **Boost-style** folder structure for better maintai
 - **`algorithm/`**: Algorithms and utility functions
   - `Parser.h/.cpp`: Configuration file parsing
   - `StringUtils.h/.cpp`: String manipulation utilities
+- **`crypto/`**: Cryptographic functions and utilities
+  - `AES128.h/.cpp`: High-performance AES-128 encryption with CBC and ECB modes
+  - `RSA2048.h/.cpp`: RSA 2048-bit asymmetric encryption
 
 #### Memory Management Philosophy
 - Uses object pools for high-performance memory allocation
@@ -184,31 +219,24 @@ JunCommon is organized using **Boost-style** folder structure for better maintai
 - Call `UpdateTPS()` regularly to refresh performance metrics
 
 #### Include Path Examples
-When using JunCommon classes, use the new Boost-style folder structure:
+When using JunCommon classes from JunCore, use the correct relative paths:
 ```cpp
-// Core utilities
-#include "../JunCommon/core/base.h"
+// JunCore에서 JunCommon 참조 시 (../../ 사용)
+#include "../../JunCommon/core/base.h"
+#include "../../JunCommon/container/LFStack.h"
+#include "../../JunCommon/container/LFQueue.h"
+#include "../../JunCommon/container/RingBuffer.h"
+#include "../../JunCommon/pool/LFObjectPool.h"
+#include "../../JunCommon/pool/LFObjectPoolTLS.h"
+#include "../../JunCommon/log/Logger.h"
+#include "../../JunCommon/timer/Profiler.h"
+#include "../../JunCommon/system/CrashDump.h"
+#include "../../JunCommon/algorithm/Parser.h"
 
-// Data structures and containers  
-#include "../JunCommon/container/LFStack.h"
-#include "../JunCommon/container/LFQueue.h"
-#include "../JunCommon/container/RingBuffer.h"
-
-// Object pooling
-#include "../JunCommon/pool/LFObjectPool.h"
-#include "../JunCommon/pool/LFObjectPoolTLS.h"
-
-// Logging systems
-#include "../JunCommon/log/Logger.h"
-#include "../JunCommon/log/MemoryLogger.h"
-
-// Performance monitoring
-#include "../JunCommon/timer/Profiler.h"
-#include "../JunCommon/timer/PerformanceCounter.h"
-
-// System utilities
-#include "../JunCommon/system/CrashDump.h"
-#include "../JunCommon/algorithm/Parser.h"
+// JunCore 내부 상호 참조
+#include "../buffer/packet.h"      // network에서 buffer 참조
+#include "../protocol/message.h"   // 다른 폴더에서 protocol 참조
+#include "../core/base.h"          // core utilities 참조
 ```
 
 #### Key Utility Classes
@@ -218,6 +246,14 @@ When using JunCommon classes, use the new Boost-style folder structure:
 - `PerformanceCounter`: System and network performance monitoring via PDH
 - `ProcessCpuMonitor`/`MachineCpuMonitor`: CPU usage monitoring
 - `MemoryLogger`: Memory usage tracking and debugging
+- **`AES128`**: High-performance AES-128 encryption class
+  - CBC mode: `Encrypt()`, `Decrypt()` (IV 필요)
+  - ECB mode: `EncryptECB()`, `DecryptECB()` (IV 불필요, 간단한 데이터용)
+  - Thread-local context 재사용으로 성능 최적화
+  - `GenerateRandomKey()`: 안전한 16바이트 랜덤 키 생성
+- **Hash Functions** (in `core/base.h`):
+  - `fnv1a()`: FNV-1a 32비트 해시 함수 (문자열/바이트배열용)
+  - `make_protocol_code()`: 프로토콜 버전 코드 생성 (fnv1a 기반)
 
 #### SessionId Design
 - 64-bit union combining 32-bit index and 32-bit unique identifier
