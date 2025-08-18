@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <Windows.h>
 #include <thread>
 #include "Session.h"
@@ -31,35 +31,35 @@ private:
 	};
 
 private:
-	// ��������
+	// 프로토콜
 	BYTE protocolCode;
 	BYTE privateKey;
 
-	// ��Ʈ��ũ
+	// 네트워크
 	NetType netType;
 	SOCKET clientSock = INVALID_SOCKET;
 	HANDLE h_iocp = INVALID_HANDLE_VALUE;
 	char serverIP[16] = { 0, };
 	WORD serverPort = 0;
 
-	// ����
+	// 세션
 	Session clientSession;
 
-	// ������
+	// 스레드
 	std::thread workerThread;
 	std::thread connectThread;
 
-	// �ɼ�
+	// 옵션
 	bool reconnectFlag = true;
 
-	// ����͸�
+	// 모니터링
 	DWORD recvMsgTPS = 0;
 	DWORD sendMsgTPS = 0;
 	alignas(64) DWORD recvMsgCount = 0;
 	alignas(64) DWORD sendMsgCount = 0;
 
 private:
-	// ������
+	// 스레드
 	void WorkerFunc();
 	void ConnectFunc();
 
@@ -68,7 +68,7 @@ private:
 	void RecvCompletionNET();
 	void SendCompletion();
 
-	// ����
+	// 세션
 	SessionId GetSessionID();
 	bool ValidateSession();
 	inline void IncrementIOCount();
@@ -81,11 +81,11 @@ private:
 	int	 AsyncSend();
 	bool AsyncRecv();
 
-	// ������
+	// 세션정리
 	void ReleaseSession();
 
 protected:
-	// ���̺귯�� ����� �� ������ �Ͽ� ���
+	// 라이브러리 사용자가 구현해야 하는 함수들
 	virtual void OnConnect() = 0;
 	virtual void OnRecv(PacketBuffer* csContentsPacket) = 0;
 	virtual void OnDisconnect() = 0;
@@ -96,7 +96,7 @@ protected:
 	// virtual void OnWorkerThreadEnd() = 0;                   
 
 public:
-	// ��ƿ
+	// 파서
 	Parser parser;
 
 public:
@@ -108,7 +108,7 @@ public:
 	bool Disconnect();
 
 public:
-	// ����͸� Getter
+	// 모니터링 Getter
 	void UpdateTPS();
 	DWORD GetSendTPS();
 	DWORD GetRecvTPS();
@@ -135,7 +135,7 @@ inline void NetClient::IncrementIOCount()
 	InterlockedIncrement((LONG*)&clientSession.ioCount);
 }
 
-// * 'IO Count == 0' �� �� �� ������ ����Ұ�. (�׷��� �ʴٸ�, �ٸ����� ���¹��� �߻�)
+// * 'IO Count == 0' 일 때만 세션을 정리가능. (그렇지 않다면, 다른스레드 메모리접근 발생)
 inline void NetClient::DisconnectSession() 
 {
 	clientSession.disconnectFlag = true;

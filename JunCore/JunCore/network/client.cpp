@@ -1,4 +1,4 @@
-#include <WS2tcpip.h>
+﻿#include <WS2tcpip.h>
 #include <WinSock2.h>
 #include <memory.h>
 #include <timeapi.h>
@@ -11,7 +11,7 @@
 using namespace std;
 
 //------------------------------
-// Server Func
+// Client Func
 //------------------------------
 NetClient::NetClient(const char* systemFile, const char* server) 
 {
@@ -70,7 +70,7 @@ void NetClient::WorkerFunc()
 
 		BOOL ret_GQCS = GetQueuedCompletionStatus(h_iocp, &io_size, (PULONG_PTR)&p_session, &p_overlapped, INFINITE);
 
-		// ��Ŀ ������ ����
+		// 워커 스레드 종료
 		if (io_size == 0 && p_session == 0 && p_overlapped == 0) 
 		{
 			PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
@@ -109,14 +109,14 @@ void NetClient::WorkerFunc()
 			}
 		}
 
-		// recv �Ϸ�����
+		// recv 완료처리
 		if (&p_session->recvOverlapped == p_overlapped) 
 		{
 			if (ret_GQCS) 
 			{
 				p_session->recvBuf.MoveRear(io_size);
 				p_session->lastRecvTime = timeGetTime();
-				// ���� ��� �ܺ� ��� ����
+				// 패킷 수신 후 외부 루틴 호출
 				if (NetType::LAN == netType) {
 					RecvCompletionLAN();
 				}
@@ -129,7 +129,7 @@ void NetClient::WorkerFunc()
 				////LOG("NetClient", LOG_LEVEL_DEBUG, "Overlapped Recv Fail");
 			}
 		}
-		// send �Ϸ�����
+		// send 완료처리
 		else if (&p_session->sendOverlapped == p_overlapped) 
 		{
 			if (ret_GQCS) 
@@ -193,7 +193,7 @@ void NetClient::ConnectFunc()
 	OnConnect();
 	AsyncRecv();
 
-	// ���� I/O Count ���� (* Release() ���� Connect �翬�� �� �����)
+	// 연결 이후 I/O Count 증가 (* Release() 방지용 Connect 타이밍에 산 증가량)
 	DecrementIOCountPQCS();
 }
 
@@ -207,7 +207,7 @@ void NetClient::ReleaseSession()
 	// * release_flag(0), iocount(0) -> release_flag(1), iocount(0)
 	if (0 == InterlockedCompareExchange64((long long*)&clientSession.releaseFlag, 1, 0)) 
 	{
-		// ���ҽ� ���� (����, ��Ŷ)
+		// 리소스 정리 (소켓, 패킷)
 		closesocket(clientSession.sock);
 		PacketBuffer* packet;
 		while (clientSession.sendQ.Dequeue(&packet)) 
@@ -219,10 +219,10 @@ void NetClient::ReleaseSession()
 			PacketBuffer::Free(clientSession.sendPacketArr[i]);
 		}
 
-		// ����� ���ҽ� ����
+		// 사용자 리소스 정리
 		OnDisconnect();
 
-		// Conncet ��õ�
+		// Connect 재연결
 		if (reconnectFlag) 
 		{
 			if (connectThread.joinable()) 
@@ -247,7 +247,7 @@ void NetClient::SendCompletion()
 	// Send Flag OFF
 	InterlockedExchange8((char*)&clientSession.sendFlag, false);
 
-	// Send ���� üũ
+	// Send 완료 체크
 	if (clientSession.disconnectFlag)	return;
 	if (clientSession.sendQ.GetUseCount() <= 0) return;
 	SendPost();
@@ -267,7 +267,7 @@ void NetClient::SendPacket(PacketBuffer* send_packet)
 		return;
 	}
 
-	// LAN, NET ����
+	// LAN, NET 처리
 	if (NetType::LAN == netType) 
 	{
 		send_packet->SetLanHeader();
@@ -283,14 +283,14 @@ void NetClient::SendPacket(PacketBuffer* send_packet)
 	PostQueuedCompletionStatus(h_iocp, 1, (ULONG_PTR)&clientSession, (LPOVERLAPPED)PQCS_TYPE::SEND_POST);
 }
 
-// AsyncSend Call �õ�
+// AsyncSend Call 시도
 bool NetClient::SendPost() 
 {
 	// Empty return
 	if (clientSession.sendQ.GetUseCount() <= 0)
 		return false;
 
-	// Send 1ȸ üũ (send flag, true �� send ���� ��)
+	// Send 1회 체크 (send flag, true 일때 send 중복 방지)
 	if (clientSession.sendFlag == true)
 	{
 		return false;
@@ -338,7 +338,7 @@ int NetClient::AsyncSend() {
 			wsaBuf[i].len = clientSession.sendPacketArr[i]->GetNetPacketSize();
 		}
 	}
-	// MAX SEND ���� �ʰ�
+	// MAX SEND 패킷 초과
 	if (clientSession.sendPacketCount == 0) {
 		clientSession.sendPacketCount = MAX_SEND_MSG;
 		DisconnectSession();
@@ -349,7 +349,7 @@ int NetClient::AsyncSend() {
 	ZeroMemory(&clientSession.sendOverlapped, sizeof(clientSession.sendOverlapped));
 	if (SOCKET_ERROR == WSASend(clientSession.sock, wsaBuf, clientSession.sendPacketCount, NULL, 0, &clientSession.sendOverlapped, NULL)) {
 		const auto err_no = WSAGetLastError();
-		if (ERROR_IO_PENDING != err_no) { // Send ����
+		if (ERROR_IO_PENDING != err_no) { // Send 실패
 			////LOG("NetClient", LOG_LEVEL_DEBUG, "WSASend() Fail, Error code : %d", WSAGetLastError());
 			DisconnectSession();
 			DecrementIOCount();
@@ -375,7 +375,7 @@ bool NetClient::AsyncRecv()
 	ZeroMemory(&clientSession.recvOverlapped, sizeof(clientSession.recvOverlapped));
 	if (SOCKET_ERROR == WSARecv(clientSession.sock, wsaBuf, 2, NULL, &flags, &clientSession.recvOverlapped, NULL)) 
 	{
-		if (WSAGetLastError() != ERROR_IO_PENDING) { // Recv ����
+		if (WSAGetLastError() != ERROR_IO_PENDING) { // Recv 실패
 			////LOG("NetClient", LOG_LEVEL_DEBUG, "WSARecv() Fail, Error code : %d", WSAGetLastError());
 			DecrementIOCount();
 			return false;
@@ -393,7 +393,7 @@ bool NetClient::AsyncRecv()
 
 void NetClient::RecvCompletionLAN()
 {
-	// ��Ŷ ����
+	// 패킷 처리
 	for (;;) 
 	{
 		int recv_len = clientSession.recvBuf.GetUseSize();
@@ -405,23 +405,23 @@ void NetClient::RecvCompletionLAN()
 		LanHeader lanHeader;
 		clientSession.recvBuf.Peek(&lanHeader, LAN_HEADER_SIZE);
 
-		// ���̷ε� ������ ����
+		// 페이로드 길이 부족 체크
 		if (recv_len < lanHeader.len + LAN_HEADER_SIZE)
 		{
 			break;
 		}
 
 		//------------------------------
-		// OnRecv (��Ʈ��ũ ��� ����)
+		// OnRecv (네트워크 레이어 콜백)
 		//------------------------------
 		PacketBuffer* csContentsPacket = PacketBuffer::Alloc();
 
-		// ������ ��Ŷ ����
+		// 수신한 패킷 복사
 		clientSession.recvBuf.MoveFront(LAN_HEADER_SIZE);
 		clientSession.recvBuf.Dequeue(csContentsPacket->writePos, lanHeader.len);
 		csContentsPacket->MoveWp(lanHeader.len);
 
-		// ����� ��Ŷ ó��
+		// 수신한 패킷 처리
 		OnRecv(csContentsPacket);
 		InterlockedIncrement(&recvMsgCount);
 
@@ -429,7 +429,7 @@ void NetClient::RecvCompletionLAN()
 	}
 
 	//------------------------------
-	// Post Recv (Recv �ɾ�α�)
+	// Post Recv
 	//------------------------------
 	if (false == clientSession.disconnectFlag) 
 	{
@@ -437,18 +437,18 @@ void NetClient::RecvCompletionLAN()
 	}
 }
 
-void NetClient::RecvCompletionNET(){
-	// ��Ŷ ����
+void NetClient::RecvCompletionNET() {
+	// 패킷 처리
 	for (;;) {
 		int recv_len = clientSession.recvBuf.GetUseSize();
 		if (recv_len < NET_HEADER_SIZE)
 			break;
 
-		// ��� ī��
+		// 암호화된 패킷 헤더 확인
 		char encryptPacket[200];
 		clientSession.recvBuf.Peek(encryptPacket, NET_HEADER_SIZE);
 
-		// code �˻�
+		// 코드 검증
 		BYTE code = ((NetHeader*)encryptPacket)->code;
 		if (code != protocolCode) {
 			////LOG("NetServer", LOG_LEVEL_WARN, "Recv Packet is wrong code!!", WSAGetLastError());
@@ -456,17 +456,17 @@ void NetClient::RecvCompletionNET(){
 			break;
 		}
 
-		// ���̷ε� ������ ����
+		// 페이로드 길이 부족 체크
 		WORD payload_len = ((NetHeader*)encryptPacket)->len;
 		if (recv_len < (NET_HEADER_SIZE + payload_len)) {
 			break;
 		}
 
-		// Recv Data ��Ŷ ȭ
+		// Recv Data 패킷 복사
 		clientSession.recvBuf.MoveFront(NET_HEADER_SIZE);
 		clientSession.recvBuf.Dequeue(encryptPacket + NET_HEADER_SIZE, payload_len);
 
-		// ��ȣ��Ŷ ����
+		// 암호화된 패킷 복호화
 		PacketBuffer* decrypt_packet = PacketBuffer::Alloc();
 		if (!decrypt_packet->DecryptPacket(encryptPacket, privateKey)) {
 			PacketBuffer::Free(decrypt_packet);
@@ -475,16 +475,16 @@ void NetClient::RecvCompletionNET(){
 			break;
 		}
 
-		// ����� ��Ŷ ó��
+		// 수신한 패킷 처리
 		OnRecv(decrypt_packet);
 		InterlockedIncrement(&recvMsgCount);
 
-		// ��ȣ��Ŷ, ��ȣȭ ��Ŷ Free
+		// 복호화된 패킷 Free
 		PacketBuffer::Free(decrypt_packet);
 	}
 
 	//------------------------------
-	// Post Recv
+	// Post Recv (수신 요청 등록)
 	//------------------------------
 	if (!clientSession.disconnectFlag) {
 		AsyncRecv();
@@ -494,8 +494,8 @@ void NetClient::RecvCompletionNET(){
 bool NetClient::ValidateSession() {
 	IncrementIOCount();
 
-	// ���� ������ ����
-	if (true == clientSession.releaseFlag) {
+	if (true == clientSession.releaseFlag) 
+	{
 		DecrementIOCount();
 		return false;
 	}
@@ -510,23 +510,23 @@ bool NetClient::Disconnect() {
 }
 
 void NetClient::Stop() {
-	// Connect Thread ����
+	// Connect Thread 종료
 	reconnectFlag = false;
 	if (connectThread.joinable()) {
 		connectThread.join();
 	}
 
-	// ���� ����
+	// 세션 종료
 	if (!clientSession.releaseFlag) {
 		DisconnectSession();
 	}
 
-	// ���� ���� üũ
+	// 세션 해제 확인
 	while (!clientSession.releaseFlag) {
 		Sleep(100);
 	}
 
-	// Worker ����
+	// Worker 종료
 	PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
 	if (workerThread.joinable()) {
 		workerThread.join();
@@ -535,7 +535,7 @@ void NetClient::Stop() {
 	CloseHandle(h_iocp);
 	WSACleanup();
 
-	// ����� ���ҽ� ����
+	// 클라이언트 종료 콜백
 	OnClientStop();
 }
 
