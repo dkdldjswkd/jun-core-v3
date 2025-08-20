@@ -17,14 +17,12 @@ using namespace std;
 // Server Func
 //------------------------------
 NetServer::NetServer(const char* system_file, const char* server) 
+	: NetBase(system_file, server)  // NetBase 생성자 호출
 {
 	int serverPort;
 	int nagle;
 
-	// json parser로 변경할것
-	protocolCode	= 0xFF;			// parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
-	privateKey		= 0xFF;			// parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
-	netType			= NetType::NET; // parser.GetValue(server, "NET_TYPE", (int*)&netType);
+	// json parser로 변경할것 - 서버 특화 설정들만 로딩
 	serverPort		= 7777;			// parser.GetValue(server, "PORT", (int*)&serverPort);
 	maxSession		= 10000;		// parser.GetValue(server, "MAX_SESSION", (int*)&maxSession);
 	nagle			= TRUE;			// parser.GetValue(server, "NAGLE", (int*)&nagle);
@@ -34,7 +32,7 @@ NetServer::NetServer(const char* system_file, const char* server)
 	maxWorker		= 4;			// parser.GetValue(server, "MAX_WORKER", (int*)&maxWorker);
 	activeWorker	= 2;			// parser.GetValue(server, "ACTIVE_WORKER", (int*)&activeWorker);
 
-	// Check system
+	// 서버 특화 검증
 	if (maxWorker < activeWorker) 
 	{
 		//LOG("NetServer", LOG_LEVEL_FATAL, "WORKER_NUM_ERROR");
@@ -48,15 +46,8 @@ NetServer::NetServer(const char* system_file, const char* server)
 	}
 
 	//////////////////////////////
-	// Set Server
+	// Set Server - 서버 특화 초기화
 	//////////////////////////////
-
-	WSADATA wsaData;
-	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) 
-	{
-		//LOG("NetServer", LOG_LEVEL_FATAL, "WSAStartup()_ERROR : %d", WSAGetLastError());
-		throw std::exception("WSAStartup_ERROR");
-	}
 
 	listenSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
 	if (INVALID_SOCKET == listenSock) 
@@ -102,13 +93,8 @@ NetServer::NetServer(const char* system_file, const char* server)
 		sessionIdxStack.Push(maxSession - (1 + i));
 	}
 
-	// Create IOCP
-	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, activeWorker);
-	if (h_iocp == INVALID_HANDLE_VALUE || h_iocp == NULL) 
-	{
-		//LOG("NetServer", LOG_LEVEL_FATAL, "CreateIoCompletionPort()_ERROR : %d", GetLastError());
-		throw std::exception("CreateIoCompletionPort()_ERROR");
-	}
+	// IOCP 초기화 (activeWorker 설정과 함께)
+	InitializeIOCP(activeWorker);
 
 	// Create IOCP Worker
 	workerThreadArr = new thread[maxWorker];
@@ -124,7 +110,7 @@ NetServer::~NetServer()
 	delete[] workerThreadArr;
 }
 
-void NetServer::Start()
+void NetServer::StartServer()
 {
 	// listen
 	if (0 != listen(listenSock, SOMAXCONN_HINT(65535))) 
@@ -464,7 +450,7 @@ void NetServer::Disconnect(SessionId session_id)
 	DecrementIOCountPQCS(session);
 }
 
-void NetServer::Stop()
+void NetServer::StopServer()
 {
 	// AcceptThread 종료
 	closesocket(listenSock);
@@ -502,8 +488,8 @@ void NetServer::Stop()
 		}
 	}
 
-	CloseHandle(h_iocp);
-	WSACleanup();
+	// IOCP 핸들 정리는 NetBase 소멸자에서 처리됨
+	// h_iocp는 NetBase::CleanupIOCP()에서 정리됨
 
 	// 컨텐츠 서버 리소스 정리
 	OnServerStop();

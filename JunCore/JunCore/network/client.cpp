@@ -15,14 +15,12 @@ using namespace std;
 // Client Func
 //------------------------------
 NetClient::NetClient(const char* systemFile, const char* server) 
+	: NetBase(systemFile, server)
 {
 	// Read SystemFile
 	parser.LoadFile(systemFile);
 
-	// json parser로 변경할것
-	protocolCode	= 0xFF;				// parser.GetValue(server, "PROTOCOL_CODE", (int*)&protocolCode);
-	privateKey		= 0xFF;				// parser.GetValue(server, "PRIVATE_KEY", (int*)&privateKey);
-	netType			= NetType::NET;		// parser.GetValue(server, "NET_TYPE", (int*)&netType);
+	// 클라이언트 특화 설정 파싱
 	strcpy_s(serverIP, "127.0.0.1");	// parser.GetValue(server, "IP", serverIP);
 	serverPort		= 7777;				// parser.GetValue(server, "PORT", (int*)&serverPort);
 
@@ -36,19 +34,8 @@ NetClient::NetClient(const char* systemFile, const char* server)
 	// Set Client
 	//////////////////////////////
 
-	WSADATA wsaData;
-	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) 
-	{
-		////LOG("NetClient", LOG_LEVEL_FATAL, "WSAStartup() Eror(%d)", WSAGetLastError());
-		//CRASH();
-	}
-
-	// Create IOCP
-	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 2);
-	if (INVALID_HANDLE_VALUE == h_iocp) 
-	{ 
-		/*CRASH();*/ 
-	}
+	// NetBase에서 이미 IOCP 초기화됨, 클라이언트용으로 재설정
+	InitializeIOCP(2);
 
 	// IOCP 핸들을 clientSession에 설정
 	clientSession.SetIOCP(h_iocp);
@@ -58,7 +45,7 @@ NetClient::NetClient(const char* systemFile, const char* server)
 }
 NetClient::~NetClient() {}
 
-void NetClient::Start() 
+void NetClient::StartClient() 
 {
 	connectThread = thread([this]() {ConnectFunc(); });
 	////LOG("NetClient", LOG_LEVEL_DEBUG, "Client Start");
@@ -278,7 +265,7 @@ bool NetClient::Disconnect() {
 	return true;
 }
 
-void NetClient::Stop() {
+void NetClient::StopClient() {
 	// Connect Thread 종료
 	reconnectFlag = false;
 	if (connectThread.joinable()) {
@@ -301,8 +288,8 @@ void NetClient::Stop() {
 		workerThread.join();
 	}
 
-	CloseHandle(h_iocp);
-	WSACleanup();
+	// NetBase에서 IOCP와 WSA 정리
+	CleanupIOCP();
 
 	// 클라이언트 종료 콜백
 	OnClientStop();

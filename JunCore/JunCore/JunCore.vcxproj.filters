@@ -15,6 +15,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="network\NetBase.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
     <ClCompile Include="network\client.cpp">
       <Filter>network</Filter>
     </ClCompile>
@@ -32,6 +35,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="network\NetBase.h">
+      <Filter>network</Filter>
+    </ClInclude>
     <ClInclude Include="network\client.h">
       <Filter>network</Filter>
     </ClInclude>

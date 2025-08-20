@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Windows.h>
 #include <thread>
+#include "NetBase.h"
 #include "Session.h"
 #include "../buffer/packet.h"
 #include "../../JunCommon/container/LFStack.h"
@@ -11,18 +12,14 @@
 //------------------------------
 // NetworkLib
 //------------------------------
-class NetServer
+class NetServer : public NetBase
 {
 public:
 	NetServer(const char* systemFile, const char* server);
 	virtual ~NetServer();
 
 public:
-	// 서버 ON/OFF
-	void Start();
-	void Stop();
-
-	// 라이브러리 외부 API
+	// 라이브러리 외부 API (NetBase를 통해 Start()/Stop() 제공)
 	void SendPacket(SessionId sessionId, PacketBuffer* sendPacket);
 	void Disconnect(SessionId sessionId);
 
@@ -30,29 +27,8 @@ private:
 	friend PacketBuffer;
 
 private:
-	enum class NetType : BYTE
-	{
-		LAN,
-		NET,
-		NONE,
-	};
-
-	enum class PQCS_TYPE : BYTE
-	{
-		SEND_POST = 1,
-		RELEASE_SESSION = 2,
-		NONE,
-	};
-
-private:
-	// 프로토콜
-	BYTE protocolCode;
-	BYTE privateKey;
-
-	// 네트워크
-	NetType netType;
+	// 네트워크 (서버 특화)
 	SOCKET listenSock = INVALID_SOCKET;
-	HANDLE h_iocp = INVALID_HANDLE_VALUE;
 
 	// 세션
 	DWORD sessionUnique = 0;
@@ -74,17 +50,17 @@ private:
 	DWORD timeoutCycle;
 	DWORD timeOut;
 
-	// 모니터링
+	// 모니터링 (서버 특화)
 	DWORD acceptCount	= 0;
 	DWORD acceptTPS		= 0;
 	DWORD acceptTotal	= 0;
-	DWORD recvMsgTPS	= 0;
-	DWORD sendMsgTPS	= 0;
 	alignas(64) DWORD sessionCount = 0;
-	alignas(64) DWORD recvMsgCount = 0;
-	alignas(64) DWORD sendMsgCount = 0;
 
 private:
+	// NetBase 가상 함수 구현
+	void StartServer();
+	void StopServer();
+
 	// Session Manager 어댑터 클래스 (IOCP Worker와 연동용)
 	class ServerSessionManager 
 	{
@@ -143,13 +119,15 @@ protected:
 	// virtual void OnWorkerThreadEnd() = 0;                     
 
 public:
-	// Getter
-	void UpdateTPS();
+	// Getter (NetBase 확장)
+	void UpdateTPS() override;
 	DWORD GetSessionCount();
 	DWORD GetAcceptTPS();
 	DWORD GetAcceptTotal();
-	DWORD GetSendTPS();
-	DWORD GetRecvTPS();
+	
+	// NetBase 구현
+	void StartImpl() override { StartServer(); }
+	void StopImpl() override { StopServer(); }
 };
 
 //////////////////////////////
@@ -186,14 +164,12 @@ inline void NetServer::DisconnectSession(Session* session)
 
 inline void NetServer::UpdateTPS() 
 {
+	// 기본 TPS 업데이트 (NetBase에서 처리)
+	UpdateBaseTPS();
+	
+	// 서버 특화 TPS 업데이트
 	acceptTPS = acceptCount;
 	acceptCount = 0;
-
-	sendMsgTPS = sendMsgCount;
-	sendMsgCount = 0;
-
-	recvMsgTPS = recvMsgCount;
-	recvMsgCount = 0;
 }
 
 inline DWORD NetServer::GetSessionCount() 
@@ -209,14 +185,4 @@ inline DWORD NetServer::GetAcceptTPS()
 inline DWORD NetServer::GetAcceptTotal() 
 {
 	return acceptTotal;
-}
-
-inline DWORD NetServer::GetSendTPS() 
-{
-	return sendMsgTPS;
-}
-
-inline DWORD NetServer::GetRecvTPS() 
-{
-	return recvMsgTPS;
 }

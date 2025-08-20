@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Windows.h>
 #include <thread>
+#include "NetBase.h"
 #include "Session.h"
 #include "../buffer/packet.h"
 #include "../../JunCommon/algorithm/Parser.h"
@@ -8,7 +9,7 @@
 //------------------------------
 // NetworkLib
 //------------------------------
-class NetClient 
+class NetClient : public NetBase 
 {
 public:
 	NetClient(const char* systemFile, const char* client);
@@ -18,27 +19,8 @@ private:
 	friend PacketBuffer;
 
 private:
-	enum class NetType : BYTE {
-		LAN,
-		NET,
-		NONE,
-	};
-
-	enum class PQCS_TYPE : BYTE {
-		SEND_POST = 1,
-		RELEASE_SESSION = 2,
-		NONE,
-	};
-
-private:
-	// 프로토콜
-	BYTE protocolCode;
-	BYTE privateKey;
-
-	// 네트워크
-	NetType netType;
+	// 네트워크 (클라이언트 특화)
 	SOCKET clientSock = INVALID_SOCKET;
-	HANDLE h_iocp = INVALID_HANDLE_VALUE;
 	char serverIP[16] = { 0, };
 	WORD serverPort = 0;
 
@@ -52,11 +34,7 @@ private:
 	// 옵션
 	bool reconnectFlag = true;
 
-	// 모니터링
-	DWORD recvMsgTPS = 0;
-	DWORD sendMsgTPS = 0;
-	alignas(64) DWORD recvMsgCount = 0;
-	alignas(64) DWORD sendMsgCount = 0;
+	// 모니터링은 NetBase에서 상속
 
 private:
 	// Session Manager 어댑터 클래스 (IOCP Worker와 연동용)
@@ -117,22 +95,22 @@ protected:
 	// virtual void OnWorkerThreadEnd() = 0;                   
 
 public:
-	// 파서
+	// 파서 (클라이언트 특화)
 	Parser parser;
 
 public:
-	void Start();
-	void Stop();
+	// NetBase 구현
+	void StartImpl() override { StartClient(); }
+	void StopImpl() override { StopClient(); }
+
+private:
+	// 내부 구현 함수들
+	void StartClient();
+	void StopClient();
 
 public:
 	void SendPacket(PacketBuffer* send_packet);
 	bool Disconnect();
-
-public:
-	// 모니터링 Getter
-	void UpdateTPS();
-	DWORD GetSendTPS();
-	DWORD GetRecvTPS();
 };
 
 inline void NetClient::DecrementIOCount() 
@@ -160,24 +138,5 @@ inline void NetClient::DisconnectSession()
 }
 
 ////////////////////////////// 
-// Getter
-////////////////////////////// 
-
-inline void NetClient::UpdateTPS() 
-{
-	sendMsgTPS = sendMsgCount;
-	sendMsgCount = 0;
-
-	recvMsgTPS = recvMsgCount;
-	recvMsgCount = 0;
-}
-
-inline DWORD NetClient::GetRecvTPS() 
-{
-	return recvMsgTPS;
-}
-
-inline DWORD NetClient::GetSendTPS() 
-{
-	return sendMsgTPS;
-}
+// Getter는 NetBase에서 상속
+//////////////////////////////

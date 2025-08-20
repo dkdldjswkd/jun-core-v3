@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="network\NetBase.cpp" />
     <ClCompile Include="network\client.cpp" />
     <ClCompile Include="network\server.cpp" />
     <ClCompile Include="buffer\packet.cpp" />
@@ -27,6 +28,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h" />
+    <ClInclude Include="network\NetBase.h" />
     <ClInclude Include="network\client.h" />
     <ClInclude Include="network\server.h" />
     <ClInclude Include="network\IoCommon.h" />
