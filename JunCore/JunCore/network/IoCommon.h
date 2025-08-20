@@ -110,6 +110,201 @@ inline bool AsyncSend(Session& session, bool isLan, DisconnectFn&& disconnect, D
 	return true;
 }
 
+// Send 완료 처리
+// - 전송된 패킷들을 해제하고 통계를 업데이트합니다.
+// - sendFlag를 해제하고 조건에 맞으면 재전송을 시도합니다.
+template <typename SendPostFn, typename IncrementCountFn>
+inline void SendCompletion(Session& session, SendPostFn&& sendPost, IncrementCountFn&& incCount)
+{
+	// Send Packet Free
+	for (int i = 0; i < session.sendPacketCount; i++)
+	{
+		PacketBuffer::Free(session.sendPacketArr[i]);
+	}
+
+	// 통계 업데이트 (NetServer 방식: 배치 처리가 더 효율적)
+	incCount(session.sendPacketCount);
+	session.sendPacketCount = 0;
+
+	// Send Flag OFF
+	InterlockedExchange8((char*)&session.sendFlag, false);
+
+	// Send 재전송 체크
+	if (session.disconnectFlag || session.sendQ.GetUseCount() <= 0)
+	{
+		return;
+	}
+
+	sendPost();
+}
+
+// Recv 완료 처리 - LAN 모드
+// - LAN 헤더 기반 패킷을 파싱하고 OnRecv 콜백을 호출합니다.
+template <typename OnRecvFn, typename DisconnectFn, typename AsyncRecvFn, typename IncrementCountFn>
+inline void RecvCompletionLan(Session& session, OnRecvFn&& onRecv, DisconnectFn&& disconnect, 
+							  AsyncRecvFn&& asyncRecv, IncrementCountFn&& incCount)
+{
+	for (;;)
+	{
+		if (session.recvBuf.GetUseSize() < LAN_HEADER_SIZE)
+			break;
+
+		LanHeader lanHeader;
+		session.recvBuf.Peek(&lanHeader, LAN_HEADER_SIZE);
+
+		if (lanHeader.len > MAX_PAYLOAD_LEN)
+		{
+			disconnect();
+			return;
+		}
+
+		if (session.recvBuf.GetUseSize() < LAN_HEADER_SIZE + lanHeader.len)
+			break;
+
+		session.recvBuf.MoveFront(LAN_HEADER_SIZE);
+
+		PacketBuffer* contentsPacket = PacketBuffer::Alloc();
+		char* tempBuffer = new char[lanHeader.len];
+		session.recvBuf.Dequeue(tempBuffer, lanHeader.len);
+		contentsPacket->PutData(tempBuffer, lanHeader.len);
+		delete[] tempBuffer;
+
+		onRecv(contentsPacket);
+		incCount();
+	}
+
+	if (!session.disconnectFlag)
+	{
+		asyncRecv();
+	}
+}
+
+// Recv 완료 처리 - NET 모드  
+// - 암호화된 NET 헤더 기반 패킷을 복호화하고 OnRecv 콜백을 호출합니다.
+template <typename OnRecvFn, typename DisconnectFn, typename AsyncRecvFn, typename IncrementCountFn>
+inline void RecvCompletionNet(Session& session, BYTE protocolCode, BYTE privateKey,
+							  OnRecvFn&& onRecv, DisconnectFn&& disconnect, 
+							  AsyncRecvFn&& asyncRecv, IncrementCountFn&& incCount)
+{
+	for (;;)
+	{
+		if (session.recvBuf.GetUseSize() < NET_HEADER_SIZE)
+			break;
+
+		NetHeader netHeader;
+		session.recvBuf.Peek(&netHeader, NET_HEADER_SIZE);
+
+		if (netHeader.code != protocolCode)
+		{
+			disconnect();
+			return;
+		}
+
+		if (netHeader.len > MAX_PAYLOAD_LEN)
+		{
+			disconnect();
+			return;
+		}
+
+		if (session.recvBuf.GetUseSize() < NET_HEADER_SIZE + netHeader.len)
+			break;
+
+		// 암호화 패킷 준비
+		char encryptPacket[NET_HEADER_SIZE + MAX_PAYLOAD_LEN];
+		session.recvBuf.Peek(encryptPacket, NET_HEADER_SIZE + netHeader.len);
+		session.recvBuf.MoveFront(NET_HEADER_SIZE + netHeader.len);
+
+		// 복호화
+		PacketBuffer* decryptPacket = PacketBuffer::Alloc();
+		if (false == decryptPacket->DecryptPacket(encryptPacket, privateKey))
+		{
+			PacketBuffer::Free(decryptPacket);
+			disconnect();
+			return;
+		}
+
+		onRecv(decryptPacket);
+		incCount();
+	}
+
+	if (!session.disconnectFlag)
+	{
+		asyncRecv();
+	}
+}
+
+// IOCP Worker 함수 공통 로직
+// - NetServer와 NetClient의 WorkerFunc 공통 부분을 추출한 템플릿 함수
+template <typename SessionManagerT>
+inline void IOCPWorkerLoop(HANDLE h_iocp, SessionManagerT& sessionManager)
+{
+	for (;;) 
+	{
+		DWORD ioSize = 0;
+		Session* session = nullptr;
+		LPOVERLAPPED p_overlapped = nullptr;
+
+		BOOL retGQCS = GetQueuedCompletionStatus(h_iocp, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
+
+		// 워커 스레드 종료
+		if (ioSize == 0 && session == nullptr && p_overlapped == nullptr) 
+		{
+			PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
+			return;
+		}
+
+		// FIN
+		if (ioSize == 0) 
+		{
+			// Zero byte send 감지 (디버깅용 로그, 현재 비활성화)
+			// if (&session->sendOverlapped == p_overlapped)
+			// {
+			//     LOG("IOCPWorker", LOG_LEVEL_FATAL, "Zero Byte Send !!");
+			// }
+			goto Decrement_IOCount;
+		}
+		// PQCS
+		else if ((ULONG_PTR)p_overlapped < 3) // PQCS_TYPE::NONE == 3
+		{
+			int pqcsType = (int)(ULONG_PTR)p_overlapped;
+			switch (pqcsType) 
+			{
+				case 1: // SEND_POST
+				{
+					sessionManager.HandleSendPost(session);
+					goto Decrement_IOCount;
+				}
+				case 2: // RELEASE_SESSION
+				{
+					sessionManager.HandleReleaseSession(session);
+					continue;
+				}
+			}
+		}
+		// recv 완료처리
+		else if (&session->recvOverlapped == p_overlapped) 
+		{
+			if (retGQCS) 
+			{
+				session->recvBuf.MoveRear(ioSize);
+				session->lastRecvTime = timeGetTime();
+				sessionManager.HandleRecvCompletion(session);
+			}
+		}
+		// send 완료처리
+		else if (&session->sendOverlapped == p_overlapped) 
+		{
+			if (retGQCS) 
+			{
+				sessionManager.HandleSendCompletion(session);
+			}
+		}
+
+	Decrement_IOCount:
+		sessionManager.HandleDecrementIOCount(session);
+	}
+}
+
 } // namespace IoCommon
 
 

@@ -85,6 +85,27 @@ private:
 	alignas(64) DWORD sendMsgCount = 0;
 
 private:
+	// Session Manager 어댑터 클래스 (IOCP Worker와 연동용)
+	class ServerSessionManager 
+	{
+	private:
+		NetServer* server;
+	public:
+		ServerSessionManager(NetServer* srv) : server(srv) {}
+		
+		void HandleSendPost(Session* session) { server->SendPost(session); }
+		void HandleReleaseSession(Session* session) { server->ReleaseSession(session); }
+		void HandleRecvCompletion(Session* session) {
+			if (server->netType == NetType::LAN)
+				server->RecvCompletionLan(session);
+			else 
+				server->RecvCompletionNet(session);
+		}
+		void HandleSendCompletion(Session* session) { server->SendCompletion(session); }
+		void HandleDecrementIOCount(Session* session) { server->DecrementIOCount(session); }
+	};
+
+private:
 	// 스레드
 	void WorkerFunc();
 	void AcceptFunc();
@@ -137,12 +158,12 @@ public:
 
 inline void NetServer::IncrementIOCount(Session* session) 
 {
-	InterlockedIncrement((LONG*)&session->ioCount);
+	session->IncrementIOCount();
 }
 
 inline void NetServer::DecrementIOCount(Session* session) 
 {
-	if (0 == InterlockedDecrement((LONG*)&session->ioCount))
+	if (session->DecrementIOCount())
 	{
 		ReleaseSession(session);
 	}
@@ -150,17 +171,13 @@ inline void NetServer::DecrementIOCount(Session* session)
 
 inline void NetServer::DecrementIOCountPQCS(Session* session) 
 {
-	if (0 == InterlockedDecrement((LONG*)&session->ioCount))
-	{
-		PostQueuedCompletionStatus(h_iocp, 1, (ULONG_PTR)session, (LPOVERLAPPED)PQCS_TYPE::RELEASE_SESSION);
-	}
+	session->DecrementIOCountPQCS();
 }
 
 // * 'IO Count == 0' 일 때만 세션을 해제가능. (그렇지 않다면, 다른곳에서 참조중일 발생)
 inline void NetServer::DisconnectSession(Session* session) 
 {
-	session->disconnectFlag = true;
-	CancelIoEx((HANDLE)session->sock, NULL);
+	session->DisconnectSession();
 }
 
 //////////////////////////////

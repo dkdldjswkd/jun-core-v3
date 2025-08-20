@@ -59,6 +59,27 @@ private:
 	alignas(64) DWORD sendMsgCount = 0;
 
 private:
+	// Session Manager 어댑터 클래스 (IOCP Worker와 연동용)
+	class ClientSessionManager 
+	{
+	private:
+		NetClient* client;
+	public:
+		ClientSessionManager(NetClient* cli) : client(cli) {}
+		
+		void HandleSendPost(Session* session) { client->SendPost(); }
+		void HandleReleaseSession(Session* session) { client->ReleaseSession(); }
+		void HandleRecvCompletion(Session* session) {
+			if (client->netType == NetType::LAN)
+				client->RecvCompletionLAN();
+			else 
+				client->RecvCompletionNET();
+		}
+		void HandleSendCompletion(Session* session) { client->SendCompletion(); }
+		void HandleDecrementIOCount(Session* session) { client->DecrementIOCount(); }
+	};
+
+private:
 	// 스레드
 	void WorkerFunc();
 	void ConnectFunc();
@@ -116,7 +137,7 @@ public:
 
 inline void NetClient::DecrementIOCount() 
 {
-	if (0 == InterlockedDecrement((LONG*)&clientSession.ioCount)) 
+	if (clientSession.DecrementIOCount()) 
 	{
 		ReleaseSession();
 	}
@@ -124,22 +145,18 @@ inline void NetClient::DecrementIOCount()
 
 inline void NetClient::DecrementIOCountPQCS() 
 {
-	if (0 == InterlockedDecrement((LONG*)&clientSession.ioCount)) 
-	{
-		PostQueuedCompletionStatus(h_iocp, 1, (ULONG_PTR)&clientSession, (LPOVERLAPPED)PQCS_TYPE::RELEASE_SESSION);
-	}
+	clientSession.DecrementIOCountPQCS();
 }
 
 inline void NetClient::IncrementIOCount() 
 {
-	InterlockedIncrement((LONG*)&clientSession.ioCount);
+	clientSession.IncrementIOCount();
 }
 
 // * 'IO Count == 0' 일 때만 세션을 정리가능. (그렇지 않다면, 다른스레드 메모리접근 발생)
 inline void NetClient::DisconnectSession() 
 {
-	clientSession.disconnectFlag = true;
-	CancelIoEx((HANDLE)clientSession.sock, NULL);
+	clientSession.DisconnectSession();
 }
 
 ////////////////////////////// 

@@ -290,3 +290,80 @@ When using JunCommon classes from JunCore, use the correct relative paths:
 - Fix any compiler warnings before proceeding with development
 - **Always build after completing work** to verify no compilation issues
 - Use appropriate warning level settings in project configuration
+
+## Code Refactoring History (2025-08)
+
+### NetServer/NetClient 중복 코드 제거 프로젝트
+대규모 리팩토링을 통해 NetServer와 NetClient 간의 중복 코드를 대폭 제거하여 유지보수성과 코드 품질을 향상시켰습니다.
+
+#### 🎯 주요 성과
+- **SendCompletion**: 22줄 → 5줄 (77% 감소)
+- **RecvCompletion**: 98줄 → 9줄 (91% 감소) 
+- **WorkerFunc**: 93줄 → 3줄 (97% 감소)
+- **전체 중복 코드**: 약 200+ 줄 제거
+
+#### 🔧 리팩토링 완료 항목
+
+##### 1. IoCommon.h 공통 함수 추출
+**위치**: `JunCore/network/IoCommon.h`
+- `SendCompletion()`: Send 완료 처리 템플릿 함수
+- `RecvCompletionLan()`: LAN 모드 Recv 완료 처리  
+- `RecvCompletionNet()`: NET 모드 Recv 완료 처리 (암호화 지원)
+- `IOCPWorkerLoop()`: IOCP 메인 루프 템플릿
+- `AsyncSend()`: 비동기 송신 등록
+- `AsyncRecv()`: 비동기 수신 등록
+
+**특징**: 모든 함수가 템플릿 기반으로 구현되어 런타임 오버헤드 없음
+
+##### 2. Session 클래스 IO Count 관리 통합  
+**위치**: `JunCore/network/Session.h`
+```cpp
+// 추가된 함수들
+inline void IncrementIOCount();
+inline bool DecrementIOCount();
+inline bool DecrementIOCountPQCS();
+inline void DisconnectSession();
+inline void SetIOCP(HANDLE iocp_handle);
+```
+
+**개선점**:
+- IO Count 관리 로직을 Session에 캡슐화
+- NetServer/NetClient에서 중복된 IO 관리 코드 제거
+- IOCP 핸들 관리 중앙집중화
+
+##### 3. 어댑터 패턴을 통한 WorkerFunc 통합
+**NetServer 어댑터**: `ServerSessionManager` 클래스
+**NetClient 어댑터**: `ClientSessionManager` 클래스
+
+**구현 예시**:
+```cpp
+// 기존 93줄 → 새로운 3줄
+void NetServer::WorkerFunc() 
+{
+    ServerSessionManager sessionManager(this);
+    IoCommon::IOCPWorkerLoop(h_iocp, sessionManager);
+}
+```
+
+#### 🚀 성능 최적화 원칙
+1. **Zero Runtime Overhead**: 모든 공통화가 템플릿/inline 기반
+2. **TPS 함수는 기존 유지**: 고성능이 중요한 부분은 최적화된 구조 보존  
+3. **메모리 효율성**: 가상함수 테이블 생성 방지
+4. **캐시 친화적**: alignas(64) 활용한 메모리 레이아웃 최적화
+
+#### 🏗️ 아키텍처 개선 사항
+- **관심사 분리**: 공통 네트워크 로직과 서버/클라이언트 특화 로직 분리
+- **캡슐화 강화**: Session이 자신의 상태와 IO Count를 직접 관리
+- **코드 재사용**: 템플릿 메타프로그래밍을 통한 안전한 코드 공유
+- **유지보수성**: 핵심 로직 변경 시 IoCommon 한 곳만 수정하면 됨
+
+#### 🔍 리팩토링 방법론
+**3단계 점진적 접근법** 사용:
+1. **Phase 1**: 공통 함수 추출 (IoCommon.h)
+2. **Phase 2**: 기반 클래스 패턴 적용  
+3. **Phase 3**: 템플릿 기반 완전 통합
+
+**핵심 설계 원칙**:
+- 기존 API 호환성 100% 유지
+- 성능 저하 없는 리팩토링
+- 컴파일 타임 에러 감지로 안전성 보장

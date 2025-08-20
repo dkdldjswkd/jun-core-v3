@@ -62,10 +62,9 @@ private:
 	void SetLanHeader();
 	void SetNetHeader(BYTE protocolCode, BYTE privateKey);
 
-	// ��Ŷ ��ȣȭ
-	bool DecryptPacket(char* encryptPacket, BYTE privateKey);
-
 	public:
+	// ��Ŷ ��ȣȭ (public으로 이동)
+	bool DecryptPacket(char* encryptPacket, BYTE privateKey);
 	// ��Ŷ ���� �ּ� ��ȯ (payLoadPos - headerLen)
 	char* GetLanPacketPos();
 	char* GetNetPacketPos();

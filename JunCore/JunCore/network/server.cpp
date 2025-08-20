@@ -203,6 +203,7 @@ void NetServer::AcceptFunc()
 		// 세션 자료구조 할당
 		Session* p_acceptSession = &sessionArray[sessionId.SESSION_INDEX];
 		p_acceptSession->Set(acceptSock, acceptIp, acceptPort, sessionId);
+		p_acceptSession->SetIOCP(h_iocp);  // IOCP 핸들 설정
 		acceptCount++;
 
 		// Bind IOCP
@@ -265,96 +266,8 @@ void NetServer::TimeoutFunc()
 
 void NetServer::WorkerFunc() 
 {
-	for (;;)
-	{
-		DWORD ioSize = 0;
-		Session* session = 0;
-		LPOVERLAPPED p_overlapped = 0;
-
-		BOOL retGQCS = GetQueuedCompletionStatus(h_iocp, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
-
-		// 워커 스레드 종료
-		if (ioSize == 0 && session == 0 && p_overlapped == 0)
-		{
-			PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
-			return;
-		}
-
-		// FIN
-		if (ioSize == 0)
-		{
-			if (&session->sendOverlapped == p_overlapped)
-			{
-				//LOG("NetServer", LOG_LEVEL_FATAL, "Zero Byte Send !!");
-			}
-			goto Decrement_IOCount;
-		}
-
-		// PQCS
-		else if ((ULONG_PTR)p_overlapped < (ULONG_PTR)PQCS_TYPE::NONE)
-		{
-			switch ((PQCS_TYPE)(unsigned char)p_overlapped)
-			{
-				case PQCS_TYPE::SEND_POST:
-				{
-					SendPost(session);
-					goto Decrement_IOCount;
-				} break;
-
-				case PQCS_TYPE::RELEASE_SESSION:
-				{
-					ReleaseSession(session);
-					continue;
-				} break;
-
-				default:
-				{
-					//LOG("NetServer", LOG_LEVEL_FATAL, "PQCS Default");
-				} break;
-			}
-		}
-
-		// recv 완료처리
-		if (&session->recvOverlapped == p_overlapped)
-		{
-			if (retGQCS)
-			{
-				session->recvBuf.MoveRear(ioSize);
-				session->lastRecvTime = timeGetTime();
-				// 패킷 타입 내부 외부 분기 처리
-				if (NetType::LAN == netType)
-				{
-					RecvCompletionLan(session);
-				}
-				else {
-					RecvCompletionNet(session);
-				}
-			}
-			else
-			{
-				//LOG("NetServer", LOG_LEVEL_DEBUG, "Overlapped Recv Fail");
-			}
-		}
-		// send 완료처리
-		else if (&session->sendOverlapped == p_overlapped)
-		{
-			if (retGQCS)
-			{
-				SendCompletion(session);
-			}
-			else
-			{
-				//LOG("NetServer", LOG_LEVEL_DEBUG, "Overlapped Send Fail");
-			}
-		}
-		else 
-		{
-			//LOG("NetServer", LOG_LEVEL_FATAL, "GQCS INVALID Overlapped!!");
-		}
-
-	Decrement_IOCount:
-		DecrementIOCount(session);
-	}
+	ServerSessionManager sessionManager(this);
+	IoCommon::IOCPWorkerLoop(h_iocp, sessionManager);
 }
 
 bool NetServer::ReleaseSession(Session* session) 
@@ -394,25 +307,10 @@ bool NetServer::ReleaseSession(Session* session)
 
 void NetServer::SendCompletion(Session* session)
 {
-	// Send Packet Free
-	for (int i = 0; i < session->sendPacketCount ; i++)
-	{
-		PacketBuffer::Free(session->sendPacketArr[i]);
-	}
-
-	InterlockedAdd((LONG*)&sendMsgCount, session->sendPacketCount);
-	session->sendPacketCount = 0;
-
-	// Send Flag OFF
-	InterlockedExchange8((char*)&session->sendFlag, false);
-
-	// Send 재전송 체크
-	if (session->disconnectFlag || session->sendQ.GetUseCount() <= 0)
-	{
-		return;
-	}
-
-	SendPost(session);
+	IoCommon::SendCompletion(*session, 
+		[this, session]() { SendPost(session); },
+		[this](int count) { InterlockedAdd((LONG*)&sendMsgCount, count); }
+	);
 }
 
 // SendQ Enqueue, SendPost
@@ -512,106 +410,28 @@ bool NetServer::AsyncRecv(Session* session)
 
 void NetServer::RecvCompletionLan(Session* session)
 {
-	// 패킷 처리
-	for (;;)
-	{
-		int recvLen = session->recvBuf.GetUseSize();
-		if (recvLen <= LAN_HEADER_SIZE)
-			break;
-
-		LanHeader lanHeader;
-		session->recvBuf.Peek(&lanHeader, LAN_HEADER_SIZE);
-
-		// 페이로드 길이만큼 수신
-		if (recvLen < lanHeader.len + LAN_HEADER_SIZE)
-			break;
-
-		//------------------------------
-		// OnRecv (네트워크 분기 처리)
-		//------------------------------
-		PacketBuffer* contentsPacket = PacketBuffer::Alloc();
-
-		// 수신한 패킷 분해
-		session->recvBuf.MoveFront(LAN_HEADER_SIZE);
-		session->recvBuf.Dequeue(contentsPacket->writePos, lanHeader.len);
-		contentsPacket->MoveWp(lanHeader.len);
-
-		// 컨텐츠 패킷 처리
-		OnRecv(session->sessionId, contentsPacket);
-		InterlockedIncrement(&recvMsgCount);
-
-		PacketBuffer::Free(contentsPacket);
-	}
-
-	//------------------------------
-	// Post Recv (Recv 재등록)
-	//------------------------------
-	if (false == session->disconnectFlag)
-	{
-		AsyncRecv(session);
-	}
+	IoCommon::RecvCompletionLan(*session,
+		[this, session](PacketBuffer* packet) { 
+			OnRecv(session->sessionId, packet); 
+			PacketBuffer::Free(packet);
+		},
+		[this, session]() { DisconnectSession(session); },
+		[this, session]() { AsyncRecv(session); },
+		[this]() { InterlockedIncrement(&recvMsgCount); }
+	);
 }
 
 void NetServer::RecvCompletionNet(Session* session)
 {
-	// 패킷 처리
-	for (;;)
-	{
-		int recvLen = session->recvBuf.GetUseSize();
-		if (recvLen <= NET_HEADER_SIZE)
-		{
-			break;
-		}
-
-		// 암호 카피
-		char encryptPacket[NET_HEADER_SIZE + MAX_PAYLOAD_LEN];
-		session->recvBuf.Peek(encryptPacket, NET_HEADER_SIZE);
-
-		// code 검사
-		BYTE code = ((NetHeader*)encryptPacket)->code;
-		if (code != protocolCode)
-		{
-			//LOG("NetServer", LOG_LEVEL_WARN, "Recv Packet is wrong code!!", WSAGetLastError());
-			DisconnectSession(session);
-			break;
-		}
-
-		// 페이로드 길이만큼 수신
-		WORD payloadLen = ((NetHeader*)encryptPacket)->len;
-		if (recvLen < (NET_HEADER_SIZE + payloadLen))
-		{
-			break;
-		}
-
-		// 암호패킷 분해
-		session->recvBuf.MoveFront(NET_HEADER_SIZE);
-		session->recvBuf.Dequeue(encryptPacket + NET_HEADER_SIZE, payloadLen);
-
-		// 패킷 복호화
-		PacketBuffer* decrypt_packet = PacketBuffer::Alloc();
-		if (!decrypt_packet->DecryptPacket(encryptPacket, privateKey))
-		{
-			PacketBuffer::Free(decrypt_packet);
-			//LOG("NetServer", LOG_LEVEL_WARN, "Recv Packet is wrong checksum!!", WSAGetLastError());
-			DisconnectSession(session);
-			break;
-		}
-
-		// 컨텐츠 패킷 처리
-		OnRecv(session->sessionId, decrypt_packet);
-		InterlockedIncrement(&recvMsgCount);
-
-		// 암호패킷, 복호화 패킷 Free
-		PacketBuffer::Free(decrypt_packet);
-	}
-
-	//------------------------------
-	// Post Recv
-	//------------------------------
-	if (!session->disconnectFlag)
-	{
-		AsyncRecv(session);
-	}
+	IoCommon::RecvCompletionNet(*session, protocolCode, privateKey,
+		[this, session](PacketBuffer* packet) { 
+			OnRecv(session->sessionId, packet); 
+			PacketBuffer::Free(packet);
+		},
+		[this, session]() { DisconnectSession(session); },
+		[this, session]() { AsyncRecv(session); },
+		[this]() { InterlockedIncrement(&recvMsgCount); }
+	);
 }
 
 Session* NetServer::ValidateSession(SessionId session_id)

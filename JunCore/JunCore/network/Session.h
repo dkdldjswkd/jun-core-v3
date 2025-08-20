@@ -74,8 +74,42 @@ public:
 	std::vector<char> AESkey;
 	unsigned long long send_seq_number_ = 0;
 
+private:
+	HANDLE h_iocp = INVALID_HANDLE_VALUE;  // IOCP 핸들 저장
+
 public:
 	void Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId);
 	// Reset : ReleaseSession()
+	
+	// IOCP 핸들 설정 (초기화 시 호출)
+	inline void SetIOCP(HANDLE iocp_handle) { h_iocp = iocp_handle; }
+	
+	// IO Count 관리 함수들
+	inline void IncrementIOCount() 
+	{
+		InterlockedIncrement(&ioCount);
+	}
+	
+	inline bool DecrementIOCount() 
+	{
+		return (0 == InterlockedDecrement(&ioCount));
+	}
+	
+	inline bool DecrementIOCountPQCS() 
+	{
+		if (0 == InterlockedDecrement(&ioCount)) 
+		{
+			PostQueuedCompletionStatus(h_iocp, 1, (ULONG_PTR)this, (LPOVERLAPPED)2); // RELEASE_SESSION
+			return true;
+		}
+		return false;
+	}
+	
+	// 연결 해제
+	inline void DisconnectSession() 
+	{
+		disconnectFlag = true;
+		CancelIoEx((HANDLE)sock, NULL);
+	}
 };
 typedef Session* PSession;
