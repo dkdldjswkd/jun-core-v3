@@ -10,10 +10,10 @@
 void NetBase::InitializeProtocol(const char* systemFile, const char* configSection)
 {
 	// TODO: Parser를 사용한 설정 로딩 구현 예정
-	// 현재는 하드코딩된 값으로 초기화
+	// 현재는 하드코딩된 값으로 초기화 (EchoServer/Client는 LAN 모드 사용)
 	protocolCode = 0xFF;
 	privateKey = 0xFF; 
-	netType = NetType::NET;
+	netType = NetType::LAN;
 
 	/* 향후 구현 예정:
 	Parser parser;

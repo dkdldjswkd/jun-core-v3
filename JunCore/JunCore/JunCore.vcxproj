@@ -20,8 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="network\NetBase.cpp" />
-    <ClCompile Include="network\client.cpp" />
-    <ClCompile Include="network\server.cpp" />
+    <ClCompile Include="network\NetworkPolicy.cpp" />
     <ClCompile Include="buffer\packet.cpp" />
     <ClCompile Include="network\Session.cpp" />
     <ClCompile Include="protocol\handshake.pb.cc" />
@@ -29,8 +28,9 @@
   <ItemGroup>
     <ClInclude Include="core\base.h" />
     <ClInclude Include="network\NetBase.h" />
-    <ClInclude Include="network\client.h" />
-    <ClInclude Include="network\server.h" />
+    <ClInclude Include="network\NetworkEngine.h" />
+    <ClInclude Include="network\NetworkPolicy.h" />
+    <ClInclude Include="network\NetworkTypes.h" />
     <ClInclude Include="network\IoCommon.h" />
     <ClInclude Include="buffer\packet.h" />
     <ClInclude Include="protocol\handshake.pb.h" />

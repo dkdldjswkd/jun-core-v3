@@ -11,11 +11,9 @@
 using NetServerEngine = NetworkEngine<ServerPolicy>;
 using NetClientEngine = NetworkEngine<ClientPolicy>;
 
-// 기존 NetServer/NetClient 클래스들을 NetworkEngine 기반으로 교체할 때 사용
-// Phase 3 완료 후에는 다음과 같이 사용:
-// 
-// typedef NetServerEngine NetServer;  // 기존 NetServer 대체
-// typedef NetClientEngine NetClient;  // 기존 NetClient 대체
+// Phase 3 완료: NetworkEngine으로 완전 교체
+using NetServer = NetServerEngine;   // 기존 NetServer 대체
+using NetClient = NetClientEngine;   // 기존 NetClient 대체
 
 //------------------------------
 // 편의를 위한 팩토리 함수들

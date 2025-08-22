@@ -10,6 +10,9 @@
 //------------------------------
 class NetBase
 {
+	friend struct ServerPolicy;
+	friend struct ClientPolicy;
+	
 public:
 	NetBase(const char* systemFile, const char* configSection);
 	virtual ~NetBase();

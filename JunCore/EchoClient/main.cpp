@@ -24,9 +24,9 @@ int main()
 
 		// 서버에 테스트 메시지 전송
 		PacketBuffer* testPacket = PacketBuffer::Alloc();
-		testPacket->PutData(input.c_str(), input.length());
+		testPacket->PutData(input.c_str(), static_cast<int>(input.length()));
 		client.SendPacket(testPacket);
-		PacketBuffer::Free(testPacket);
+		// SendPacket은 패킷을 큐에 넣으므로 바로 Free하면 안됨
 	}
 
 	client.Stop();

@@ -23,8 +23,10 @@ public:
 #define PUT_ERROR 1 // << Error
 };
 
-class NetServer;
-class NetClient;
+// NetworkEngine forward declarations
+template<typename NetworkPolicy> class NetworkEngine;
+struct ServerPolicy;
+struct ClientPolicy;
 class PacketBuffer 
 {
 private:
@@ -33,8 +35,7 @@ public:
 	inline ~PacketBuffer();
 
 private:
-	friend NetServer;
-	friend NetClient;
+	template<typename NetworkPolicy> friend class NetworkEngine;
 	friend LFObjectPoolTLS<PacketBuffer>;
 
 private:

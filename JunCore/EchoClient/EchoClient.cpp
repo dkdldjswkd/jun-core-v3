@@ -1,4 +1,5 @@
-﻿#include "EchoClient.h"
+﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#include "EchoClient.h"
 #include <iostream>
 
 EchoClient::EchoClient(const char* systemFile, const char* client) : NetClient(systemFile, client)
@@ -27,11 +28,13 @@ void EchoClient::OnRecv(PacketBuffer* csContentsPacket)
 	char* payloadData = new char[csContentsPacket_len + 1];
 	payloadData[csContentsPacket_len] = 0;
 
-	csContentsPacket->GetData(OUT payloadData, csContentsPacket_len);
-	std::cout << "recv msg >> " << payloadData << std::endl;
+	csContentsPacket->GetData(payloadData, csContentsPacket_len);
+	std::cout << "[EchoClient] recv msg >> " << payloadData << std::endl;
 	delete[] payloadData;
 	csContentsPacket->MoveRp(csContentsPacket_len);
-	return;
+	
+	// 중요: PacketBuffer 해제
+	PacketBuffer::Free(csContentsPacket);
 }
 
 void EchoClient::OnDisconnect() 

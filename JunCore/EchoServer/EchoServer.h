@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "../JunCore/network/server.h"
+#include "../JunCore/network/NetworkTypes.h"
 
 class EchoServer : public NetServer 
 {

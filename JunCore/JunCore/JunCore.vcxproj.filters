@@ -18,12 +18,6 @@
     <ClCompile Include="network\NetBase.cpp">
       <Filter>network</Filter>
     </ClCompile>
-    <ClCompile Include="network\client.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
-    <ClCompile Include="network\server.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
     <ClCompile Include="buffer\packet.cpp">
       <Filter>buffer</Filter>
     </ClCompile>
@@ -33,15 +27,12 @@
     <ClCompile Include="protocol\handshake.pb.cc">
       <Filter>protocol</Filter>
     </ClCompile>
+    <ClCompile Include="network\NetworkPolicy.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network\NetBase.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\client.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\server.h">
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\IoCommon.h">
@@ -61,6 +52,15 @@
     </ClInclude>
     <ClInclude Include="protocol\handshake.pb.h">
       <Filter>protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="network\NetworkEngine.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\NetworkPolicy.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\NetworkTypes.h">
+      <Filter>network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
