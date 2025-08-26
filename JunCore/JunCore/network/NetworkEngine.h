@@ -14,9 +14,6 @@
 template<typename NetworkPolicy>
 class NetworkEngine : public NetBase
 {
-	friend struct ServerPolicy;
-	friend struct ClientPolicy;
-	
 public:
 	NetworkEngine(const char* systemFile, const char* configSection);
 	virtual ~NetworkEngine();
@@ -57,9 +54,44 @@ public:
 	
 	template<bool Enable = !NetworkPolicy::IsServer>
 	typename std::enable_if<Enable, bool>::type Disconnect();
+
+public:
+	// === Policy 전용 인터페이스 (friend 제거로 인한 공개 API) ===
+	// 주의: 이 함수들은 Policy에서만 호출해야 함
+	
+	// Policy 데이터 접근
+	typename NetworkPolicy::PolicyData& GetPolicyData() { return policyData; }
+	const typename NetworkPolicy::PolicyData& GetPolicyData() const { return policyData; }
+	
+	// ClientPolicy에서 parser 접근 (조건부 컴파일)
+	template<bool Enable = !NetworkPolicy::IsServer>
+	typename std::enable_if<Enable, Parser&>::type GetParser() { return parser; }
+	
+	// IOCP 관련 인터페이스
+	HANDLE GetIOCPHandle() const { return h_iocp; }
+	void PostCompletion(DWORD bytes, ULONG_PTR key, LPOVERLAPPED overlapped) {
+		PostQueuedCompletionStatus(h_iocp, bytes, key, overlapped);
+	}
+	
+	// 스레드 함수들 (Policy에서 스레드 생성 시 사용)
+	void WorkerFunc();
+	
+	template<bool Enable = NetworkPolicy::IsServer>
+	typename std::enable_if<Enable, void>::type AcceptFunc();
+	
+	template<bool Enable = NetworkPolicy::IsServer>
+	typename std::enable_if<Enable, void>::type TimeoutFunc();
 	
 	template<bool Enable = !NetworkPolicy::IsServer>
-	typename std::enable_if<Enable, Parser&>::type GetParser();
+	typename std::enable_if<Enable, void>::type ConnectFunc();
+	
+	// Policy에서 콜백 호출
+	void CallOnServerStop() { OnServerStop(); }
+	void CallOnClientStop() { OnClientStop(); }
+	
+	// Policy에서 세션 관련 함수 호출
+	bool CallSendPost(Session* session) { return SendPost(session); }
+	bool CallReleaseSession(Session* session) { return ReleaseSession(session); }
 
 private:
 	// 세션 관련 (정책으로 위임)
@@ -104,19 +136,6 @@ protected:
 	virtual void OnClientStop() {}
 
 private:
-	// WorkerFunc (NetBase::RunWorkerThread 사용)
-	void WorkerFunc();
-	
-	// 정책별 특화 스레드 함수들
-	template<bool Enable = NetworkPolicy::IsServer>
-	typename std::enable_if<Enable, void>::type AcceptFunc();
-	
-	template<bool Enable = NetworkPolicy::IsServer>
-	typename std::enable_if<Enable, void>::type TimeoutFunc();
-	
-	template<bool Enable = !NetworkPolicy::IsServer>
-	typename std::enable_if<Enable, void>::type ConnectFunc();
-	
 	// Send/Recv 관련 (NetBase 메서드 사용)
 	bool SendPost(Session* session);
 	bool AsyncRecv(Session* session);

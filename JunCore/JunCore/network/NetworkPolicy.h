@@ -76,13 +76,13 @@ struct ServerPolicy
 	template<typename NetworkEngineT>
 	static constexpr void HandleSendPost(NetworkEngineT* engine, PolicyData& data, Session* session)
 	{
-		engine->SendPost(session);
+		engine->CallSendPost(session);
 	}
 	
 	template<typename NetworkEngineT>
 	static constexpr void HandleReleaseSession(NetworkEngineT* engine, PolicyData& data, Session* session)
 	{
-		engine->ReleaseSession(session);
+		engine->CallReleaseSession(session);
 	}
 	
 	template<typename NetworkEngineT>
@@ -148,14 +148,14 @@ struct ClientPolicy
 	static constexpr void HandleSendPost(NetworkEngineT* engine, PolicyData& data, Session* session)
 	{
 		// 클라이언트는 단일 세션이므로 session 파라미터 무시하고 자신의 세션 사용
-		engine->SendPost(&data.clientSession);
+		engine->CallSendPost(&data.clientSession);
 	}
 	
 	template<typename NetworkEngineT>
 	static constexpr void HandleReleaseSession(NetworkEngineT* engine, PolicyData& data, Session* session)
 	{
 		// 클라이언트는 자신의 세션만 해제
-		engine->ReleaseSession(&data.clientSession);
+		engine->CallReleaseSession(&data.clientSession);
 	}
 	
 	template<typename NetworkEngineT>
@@ -329,7 +329,7 @@ inline void ServerPolicy::StopNetwork(NetworkEngineT* engine, PolicyData& data)
 		data.timeOutThread.join();
 	}
 
-	engine->OnServerStop();
+	engine->CallOnServerStop();
 }
 
 inline SessionId ServerPolicy::GetSessionId(PolicyData& data)
@@ -429,7 +429,7 @@ inline void ClientPolicy::StopNetwork(NetworkEngineT* engine, PolicyData& data)
 		data.connectThread.join();
 	}
 
-	engine->OnClientStop();
+	engine->CallOnClientStop();
 }
 
 inline bool ClientPolicy::ReleaseSession(PolicyData& data)
