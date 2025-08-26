@@ -49,7 +49,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId)
 	sendFlag = false;
 	disconnectFlag = false;
 	sendPacketCount = 0;
-	lastRecvTime = timeGetTime();
+	lastRecvTime = static_cast<DWORD>(GetTickCount64());
 
 	// 클라이언트의 접속 요청을 허용할지 여부
 	InterlockedIncrement(&ioCount);

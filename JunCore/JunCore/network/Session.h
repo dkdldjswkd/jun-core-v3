@@ -5,8 +5,8 @@
 #include "../../JunCommon/container/RingBuffer.h"
 #include <vector>
 
-#define MAX_SEND_MSG		100
-#define	INVALID_SESSION_ID	-1
+constexpr int MAX_SEND_MSG = 100;
+constexpr int INVALID_SESSION_ID = -1;
 
 //------------------------------
 // SessionId
@@ -85,17 +85,17 @@ public:
 	inline void SetIOCP(HANDLE iocp_handle) { h_iocp = iocp_handle; }
 	
 	// IO Count 관리 함수들
-	inline void IncrementIOCount() 
+	inline void IncrementIOCount() noexcept
 	{
 		InterlockedIncrement(&ioCount);
 	}
 	
-	inline bool DecrementIOCount() 
+	inline bool DecrementIOCount() noexcept
 	{
 		return (0 == InterlockedDecrement(&ioCount));
 	}
 	
-	inline bool DecrementIOCountPQCS() 
+	inline bool DecrementIOCountPQCS() noexcept
 	{
 		if (0 == InterlockedDecrement(&ioCount)) 
 		{
@@ -106,7 +106,7 @@ public:
 	}
 	
 	// 연결 해제
-	inline void DisconnectSession() 
+	inline void DisconnectSession() noexcept
 	{
 		disconnectFlag = true;
 		CancelIoEx((HANDLE)sock, NULL);

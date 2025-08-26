@@ -8,8 +8,8 @@
 #include <exception>
 #include "../../JunCommon/pool/LFObjectPoolTLS.h"
 
-#define MAX_PAYLOAD_LEN 8000
-#define MAX_HEADER_LEN 10
+constexpr size_t MAX_PAYLOAD_LEN = 8000;
+constexpr size_t MAX_HEADER_LEN = 10;
 
 struct PacketException : public std::exception 
 {
@@ -85,12 +85,12 @@ public:
 	static void Free(PacketBuffer* instance, bool* isReleased);
 
 	// Empty & Full
-	inline bool Empty() const;
-	inline bool Full() const;
+	inline bool Empty() const noexcept;
+	inline bool Full() const noexcept;
 
 	// Getter
-	inline int GetFreeSize()const;
-	inline int GetPayloadSize() const;
+	inline int GetFreeSize() const noexcept;
+	inline int GetPayloadSize() const noexcept;
 
 	// ref ����
 	void IncrementRefCount();
@@ -161,20 +161,20 @@ inline char* PacketBuffer::GetNetPacketPos() {
 	return (payloadPos - NET_HEADER_SIZE);
 }
 
-inline bool PacketBuffer::Empty() const {
+inline bool PacketBuffer::Empty() const noexcept {
 	if (writePos <= payloadPos) return true;
 	return false;
 }
 
-bool PacketBuffer::Full() const {
+inline bool PacketBuffer::Full() const noexcept {
 	if (writePos + 1 == end) return true;
 	return false;
 }
 
-inline int PacketBuffer::GetFreeSize() const {
+inline int PacketBuffer::GetFreeSize() const noexcept {
 	return static_cast<int>(end - writePos);
 }
 
-inline int PacketBuffer::GetPayloadSize() const {
+inline int PacketBuffer::GetPayloadSize() const noexcept {
 	return static_cast<int>(writePos - payloadPos);
 }

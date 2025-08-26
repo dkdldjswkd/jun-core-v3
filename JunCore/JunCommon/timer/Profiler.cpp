@@ -38,7 +38,7 @@ void Profiler::ProfileEnd(const char* name) {
 		}
 
 		// profile time이 최대/최소 범위라면, 반영 x
-		DWORD profileTime = timeGetTime() - profileArr[i].startTime;
+		DWORD profileTime = static_cast<DWORD>(GetTickCount64()) - profileArr[i].startTime;
 		if (profileArr[i].VaildateData(profileTime)) return;
 
 		// profile time 반영 o
@@ -53,7 +53,7 @@ void Profiler::ProfileBegin(const char* name) {
 	// 기존 데이터 없이 새로 생성
 	for (int i = 0; i < PROFILE_DATA_NUM; i++) {
 		if (strcmp(profileArr[i].name, name) == 0) {
-			profileArr[i].startTime = timeGetTime();
+			profileArr[i].startTime = static_cast<DWORD>(GetTickCount64());
 			return;
 		}
 	}
@@ -63,7 +63,7 @@ void Profiler::ProfileBegin(const char* name) {
 		if (false == profileArr[i].useFlag) {
 			strncpy_s(profileArr[i].name, PROFILE_NAME_LEN, name, PROFILE_NAME_LEN - 1);
 			profileArr[i].useFlag = true;
-			profileArr[i].startTime = timeGetTime();
+			profileArr[i].startTime = static_cast<DWORD>(GetTickCount64());
 			return;
 		}
 	}

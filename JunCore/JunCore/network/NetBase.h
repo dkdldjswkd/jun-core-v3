@@ -62,8 +62,8 @@ protected:
 		recvMsgCount = 0;
 	}
 
-	inline DWORD GetBaseSendTPS() const { return sendMsgTPS; }
-	inline DWORD GetBaseRecvTPS() const { return recvMsgTPS; }
+	inline DWORD GetBaseSendTPS() const noexcept { return sendMsgTPS; }
+	inline DWORD GetBaseRecvTPS() const noexcept { return recvMsgTPS; }
 
 	// 공통 카운터 증가 함수들 (템플릿 콜백에서 사용)
 	inline void IncrementSendCount(int count) { 
@@ -287,10 +287,9 @@ inline void NetBase::OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, O
 		session.recvBuf.MoveFront(LAN_HEADER_SIZE);
 
 		PacketBuffer* contentsPacket = PacketBuffer::Alloc();
-		char* tempBuffer = new char[lanHeader.len];
+		char tempBuffer[MAX_PAYLOAD_LEN];
 		session.recvBuf.Dequeue(tempBuffer, lanHeader.len);
 		contentsPacket->PutData(tempBuffer, lanHeader.len);
-		delete[] tempBuffer;
 
 		onRecv(contentsPacket);
 		onIncrementCount();
@@ -402,7 +401,7 @@ inline void NetBase::RunWorkerThread(SessionManagerT& sessionManager)
 			if (retGQCS) 
 			{
 				session->recvBuf.MoveRear(ioSize);
-				session->lastRecvTime = timeGetTime();
+				session->lastRecvTime = static_cast<DWORD>(GetTickCount64());
 				sessionManager.HandleRecvCompletion(session);
 			}
 		}
