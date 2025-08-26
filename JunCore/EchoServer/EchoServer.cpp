@@ -1,7 +1,7 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "EchoServer.h"
 
-EchoServer::EchoServer(const char* systemFile, const char* server) : NetServer(systemFile, server)
+EchoServer::EchoServer(const char* systemFile, const char* server) : NetworkEngine<ServerPolicy>(systemFile, server)
 {
 }
 

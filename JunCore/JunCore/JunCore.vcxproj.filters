@@ -35,9 +35,6 @@
     <ClInclude Include="network\NetBase.h">
       <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="network\IoCommon.h">
-      <Filter>network</Filter>
-    </ClInclude>
     <ClInclude Include="buffer\packet.h">
       <Filter>buffer</Filter>
     </ClInclude>

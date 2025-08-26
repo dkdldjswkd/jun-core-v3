@@ -5,7 +5,6 @@
 #include <type_traits>
 #include "NetBase.h"
 #include "NetworkPolicy.h"
-#include "IoCommon.h"
 #include "../../JunCommon/algorithm/Parser.h"
 
 //------------------------------
@@ -75,7 +74,7 @@ private:
 	void HandleSendCompletion(Session* session);
 	void HandleDecrementIOCount(Session* session);
 
-	// IOCP Worker 어댑터 (IoCommon::IOCPWorkerLoop용)
+	// IOCP Worker 어댑터 (NetBase::RunWorkerThread용)
 	class NetworkEngineSessionManager 
 	{
 	private:
@@ -105,7 +104,7 @@ protected:
 	virtual void OnClientStop() {}
 
 private:
-	// WorkerFunc (IoCommon::IOCPWorkerLoop 사용)
+	// WorkerFunc (NetBase::RunWorkerThread 사용)
 	void WorkerFunc();
 	
 	// 정책별 특화 스레드 함수들
@@ -118,7 +117,7 @@ private:
 	template<bool Enable = !NetworkPolicy::IsServer>
 	typename std::enable_if<Enable, void>::type ConnectFunc();
 	
-	// Send/Recv 관련 (IoCommon 사용)
+	// Send/Recv 관련 (NetBase 메서드 사용)
 	bool SendPost(Session* session);
 	bool AsyncRecv(Session* session);
 	
@@ -171,7 +170,7 @@ template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::WorkerFunc()
 {
 	NetworkEngineSessionManager sessionManager(this);
-	IoCommon::IOCPWorkerLoop(h_iocp, sessionManager);
+	RunWorkerThread(sessionManager);
 }
 
 // 정책 기반 핸들러들은 단순히 정책으로 위임
@@ -215,11 +214,11 @@ void NetworkEngine<NetworkPolicy>::HandleDecrementIOCount(Session* session)
 	}
 }
 
-// RecvCompletion은 IoCommon 사용
+// RecvCompletion은 NetBase 메서드 사용
 template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::RecvCompletionLan(Session* session)
 {
-	IoCommon::RecvCompletionLan(*session,
+	OnReceiveCompleteLAN(*session,
 		[this, session](PacketBuffer* packet) { 
 			if constexpr (NetworkPolicy::IsServer) {
 				OnRecv(session->sessionId, packet);
@@ -236,7 +235,7 @@ void NetworkEngine<NetworkPolicy>::RecvCompletionLan(Session* session)
 template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::RecvCompletionNet(Session* session)
 {
-	IoCommon::RecvCompletionNet(*session, protocolCode, privateKey,
+	OnReceiveCompleteNET(*session,
 		[this, session](PacketBuffer* packet) { 
 			if constexpr (NetworkPolicy::IsServer) {
 				OnRecv(session->sessionId, packet);
@@ -253,7 +252,7 @@ void NetworkEngine<NetworkPolicy>::RecvCompletionNet(Session* session)
 template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::SendCompletion(Session* session)
 {
-	IoCommon::SendCompletion(*session,
+	OnSendComplete(*session,
 		[this, session]() { SendPost(session); },
 		[this](int count) { IncrementSendCount(count); }
 	);
@@ -495,7 +494,7 @@ template<typename NetworkPolicy>
 bool NetworkEngine<NetworkPolicy>::SendPost(Session* session)
 {
 	bool isLan = (netType == NetType::LAN);
-	return IoCommon::AsyncSend(*session, isLan,
+	return PostSend(*session, isLan,
 		[](Session* s) { s->DisconnectSession(); },
 		[](Session* s) { s->DecrementIOCount(); });
 }
@@ -530,7 +529,7 @@ NetworkEngine<NetworkPolicy>::SendPacket(PacketBuffer* sendPacket)
 template<typename NetworkPolicy>
 bool NetworkEngine<NetworkPolicy>::AsyncRecv(Session* session)
 {
-	return IoCommon::AsyncRecv(*session,
+	return PostReceive(*session,
 		[](Session* s) { s->DecrementIOCount(); });
 }
 
@@ -712,6 +711,6 @@ Key features:
 - Compile-time type safety with SFINAE
 - Zero runtime overhead template metaprogramming  
 - Modern C++17 features (if constexpr, std::enable_if)
-- Full compatibility with existing NetServer/NetClient API
+- Full compatibility with existing NetworkEngine<ServerPolicy>/NetworkEngine<ClientPolicy> API
 - Header-only template library
 */

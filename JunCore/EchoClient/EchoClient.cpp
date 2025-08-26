@@ -2,7 +2,7 @@
 #include "EchoClient.h"
 #include <iostream>
 
-EchoClient::EchoClient(const char* systemFile, const char* client) : NetClient(systemFile, client)
+EchoClient::EchoClient(const char* systemFile, const char* client) : NetworkEngine<ClientPolicy>(systemFile, client)
 {
 }
 

@@ -3,19 +3,6 @@
 #include "NetworkPolicy.h"
 
 //------------------------------
-// API 호환성을 위한 typedef 정의
-// 기존 NetServer/NetClient 코드와 호환성 유지
-//------------------------------
-
-// 기존 API와 호환되는 typedef
-using NetServerEngine = NetworkEngine<ServerPolicy>;
-using NetClientEngine = NetworkEngine<ClientPolicy>;
-
-// Phase 3 완료: NetworkEngine으로 완전 교체
-using NetServer = NetServerEngine;   // 기존 NetServer 대체
-using NetClient = NetClientEngine;   // 기존 NetClient 대체
-
-//------------------------------
 // 편의를 위한 팩토리 함수들
 //------------------------------
 namespace NetworkFactory 
@@ -65,7 +52,7 @@ namespace PolicyTraits
 //------------------------------
 /*
 // 기존 방식
-class EchoServer : public NetServer 
+class EchoServer : public NetworkEngine<ServerPolicy> 
 {
     // 구현...
 };

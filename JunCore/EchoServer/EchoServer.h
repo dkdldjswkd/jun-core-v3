@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/NetworkTypes.h"
 
-class EchoServer : public NetServer 
+class EchoServer : public NetworkEngine<ServerPolicy> 
 {
 public:
 	EchoServer(const char* systemFile, const char* server);

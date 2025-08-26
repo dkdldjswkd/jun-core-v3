@@ -31,7 +31,6 @@
     <ClInclude Include="network\NetworkEngine.h" />
     <ClInclude Include="network\NetworkPolicy.h" />
     <ClInclude Include="network\NetworkTypes.h" />
-    <ClInclude Include="network\IoCommon.h" />
     <ClInclude Include="buffer\packet.h" />
     <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />

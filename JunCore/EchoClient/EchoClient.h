@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/NetworkTypes.h"
 
-class EchoClient : public NetClient 
+class EchoClient : public NetworkEngine<ClientPolicy> 
 {
 public:
 	EchoClient(const char* systemFile, const char* client);
