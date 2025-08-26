@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <WinSock2.h>
 #include <Windows.h>
 #include <vector>
@@ -257,7 +257,7 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 
 	// 세션 배열 생성
 	data.sessionArray = new Session[data.maxSession];
-	for (int i = 0; i < data.maxSession; i++)
+	for (unsigned int i = 0; i < data.maxSession; i++)
 	{
 		data.sessionIdxStack.Push(data.maxSession - (1 + i));
 	}

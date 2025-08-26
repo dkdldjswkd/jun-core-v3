@@ -285,6 +285,11 @@ When using JunCommon classes from JunCore, use the correct relative paths:
   ```
 - Use consistent indentation (4 spaces or tabs)
 
+### File Encoding
+- **All new .cpp/.h files must be created with UTF-8 BOM encoding**
+- This ensures consistent encoding across the Visual Studio project
+- Use UTF-8 BOM when creating any C++ source or header files
+
 ### Build Requirements
 - **Zero Warnings Policy**: All code must compile without warnings
 - Fix any compiler warnings before proceeding with development

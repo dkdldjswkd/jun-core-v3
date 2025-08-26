@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <memory>
 #include <mutex>
 #include <Windows.h>
@@ -142,11 +142,11 @@ inline int PacketBuffer::GetUseCount() {
 }
 
 inline int PacketBuffer::GetLanPacketSize() {
-	return (writePos - payloadPos) + LAN_HEADER_SIZE;
+	return static_cast<int>(writePos - payloadPos) + LAN_HEADER_SIZE;
 }
 
 inline int PacketBuffer::GetNetPacketSize() {
-	return (writePos - payloadPos) + NET_HEADER_SIZE;
+	return static_cast<int>(writePos - payloadPos) + NET_HEADER_SIZE;
 }
 
 inline void PacketBuffer::IncrementRefCount() {
@@ -172,9 +172,9 @@ bool PacketBuffer::Full() const {
 }
 
 inline int PacketBuffer::GetFreeSize() const {
-	return end - writePos;
+	return static_cast<int>(end - writePos);
 }
 
 inline int PacketBuffer::GetPayloadSize() const {
-	return writePos - payloadPos;
+	return static_cast<int>(writePos - payloadPos);
 }

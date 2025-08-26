@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <WinSock2.h>
 #include <Windows.h>
@@ -419,7 +419,7 @@ NetworkEngine<NetworkPolicy>::TimeoutFunc()
 	{
 		Sleep(policyData.timeoutCycle);
 		
-		DWORD currentTime = GetTickCount64();
+		DWORD currentTime = static_cast<DWORD>(GetTickCount64());
 		
 		// 모든 세션 검사
 		for (DWORD i = 0; i < policyData.maxSession; i++)
