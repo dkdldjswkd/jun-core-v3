@@ -27,9 +27,6 @@
     <ClCompile Include="protocol\handshake.pb.cc">
       <Filter>protocol</Filter>
     </ClCompile>
-    <ClCompile Include="network\NetworkPolicy.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network\NetBase.h">

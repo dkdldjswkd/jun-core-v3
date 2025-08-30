@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <string>
 #include "EchoClient.h"
 #include "../JunCommon/system/CrashDump.h"
 using namespace std;
@@ -11,24 +12,38 @@ int main()
 	client.Start();
 	printf("StartEchoClient \n");
 
+	// 인터랙티브 채팅 모드
+	Sleep(1000); // 서버 연결 완료 대기
+	
+	cout << "=== 채팅을 시작합니다. 'exit' 입력시 종료 ===" << endl;
+	
 	while (true) 
 	{
-		std::string input;
+		string input;
 		cout << ">> ";
-		std::cin >> input;
+		
+		if (!getline(cin, input)) {
+			cout << "\n입력 오류 또는 EOF. 종료합니다..." << endl;
+			break;
+		}
+		
+		if (input.empty()) {
+			continue; // 빈 입력은 무시
+		}
 
-		if(input == "exit") 
-		{
+		if(input == "exit") {
+			cout << "채팅을 종료합니다." << endl;
 			break; 
 		}
 
-		// 서버에 테스트 메시지 전송
+		// 서버에 메시지 전송
 		PacketBuffer* testPacket = PacketBuffer::Alloc();
 		testPacket->PutData(input.c_str(), static_cast<int>(input.length()));
 		client.SendPacket(testPacket);
-		// SendPacket은 패킷을 큐에 넣으므로 바로 Free하면 안됨
+		cout << "[SENT] " << input << endl;
 	}
 
+	cout << "클라이언트를 종료합니다..." << endl;
 	client.Stop();
-	Sleep(INFINITE);
+	cout << "클라이언트가 종료되었습니다." << endl;
 }

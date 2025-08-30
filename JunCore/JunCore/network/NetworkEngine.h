@@ -7,10 +7,16 @@
 #include "NetworkPolicy.h"
 #include "../../JunCommon/algorithm/Parser.h"
 
-//------------------------------
+// 템플릿 인자 NetworkPolicy로는 추적이 불편해서 NetworkPolicy의 구현부를 추적하기 위한 전방선언
+struct ServerPolicy;
+struct ClientPolicy;
+
+//---------------------------------------------------------------------
 // NetworkEngine - 템플릿 기반 통합 네트워크 클래스
 // Policy-Based Design으로 Server/Client 동작 분리
-//------------------------------
+// 가상 함수 대신 템플릿으로 다형성을 구현하여 런타임 오버헤드를 줄이기 위해,
+// 템플릿 클래스를 사용한다.
+//---------------------------------------------------------------------
 template<typename NetworkPolicy>
 class NetworkEngine : public NetBase
 {
@@ -92,6 +98,16 @@ public:
 	// Policy에서 세션 관련 함수 호출
 	bool CallSendPost(Session* session) { return SendPost(session); }
 	bool CallReleaseSession(Session* session) { return ReleaseSession(session); }
+	
+	// NetBase 가상 핸들러 구현 (공유 IOCP용)
+	void HandleRecvComplete(Session* session) override { HandleRecvCompletion(session); }
+	void HandleSendComplete(Session* session) override { HandleSendCompletion(session); }
+	void HandleSessionDisconnect(Session* session) override { session->DisconnectSession(); }
+	void HandleDecrementIOCount(Session* session) override { 
+		if (session->DecrementIOCount()) {
+			ReleaseSession(session);
+		}
+	}
 
 private:
 	// 세션 관련 (정책으로 위임)
@@ -104,7 +120,6 @@ private:
 	void HandleReleaseSession(Session* session);
 	void HandleRecvCompletion(Session* session);
 	void HandleSendCompletion(Session* session);
-	void HandleDecrementIOCount(Session* session);
 
 	// IOCP Worker 어댑터 (NetBase::RunWorkerThread용)
 	class NetworkEngineSessionManager 
@@ -220,18 +235,6 @@ void NetworkEngine<NetworkPolicy>::HandleSendCompletion(Session* session)
 	SendCompletion(session);
 }
 
-template<typename NetworkPolicy>
-void NetworkEngine<NetworkPolicy>::HandleDecrementIOCount(Session* session)
-{
-	if (session->DecrementIOCount())
-	{
-		if constexpr (NetworkPolicy::IsServer) {
-			ReleaseSession(session);
-		} else {
-			ReleaseSession(session);  // 클라이언트도 동일하게 처리
-		}
-	}
-}
 
 // RecvCompletion은 NetBase 메서드 사용
 template<typename NetworkPolicy>
@@ -245,9 +248,15 @@ void NetworkEngine<NetworkPolicy>::RecvCompletionLan(Session* session)
 				OnRecv(packet);  // 클라이언트는 SessionId 불필요
 			}
 		},
-		[this, session]() { session->DisconnectSession(); },
-		[this, session]() { AsyncRecv(session); },
-		[this]() { IncrementRecvCount(); }
+		[this, session]() { 
+			session->DisconnectSession(); 
+		},
+		[this, session]() { 
+			AsyncRecv(session); 
+		},
+		[this]() { 
+			IncrementRecvCount(); 
+		}
 	);
 }
 
@@ -329,9 +338,6 @@ void NetworkEngine<NetworkPolicy>::SendPacket(SessionId sessionId, PacketBuffer*
 	
 	// SendPost 실행
 	SendPost(session);
-	
-	// IO Count 감소
-	session->DecrementIOCount();
 }
 
 template<typename NetworkPolicy>
@@ -352,21 +358,13 @@ SessionId NetworkEngine<NetworkPolicy>::GetSessionId()
 template<typename NetworkPolicy>
 Session* NetworkEngine<NetworkPolicy>::ValidateSession(SessionId sessionId)
 {
-	if constexpr (NetworkPolicy::IsServer) {
-		return NetworkPolicy::ValidateSession(policyData, sessionId);
-	} else {
-		return NetworkPolicy::ValidateSession(policyData);
-	}
+	return NetworkPolicy::ValidateSession(policyData, sessionId);
 }
 
 template<typename NetworkPolicy>
 bool NetworkEngine<NetworkPolicy>::ReleaseSession(Session* session)
 {
-	if constexpr (NetworkPolicy::IsServer) {
-		return NetworkPolicy::ReleaseSession(policyData, session);
-	} else {
-		return NetworkPolicy::ReleaseSession(policyData);
-	}
+	return NetworkPolicy::ReleaseSession(policyData, session);
 }
 
 // 핵심 네트워크 메서드들 구현
@@ -413,6 +411,7 @@ NetworkEngine<NetworkPolicy>::AcceptFunc()
 		session->SetIOCP(h_iocp);
 		
 		// 클라이언트 소켓을 IOCP에 등록 (핵심!)
+		// CompletionKey로 세션 포인터를 전달하여 올바른 핸들러 라우팅
 		CreateIoCompletionPort((HANDLE)clientSock, h_iocp, (ULONG_PTR)session, 0);
 		
 		InterlockedIncrement((LONG*)&policyData.sessionCount);
@@ -462,50 +461,96 @@ NetworkEngine<NetworkPolicy>::ConnectFunc()
 {
 	static_assert(!NetworkPolicy::IsServer, "ConnectFunc is only available for ClientPolicy");
 	
-	while (policyData.reconnectFlag)
+	if (policyData.isDummyClient)
 	{
-		// 소켓 생성
-		policyData.clientSock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
-		if (policyData.clientSock == INVALID_SOCKET)
+		// 더미 클라이언트 모드: 모든 세션 연결
+		while (policyData.reconnectFlag)
 		{
-			Sleep(3000);
-			continue;
+			NetworkPolicy::ConnectAllSessions(policyData);
+			
+			// 모든 세션에 IOCP 등록 및 첫 Recv 등록
+			for (size_t i = 0; i < policyData.currentSessions; ++i)
+			{
+				Session* session = &policyData.sessions[i];
+				if (session->sock != INVALID_SOCKET)
+				{
+					// CompletionKey로 세션 포인터 사용
+					CreateIoCompletionPort((HANDLE)session->sock, h_iocp, (ULONG_PTR)session, 0);
+					AsyncRecv(session);
+				}
+			}
+			
+			OnConnect();  // 연결 완료 콜백
+			
+			// 연결 유지 대기
+			while (policyData.reconnectFlag && policyData.currentSessions > 0) {
+				Sleep(1000);
+			}
+			
+			OnDisconnect();  // 연결 해제 콜백
 		}
-		
-		// 연결 시도
-		SOCKADDR_IN serverAddr;
-		serverAddr.sin_family = AF_INET;
-		serverAddr.sin_port = htons(policyData.serverPort);
-		serverAddr.sin_addr.s_addr = inet_addr(policyData.serverIP);
-		
-		if (connect(policyData.clientSock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+	}
+	else
+	{
+		// 일반 클라이언트 모드: 단일 세션 (재연결 없음)
+		if (policyData.reconnectFlag)
 		{
-			closesocket(policyData.clientSock);
-			policyData.clientSock = INVALID_SOCKET;
-			Sleep(3000);
-			continue;
+			// 세션 ID 할당
+			SessionId newSessionId = GetSessionId();
+			if (newSessionId.sessionId == INVALID_SESSION_ID)
+			{
+				Sleep(3000);
+				return;
+			}
+			
+			Session* clientSession = &policyData.sessions[newSessionId.SESSION_INDEX];
+			
+			// 소켓 생성
+			clientSession->sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
+			if (clientSession->sock == INVALID_SOCKET)
+			{
+				Sleep(3000);
+				return;
+			}
+			
+			// 연결 시도
+			SOCKADDR_IN serverAddr;
+			serverAddr.sin_family = AF_INET;
+			serverAddr.sin_port = htons(policyData.serverPort);
+			serverAddr.sin_addr.s_addr = inet_addr(policyData.serverIP);
+			
+			if (connect(clientSession->sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+			{
+				closesocket(clientSession->sock);
+				clientSession->sock = INVALID_SOCKET;
+				// 세션 ID 반환
+				policyData.availableIndexes.Push(newSessionId.SESSION_INDEX);
+				Sleep(3000);
+				return;
+			}
+			
+			// IOCP에 등록 - CompletionKey로 세션 포인터 사용
+			CreateIoCompletionPort((HANDLE)clientSession->sock, h_iocp, (ULONG_PTR)clientSession, 0);
+			
+			// 세션 초기화
+			clientSession->Set(clientSession->sock, serverAddr.sin_addr, policyData.serverPort, newSessionId);
+			clientSession->SetIOCP(h_iocp);
+			InterlockedIncrement((LONG*)&policyData.currentSessions);
+			
+			// 첫 Recv 등록
+			AsyncRecv(clientSession);
+			
+			// 연결 완료
+			OnConnect();
+			
+			// 연결 유지 대기 - 소켓이 유효한 동안 계속 대기
+			while (clientSession->sock != INVALID_SOCKET && policyData.reconnectFlag) {
+				Sleep(1000);
+			}
+			
+			// 연결 해제
+			OnDisconnect();
 		}
-		
-		// IOCP에 등록
-		CreateIoCompletionPort((HANDLE)policyData.clientSock, h_iocp, (ULONG_PTR)&policyData.clientSession, 0);
-		
-		// 세션 초기화
-		policyData.clientSession.Set(policyData.clientSock, serverAddr.sin_addr, policyData.serverPort, SessionId(0, 1));
-		policyData.clientSession.SetIOCP(h_iocp);
-		
-		// 첫 Recv 등록
-		AsyncRecv(&policyData.clientSession);
-		
-		// 연결 완료
-		OnConnect();
-		
-		// 연결 유지 대기 - 소켓이 유효한 동안 계속 대기
-		while (policyData.clientSock != INVALID_SOCKET && policyData.reconnectFlag) {
-			Sleep(1000);
-		}
-		
-		// 연결 해제
-		OnDisconnect();
 	}
 }
 
@@ -518,7 +563,7 @@ bool NetworkEngine<NetworkPolicy>::SendPost(Session* session)
 		[](Session* s) { s->DecrementIOCount(); });
 }
 
-// 클라이언트 전용 SendPacket 구현
+// 클라이언트 전용 SendPacket 구현 (첫 번째 활성 세션에 전송)
 template<typename NetworkPolicy>
 template<bool Enable>
 typename std::enable_if<Enable, void>::type 
@@ -526,8 +571,22 @@ NetworkEngine<NetworkPolicy>::SendPacket(PacketBuffer* sendPacket)
 {
 	static_assert(!NetworkPolicy::IsServer, "This SendPacket is only for ClientPolicy");
 	
-	// 클라이언트 세션에 패킷 전송
-	Session* clientSession = &policyData.clientSession;
+	// 첫 번째 활성 세션 찾기
+	Session* activeSession = nullptr;
+	for (auto& session : policyData.sessions)
+	{
+		if (session.sock != INVALID_SOCKET && !session.disconnectFlag)
+		{
+			activeSession = &session;
+			break;
+		}
+	}
+	
+	if (activeSession == nullptr)
+	{
+		PacketBuffer::Free(sendPacket);
+		return;
+	}
 	
 	// 헤더 설정
 	if (netType == NetType::LAN) {
@@ -537,12 +596,10 @@ NetworkEngine<NetworkPolicy>::SendPacket(PacketBuffer* sendPacket)
 	}
 	
 	// 세션 SendQ에 추가
-	clientSession->sendQ.Enqueue(sendPacket);
+	activeSession->sendQ.Enqueue(sendPacket);
 	
 	// SendPost 실행
-	SendPost(clientSession);
-	
-	// IO Count는 SendPost에서 관리됨
+	SendPost(activeSession);
 }
 
 template<typename NetworkPolicy>

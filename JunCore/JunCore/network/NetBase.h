@@ -52,6 +52,7 @@ protected:
 	// 공통 초기화 함수들
 	virtual void InitializeProtocol(const char* systemFile, const char* configSection);
 	virtual void InitializeIOCP(DWORD maxConcurrentThreads = 0);
+	virtual void InitializeIOCP(HANDLE sharedIOCP);  // IOCP 공유용 오버로드
 	virtual void CleanupIOCP();
 
 	// 공통 TPS 관리 함수들 (inline으로 성능 최적화)
@@ -96,6 +97,15 @@ protected:
 	// 워커 스레드 메인 루프
 	template<typename SessionManagerT>
 	void RunWorkerThread(SessionManagerT& sessionManager);
+	
+	// 공유 IOCP용 워커 스레드 (CompletionKey 라우팅)
+	static void RunSharedWorkerThread(HANDLE sharedIOCP);
+	
+	// 공유 IOCP에서 호출될 가상 핸들러들
+	virtual void HandleRecvComplete(Session* session) = 0;
+	virtual void HandleSendComplete(Session* session) = 0;
+	virtual void HandleSessionDisconnect(Session* session) = 0;
+	virtual void HandleDecrementIOCount(Session* session) = 0;
 
 protected:
 	// 순수 가상 함수 - 파생 클래스에서 구현해야 함
@@ -122,10 +132,15 @@ inline NetBase::NetBase(const char* systemFile, const char* configSection)
 {
 	// WSAStartup을 먼저 호출 (소켓 함수 사용 전에 필수)
 	WSADATA wsaData;
-	if (0 != WSAStartup(MAKEWORD(2, 2), &wsaData)) 
+	int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (0 != wsaResult) 
 	{
+		printf("!!! WSAStartup failed with error: %d !!!\n", wsaResult);
+		fflush(stdout);
 		throw std::exception("WSAStartup_ERROR");
 	}
+	printf("WSAStartup successful\n");
+	fflush(stdout);
 	
 	InitializeProtocol(systemFile, configSection);
 	// IOCP는 파생 클래스에서 activeWorker 설정 후 초기화
@@ -267,8 +282,17 @@ template<typename OnRecvFn, typename OnDisconnectFn, typename OnAsyncRecvFn, typ
 inline void NetBase::OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, OnDisconnectFn&& onDisconnect, 
 										  OnAsyncRecvFn&& onAsyncRecv, OnIncrementCountFn&& onIncrementCount)
 {
+	int loopCount = 0;
+	const int MAX_LOOP_COUNT = 100;  // 무한루프 방지
+	
 	for (;;)
 	{
+		// 무한루프 방지
+		if (++loopCount > MAX_LOOP_COUNT) {
+			// printf 제거 - 크래시 원인 가능성
+			break;
+		}
+		
 		if (session.recvBuf.GetUseSize() < LAN_HEADER_SIZE)
 			break;
 
@@ -277,6 +301,11 @@ inline void NetBase::OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, O
 
 		if (lanHeader.len > MAX_PAYLOAD_LEN)
 		{
+			onDisconnect();
+			return;
+		}
+		
+		if (lanHeader.len == 0) {
 			onDisconnect();
 			return;
 		}
@@ -364,6 +393,7 @@ inline void NetBase::RunWorkerThread(SessionManagerT& sessionManager)
 		LPOVERLAPPED p_overlapped = nullptr;
 
 		BOOL retGQCS = GetQueuedCompletionStatus(h_iocp, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
+		
 
 		// 워커 스레드 종료
 		if (ioSize == 0 && session == nullptr && p_overlapped == nullptr) 

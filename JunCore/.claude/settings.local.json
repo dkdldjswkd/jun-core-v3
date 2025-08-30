@@ -66,7 +66,15 @@
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\rpos\\jun-core-v3\\JunCore\\EchoServer\\EchoServer.vcxproj\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\rpos\\jun-core-v3\\JunCore\\EchoClient\\EchoClient.vcxproj\" /p:Configuration=Debug /p:Platform=x64)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\rpos\\jun-core-v3\\JunCore\\EchoClient\\EchoClient.vcxproj\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
-      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\rpos\\jun-core-v3\\JunCore\\JunCore.sln\" /p:Configuration=Debug /p:Platform=x64)"
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\rpos\\jun-core-v3\\JunCore\\JunCore.sln\" /p:Configuration=Debug /p:Platform=x64)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"/mnt/c/rpos/jun-core-v3/JunCore/JunCore.sln\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(pkill:*)",
+      "Bash(taskkill:*)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" ./JunCore.sln /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(tasklist)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64)",
+      "Bash(test:*)",
+      "Bash(cat:*)"
     ],
     "deny": []
   }

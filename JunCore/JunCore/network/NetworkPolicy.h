@@ -7,14 +7,6 @@
 #include "../buffer/packet.h"
 #include "../../JunCommon/container/LFStack.h"
 
-//------------------------------
-// Policy-Based Design for NetworkEngine
-// Server와 Client의 동작 차이를 정책으로 분리
-//------------------------------
-
-//------------------------------
-// ServerPolicy - 서버 특화 정책
-//------------------------------
 struct ServerPolicy 
 {
 	// 정책 식별
@@ -99,7 +91,7 @@ struct ServerPolicy
 };
 
 //------------------------------
-// ClientPolicy - 클라이언트 특화 정책  
+// ClientPolicy - 멀티세션 지원 클라이언트 정책  
 //------------------------------
 struct ClientPolicy 
 {
@@ -108,20 +100,23 @@ struct ClientPolicy
 	static constexpr const char* PolicyName = "Client";
 
 	// 세션 관리 타입 정의
-	using SessionContainer = Session;   // 단일 세션 객체
-	using SessionIndex = void;          // 인덱스 불필요
-	using SocketType = SOCKET;          // client socket
+	using SessionContainer = std::vector<Session>;  // 멀티 세션 지원
+	using SessionIndex = size_t;                    // 벡터 인덱스
+	using SocketType = SOCKET;                      // client socket
 
 	// 클라이언트 특화 멤버 변수들
 	struct PolicyData 
 	{
 		// 네트워크
-		SOCKET clientSock = INVALID_SOCKET;
 		char serverIP[16] = { 0, };
 		WORD serverPort = 0;
 		
-		// 세션 (단일)
-		SessionContainer clientSession;
+		// 세션 관리 (멀티세션 지원)
+		SessionContainer sessions;              // 세션 배열
+		size_t maxSessions = 1;                // 최대 세션 수 (기본 1개, 더미용은 더 많이)
+		size_t currentSessions = 0;            // 현재 활성 세션 수
+		LFStack<size_t> availableIndexes;     // 사용 가능한 인덱스 스택
+		DWORD sessionUnique = 0;               // 세션 고유 ID
 		
 		// 스레드 관리
 		std::thread workerThread;
@@ -129,9 +124,18 @@ struct ClientPolicy
 		
 		// 옵션
 		bool reconnectFlag = true;
+		bool isDummyClient = false;            // 더미 클라이언트 모드
+		
+		// 더미 클라이언트 전용
+		DWORD connectInterval = 100;           // 연결 간격 (ms)
 		
 		// 클라이언트 특화 (Parser)
 		// Parser는 NetworkEngine에서 별도 관리
+		
+		// 소멸자에서 리소스 정리
+		~PolicyData() {
+			// 세션들은 vector의 소멸자에서 자동 정리
+		}
 	};
 
 	// Policy-specific operations
@@ -147,15 +151,13 @@ struct ClientPolicy
 	template<typename NetworkEngineT>
 	static constexpr void HandleSendPost(NetworkEngineT* engine, PolicyData& data, Session* session)
 	{
-		// 클라이언트는 단일 세션이므로 session 파라미터 무시하고 자신의 세션 사용
-		engine->CallSendPost(&data.clientSession);
+		engine->CallSendPost(session);
 	}
 	
 	template<typename NetworkEngineT>
 	static constexpr void HandleReleaseSession(NetworkEngineT* engine, PolicyData& data, Session* session)
 	{
-		// 클라이언트는 자신의 세션만 해제
-		engine->CallReleaseSession(&data.clientSession);
+		engine->CallReleaseSession(session);
 	}
 	
 	template<typename NetworkEngineT>
@@ -164,19 +166,14 @@ struct ClientPolicy
 		// 클라이언트는 추가 TPS 없음 (NetBase에서 기본 TPS만 사용)
 	}
 	
-	// 세션 관련 (클라이언트는 단순)
-	static SessionId GetSessionId(PolicyData& data)
-	{
-		return SessionId(0, 1); // 클라이언트는 고정된 세션 ID
-	}
+	// 세션 관련 (멀티세션 지원)
+	static SessionId GetSessionId(PolicyData& data);
+	static Session* ValidateSession(PolicyData& data, SessionId sessionId);
+	static bool ReleaseSession(PolicyData& data, Session* session);
 	
-	static Session* ValidateSession(PolicyData& data)
-	{
-		data.clientSession.IncrementIOCount();
-		return &data.clientSession;
-	}
-	
-	static bool ReleaseSession(PolicyData& data);
+	// 더미 클라이언트 전용
+	static void ConnectAllSessions(PolicyData& data);
+	static void DisconnectAllSessions(PolicyData& data);
 };
 
 //==============================================
@@ -278,7 +275,10 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 template<typename NetworkEngineT>
 inline void ServerPolicy::StartNetwork(NetworkEngineT* engine, PolicyData& data)
 {
-	// 워커 스레드 시작
+	// 기존 호환성을 위해 개별 IOCP 사용 시에는 워커 스레드 생성
+	// NetworkManager를 사용하는 경우는 별도로 워커 스레드를 생성하지 않음
+	
+	// 워커 스레드 시작 (기존 방식 호환성)
 	for (int i = 0; i < data.maxWorker; i++)
 	{
 		data.workerThreadArr[i] = std::thread([engine] { engine->WorkerFunc(); });
@@ -378,25 +378,40 @@ inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 	// 클라이언트 설정 로딩 (현재는 하드코딩)
 	strcpy_s(data.serverIP, "127.0.0.1");
 	data.serverPort = 7777;
+	data.maxSessions = 1;        // 기본 1개 세션
+	data.isDummyClient = false;  // 기본 일반 클라이언트
 
 	/* TODO: Parser 사용 구현 예정
 	Parser parser;
 	parser.LoadFile(systemFile);
 	parser.GetValue(configSection, "IP", data.serverIP);
 	parser.GetValue(configSection, "PORT", (int*)&data.serverPort);
+	parser.GetValue(configSection, "MAX_SESSIONS", (int*)&data.maxSessions);
+	parser.GetValue(configSection, "IS_DUMMY_CLIENT", (int*)&data.isDummyClient);
+	parser.GetValue(configSection, "CONNECT_INTERVAL", (int*)&data.connectInterval);
 	*/
+
+	// 세션 벡터 초기화
+	data.sessions.resize(data.maxSessions);
+	
+	// 사용 가능한 인덱스 스택 초기화
+	for (size_t i = data.maxSessions; i > 0; --i) {
+		data.availableIndexes.Push(i - 1);
+	}
 
 	// IOCP 초기화 (클라이언트는 워커 스레드 1개)
 	engine->InitializeIOCP(1);
 
-	// 클라이언트 세션에 IOCP 핸들 설정
-	data.clientSession.SetIOCP(engine->h_iocp);
+	// 모든 세션에 IOCP 핸들 설정
+	for (auto& session : data.sessions) {
+		session.SetIOCP(engine->GetIOCPHandle());
+	}
 }
 
 template<typename NetworkEngineT>
 inline void ClientPolicy::StartNetwork(NetworkEngineT* engine, PolicyData& data)
 {
-	// 워커 스레드 시작
+	// 워커 스레드 시작 (클라이언트도 IOCP 완료 처리를 위해 필요)
 	data.workerThread = std::thread([engine] { engine->WorkerFunc(); });
 	
 	// Connect 스레드 시작
@@ -408,17 +423,10 @@ inline void ClientPolicy::StopNetwork(NetworkEngineT* engine, PolicyData& data)
 {
 	data.reconnectFlag = false;
 
-	// 클라이언트 소켓 정리
-	if (data.clientSock != INVALID_SOCKET)
-	{
-		closesocket(data.clientSock);
-		data.clientSock = INVALID_SOCKET;
-	}
+	// 모든 세션 소켓 정리
+	DisconnectAllSessions(data);
 
 	// 워커 스레드 종료
-	PostQueuedCompletionStatus(engine->h_iocp, 0, 0, 0);
-
-	// 스레드 종료 대기
 	if (data.workerThread.joinable())
 	{
 		data.workerThread.join();
@@ -432,14 +440,98 @@ inline void ClientPolicy::StopNetwork(NetworkEngineT* engine, PolicyData& data)
 	engine->CallOnClientStop();
 }
 
-inline bool ClientPolicy::ReleaseSession(PolicyData& data)
+inline SessionId ClientPolicy::GetSessionId(PolicyData& data)
 {
-	if (InterlockedCompareExchange((LONG*)&data.clientSession.releaseFlag, TRUE, FALSE) == TRUE)
+	if (data.availableIndexes.GetUseCount() <= 0)
+		return SessionId(INVALID_SESSION_ID);
+
+	size_t index;
+	data.availableIndexes.Pop(&index);
+	return SessionId((DWORD)index, ++data.sessionUnique);
+}
+
+inline Session* ClientPolicy::ValidateSession(PolicyData& data, SessionId sessionId)
+{
+	if (sessionId.SESSION_INDEX >= data.sessions.size())
+		return nullptr;
+		
+	Session* session = &data.sessions[sessionId.SESSION_INDEX];
+	if (session->sessionId.sessionId != sessionId.sessionId)
+		return nullptr;
+	
+	session->IncrementIOCount();
+	return session;
+}
+
+inline bool ClientPolicy::ReleaseSession(PolicyData& data, Session* session)
+{
+	if (InterlockedCompareExchange((LONG*)&session->releaseFlag, TRUE, FALSE) == TRUE)
 		return false;
 
-	closesocket(data.clientSession.sock);
-	data.clientSession.sock = INVALID_SOCKET;
-	data.clientSession.releaseFlag = TRUE;
+	// 세션 인덱스 반환
+	size_t index = session - &data.sessions[0];  // 포인터 연산으로 인덱스 계산
+	data.availableIndexes.Push(index);
+	InterlockedDecrement((LONG*)&data.currentSessions);
+	
+	closesocket(session->sock);
+	session->sock = INVALID_SOCKET;
+	session->releaseFlag = TRUE;
 	
 	return true;
+}
+
+inline void ClientPolicy::ConnectAllSessions(PolicyData& data)
+{
+	// 더미 클라이언트용: 모든 세션을 순차적으로 연결
+	for (size_t i = 0; i < data.maxSessions; ++i)
+	{
+		if (!data.reconnectFlag) break;
+		
+		Session* session = &data.sessions[i];
+		
+		// 소켓 생성
+		session->sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, NULL, WSA_FLAG_OVERLAPPED);
+		if (session->sock == INVALID_SOCKET)
+		{
+			Sleep(data.connectInterval);
+			continue;
+		}
+		
+		// 연결 시도
+		SOCKADDR_IN serverAddr;
+		serverAddr.sin_family = AF_INET;
+		serverAddr.sin_port = htons(data.serverPort);
+		serverAddr.sin_addr.s_addr = inet_addr(data.serverIP);
+		
+		if (connect(session->sock, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
+		{
+			closesocket(session->sock);
+			session->sock = INVALID_SOCKET;
+			Sleep(data.connectInterval);
+			continue;
+		}
+		
+		// 세션 초기화
+		SessionId newSessionId((DWORD)i, ++data.sessionUnique);
+		session->Set(session->sock, serverAddr.sin_addr, data.serverPort, newSessionId);
+		
+		InterlockedIncrement((LONG*)&data.currentSessions);
+		
+		if (data.connectInterval > 0) {
+			Sleep(data.connectInterval);  // 연결 간격
+		}
+	}
+}
+
+inline void ClientPolicy::DisconnectAllSessions(PolicyData& data)
+{
+	for (auto& session : data.sessions)
+	{
+		if (session.sock != INVALID_SOCKET)
+		{
+			closesocket(session.sock);
+			session.sock = INVALID_SOCKET;
+		}
+	}
+	data.currentSessions = 0;
 }

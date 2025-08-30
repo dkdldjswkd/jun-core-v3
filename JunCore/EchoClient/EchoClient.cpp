@@ -18,8 +18,11 @@ void EchoClient::OnConnect()
 	PacketBuffer* testPacket = PacketBuffer::Alloc();
 	const char* message = "Hello Server!";
 	testPacket->PutData(message, static_cast<int>(strlen(message)));
+	
+	std::cout << "[DEBUG] Sending initial packet: " << message << std::endl;
 	SendPacket(testPacket);
-	PacketBuffer::Free(testPacket);
+	std::cout << "[DEBUG] SendPacket completed" << std::endl;
+	// SendPacket이 패킷을 큐에 넣으므로 Free하지 않음
 }
 
 void EchoClient::OnRecv(PacketBuffer* csContentsPacket) 

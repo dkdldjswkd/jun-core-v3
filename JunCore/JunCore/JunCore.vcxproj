@@ -20,7 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="network\NetBase.cpp" />
-    <ClCompile Include="network\NetworkPolicy.cpp" />
     <ClCompile Include="buffer\packet.cpp" />
     <ClCompile Include="network\Session.cpp" />
     <ClCompile Include="protocol\handshake.pb.cc" />
