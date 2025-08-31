@@ -29,12 +29,12 @@ void NetworkManager::CreateServerIOCP(DWORD serverThreads)
         throw std::exception("Failed to create server IOCP");
     }
     
-    // 공유 IOCP 워커 스레드 생성
+    // IOCP 워커 스레드 생성
     serverWorkerThreads.reserve(serverThreads);
     for (DWORD i = 0; i < serverThreads; ++i)
     {
         serverWorkerThreads.emplace_back([this]() {
-            NetBase::RunSharedWorkerThread(serverIOCP);
+            NetBase::RunWorkerThread(serverIOCP);
         });
     }
     
@@ -56,12 +56,12 @@ void NetworkManager::CreateClientIOCP(DWORD clientThreads)
         throw std::exception("Failed to create client IOCP");
     }
     
-    // 공유 IOCP 워커 스레드 생성
+    // IOCP 워커 스레드 생성
     clientWorkerThreads.reserve(clientThreads);
     for (DWORD i = 0; i < clientThreads; ++i)
     {
         clientWorkerThreads.emplace_back([this]() {
-            NetBase::RunSharedWorkerThread(clientIOCP);
+            NetBase::RunWorkerThread(clientIOCP);
         });
     }
     

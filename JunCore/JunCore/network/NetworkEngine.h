@@ -409,6 +409,7 @@ NetworkEngine<NetworkPolicy>::AcceptFunc()
 		Session* session = &policyData.sessionArray[newSessionId.SESSION_INDEX];
 		session->Set(clientSock, clientAddr.sin_addr, ntohs(clientAddr.sin_port), newSessionId);
 		session->SetIOCP(h_iocp);
+		session->SetEngine(this);  // 엔진 포인터 설정
 		
 		// 클라이언트 소켓을 IOCP에 등록 (핵심!)
 		// CompletionKey로 세션 포인터를 전달하여 올바른 핸들러 라우팅
@@ -474,6 +475,8 @@ NetworkEngine<NetworkPolicy>::ConnectFunc()
 				Session* session = &policyData.sessions[i];
 				if (session->sock != INVALID_SOCKET)
 				{
+					// 엔진 포인터 설정
+					session->SetEngine(this);
 					// CompletionKey로 세션 포인터 사용
 					CreateIoCompletionPort((HANDLE)session->sock, h_iocp, (ULONG_PTR)session, 0);
 					AsyncRecv(session);
@@ -535,6 +538,7 @@ NetworkEngine<NetworkPolicy>::ConnectFunc()
 			// 세션 초기화
 			clientSession->Set(clientSession->sock, serverAddr.sin_addr, policyData.serverPort, newSessionId);
 			clientSession->SetIOCP(h_iocp);
+			clientSession->SetEngine(this);  // 엔진 포인터 설정
 			InterlockedIncrement((LONG*)&policyData.currentSessions);
 			
 			// 첫 Recv 등록

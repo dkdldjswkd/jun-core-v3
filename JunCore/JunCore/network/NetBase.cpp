@@ -37,24 +37,24 @@ void NetBase::InitializeIOCP(DWORD maxConcurrentThreads)
 	}
 }
 
-void NetBase::InitializeIOCP(HANDLE sharedIOCP)
+void NetBase::InitializeIOCP(HANDLE existingIOCP)
 {
 	// WSAStartup은 이미 생성자에서 호출됨
 	
-	// 공유 IOCP 사용
-	if (sharedIOCP == INVALID_HANDLE_VALUE)
+	// 기존 IOCP 사용
+	if (existingIOCP == INVALID_HANDLE_VALUE)
 	{
-		throw std::exception("Invalid shared IOCP handle");
+		throw std::exception("Invalid IOCP handle");
 	}
 	
-	h_iocp = sharedIOCP;
-	// 공유 IOCP이므로 CloseHandle 하지 않도록 플래그 설정
+	h_iocp = existingIOCP;
+	// 기존 IOCP이므로 CloseHandle 하지 않도록 플래그 설정
 	// (실제로는 소유권 관리가 필요하지만 간단히 구현)
 }
 
 void NetBase::CleanupIOCP()
 {
-	// 공유 IOCP인지 확인하는 로직이 필요하지만
+	// IOCP 소유권 확인이 필요하지만
 	// 현재는 단순하게 구현 (실제로는 소유권 관리 필요)
 	if (INVALID_HANDLE_VALUE != h_iocp)
 	{
@@ -66,27 +66,34 @@ void NetBase::CleanupIOCP()
 }
 
 //------------------------------
-// 공유 IOCP 워커 스레드 (CompletionKey 기반 라우팅)
+// IOCP 워커 스레드 (CompletionKey 기반 라우팅)
 //------------------------------
-void NetBase::RunSharedWorkerThread(HANDLE sharedIOCP)
+void NetBase::RunWorkerThread(HANDLE iocpHandle)
 {
 	for (;;) 
 	{
 		DWORD ioSize = 0;
-		NetBase* engine = nullptr;
+		Session* session = nullptr;
 		LPOVERLAPPED p_overlapped = nullptr;
 
-		BOOL retGQCS = GetQueuedCompletionStatus(sharedIOCP, &ioSize, (PULONG_PTR)&engine, &p_overlapped, INFINITE);
+		BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
 
 		// 워커 스레드 종료
-		if (ioSize == 0 && engine == nullptr && p_overlapped == nullptr) 
+		if (ioSize == 0 && session == nullptr && p_overlapped == nullptr) 
 		{
-			PostQueuedCompletionStatus(sharedIOCP, 0, 0, 0);
+			PostQueuedCompletionStatus(iocpHandle, 0, 0, 0);
 			return;
 		}
 
-		// 엔진이 nullptr인 경우는 에러
-		if (engine == nullptr) 
+		// 세션이 nullptr인 경우는 에러
+		if (session == nullptr) 
+		{
+			continue;
+		}
+		
+		// 세션에서 엔진 가져오기
+		NetBase* engine = session->GetEngine();
+		if (engine == nullptr)
 		{
 			continue;
 		}
@@ -94,59 +101,33 @@ void NetBase::RunSharedWorkerThread(HANDLE sharedIOCP)
 		// FIN 패킷
 		if (ioSize == 0) 
 		{
-			// Session 포인터 복원 (overlapped 구조체의 위치로부터)
-			Session* session = nullptr;
-			if (p_overlapped != nullptr) {
-				// overlapped가 recvOverlapped인지 sendOverlapped인지 확인
-				// 이는 Session 구조체 내에서의 상대적 위치로 판단
-				char* basePtr = (char*)p_overlapped;
-				// recvOverlapped의 경우
-				session = (Session*)(basePtr - offsetof(Session, recvOverlapped));
-				// sendOverlapped와 구분하기 위해 validation 필요
-				if (session->recvOverlapped.Internal != p_overlapped->Internal) {
-					session = (Session*)(basePtr - offsetof(Session, sendOverlapped));
-				}
-			}
-			
-			if (session) {
-				engine->HandleSessionDisconnect(session);
-			}
+			engine->HandleSessionDisconnect(session);
 			continue;
 		}
 
 		// PQCS (PostQueuedCompletionStatus)
 		if ((ULONG_PTR)p_overlapped < 3) 
 		{
-			Session* session = (Session*)((char*)engine + (ULONG_PTR)p_overlapped); // 임시
 			int pqcsType = (int)(ULONG_PTR)p_overlapped;
 			switch (pqcsType) 
 			{
 				case 1: // SEND_POST
 				{
-					// 세션 정보는 별도 방법으로 전달 필요
+					// TODO: 필요시 구현
 					break;
 				}
 				case 2: // RELEASE_SESSION  
 				{
-					// 세션 정보는 별도 방법으로 전달 필요
+					// TODO: 필요시 구현
 					break;
 				}
 			}
 			continue;
 		}
 
-		// Session 포인터 복원
-		Session* session = nullptr;
-		char* basePtr = (char*)p_overlapped;
-		
-		// overlapped 타입 판별 및 세션 포인터 복원
-		Session* recvSession = (Session*)(basePtr - offsetof(Session, recvOverlapped));
-		Session* sendSession = (Session*)(basePtr - offsetof(Session, sendOverlapped));
-		
 		// recv 완료처리
-		if (p_overlapped == &recvSession->recvOverlapped) 
+		if (p_overlapped == &session->recvOverlapped) 
 		{
-			session = recvSession;
 			if (retGQCS) 
 			{
 				session->recvBuf.MoveRear(ioSize);
@@ -156,9 +137,8 @@ void NetBase::RunSharedWorkerThread(HANDLE sharedIOCP)
 			engine->HandleDecrementIOCount(session);
 		}
 		// send 완료처리  
-		else if (p_overlapped == &sendSession->sendOverlapped)
+		else if (p_overlapped == &session->sendOverlapped)
 		{
-			session = sendSession;
 			if (retGQCS) 
 			{
 				engine->HandleSendComplete(session);

@@ -52,7 +52,7 @@ protected:
 	// 공통 초기화 함수들
 	virtual void InitializeProtocol(const char* systemFile, const char* configSection);
 	virtual void InitializeIOCP(DWORD maxConcurrentThreads = 0);
-	virtual void InitializeIOCP(HANDLE sharedIOCP);  // IOCP 공유용 오버로드
+	virtual void InitializeIOCP(HANDLE existingIOCP);  // 기존 IOCP 사용
 	virtual void CleanupIOCP();
 
 	// 공통 TPS 관리 함수들 (inline으로 성능 최적화)
@@ -98,10 +98,10 @@ protected:
 	template<typename SessionManagerT>
 	void RunWorkerThread(SessionManagerT& sessionManager);
 	
-	// 공유 IOCP용 워커 스레드 (CompletionKey 라우팅)
-	static void RunSharedWorkerThread(HANDLE sharedIOCP);
+	// IOCP 워커 스레드 (CompletionKey 라우팅)
+	static void RunWorkerThread(HANDLE iocpHandle);
 	
-	// 공유 IOCP에서 호출될 가상 핸들러들
+	// IOCP에서 호출될 가상 핸들러들
 	virtual void HandleRecvComplete(Session* session) = 0;
 	virtual void HandleSendComplete(Session* session) = 0;
 	virtual void HandleSessionDisconnect(Session* session) = 0;

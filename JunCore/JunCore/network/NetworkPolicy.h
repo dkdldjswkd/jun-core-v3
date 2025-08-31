@@ -259,7 +259,7 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 		data.sessionIdxStack.Push(data.maxSession - (1 + i));
 	}
 
-	// IOCP 초기화
+	// IOCP 초기화 (직접 NetworkEngine 사용 시 필요, NetworkManager 사용 시 덮어쓰기됨)
 	engine->InitializeIOCP(data.activeWorker);
 
 	// listen
@@ -275,13 +275,10 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 template<typename NetworkEngineT>
 inline void ServerPolicy::StartNetwork(NetworkEngineT* engine, PolicyData& data)
 {
-	// 기존 호환성을 위해 개별 IOCP 사용 시에는 워커 스레드 생성
-	// NetworkManager를 사용하는 경우는 별도로 워커 스레드를 생성하지 않음
-	
-	// 워커 스레드 시작 (기존 방식 호환성)
+	// 워커 스레드 생성 (직접 NetworkEngine 사용 시 필요, NetworkManager 사용 시 중복되지만 무해함)
 	for (int i = 0; i < data.maxWorker; i++)
 	{
-		data.workerThreadArr[i] = std::thread([engine] { engine->WorkerFunc(); });
+	    data.workerThreadArr[i] = std::thread([engine] { engine->WorkerFunc(); });
 	}
 
 	// Accept 스레드 시작
@@ -304,20 +301,20 @@ inline void ServerPolicy::StopNetwork(NetworkEngineT* engine, PolicyData& data)
 		data.listenSock = INVALID_SOCKET;
 	}
 
-	// 모든 워커 스레드에 종료 신호 전송
-	for (int i = 0; i < data.maxWorker; i++)
-	{
-		PostQueuedCompletionStatus(engine->h_iocp, 0, 0, 0);
-	}
+	// NetworkManager가 워커 스레드 종료를 담당
+	// for (int i = 0; i < data.maxWorker; i++)
+	// {
+	//     PostQueuedCompletionStatus(engine->h_iocp, 0, 0, 0);
+	// }
 
-	// 스레드 종료 대기
-	for (int i = 0; i < data.maxWorker; i++)
-	{
-		if (data.workerThreadArr[i].joinable())
-		{
-			data.workerThreadArr[i].join();
-		}
-	}
+	// 스레드 종료 대기 (NetworkManager가 담당)
+	// for (int i = 0; i < data.maxWorker; i++)
+	// {
+	//     if (data.workerThreadArr[i].joinable())
+	//     {
+	//         data.workerThreadArr[i].join();
+	//     }
+	// }
 
 	if (data.acceptThread.joinable())
 	{
@@ -399,10 +396,10 @@ inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 		data.availableIndexes.Push(i - 1);
 	}
 
-	// IOCP 초기화 (클라이언트는 워커 스레드 1개)
+	// IOCP 초기화 (직접 NetworkEngine 사용 시 필요, NetworkManager 사용 시 덮어쓰기됨)
 	engine->InitializeIOCP(1);
 
-	// 모든 세션에 IOCP 핸들 설정
+	// 모든 세션에 IOCP 핸들 설정 (NetworkManager가 설정한 공유 IOCP 사용)
 	for (auto& session : data.sessions) {
 		session.SetIOCP(engine->GetIOCPHandle());
 	}
@@ -411,8 +408,8 @@ inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 template<typename NetworkEngineT>
 inline void ClientPolicy::StartNetwork(NetworkEngineT* engine, PolicyData& data)
 {
-	// 워커 스레드 시작 (클라이언트도 IOCP 완료 처리를 위해 필요)
-	data.workerThread = std::thread([engine] { engine->WorkerFunc(); });
+	// NetworkManager가 워커 스레드를 관리하므로 개별 워커 스레드 생성 안 함
+	// data.workerThread = std::thread([engine] { engine->WorkerFunc(); });
 	
 	// Connect 스레드 시작
 	data.connectThread = std::thread([engine] { engine->ConnectFunc(); });
@@ -426,11 +423,11 @@ inline void ClientPolicy::StopNetwork(NetworkEngineT* engine, PolicyData& data)
 	// 모든 세션 소켓 정리
 	DisconnectAllSessions(data);
 
-	// 워커 스레드 종료
-	if (data.workerThread.joinable())
-	{
-		data.workerThread.join();
-	}
+	// 워커 스레드 종료 (NetworkManager가 담당)
+	// if (data.workerThread.joinable())
+	// {
+	//     data.workerThread.join();
+	// }
 
 	if (data.connectThread.joinable())
 	{

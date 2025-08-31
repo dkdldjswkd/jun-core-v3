@@ -76,6 +76,7 @@ public:
 
 private:
 	HANDLE h_iocp = INVALID_HANDLE_VALUE;  // IOCP 핸들 저장
+	class NetBase* engine = nullptr;       // 이 세션을 소유한 엔진
 
 public:
 	void Set(SOCKET sock, in_addr ip, WORD port, SessionId sessionId);
@@ -83,6 +84,10 @@ public:
 	
 	// IOCP 핸들 설정 (초기화 시 호출)
 	inline void SetIOCP(HANDLE iocp_handle) { h_iocp = iocp_handle; }
+	
+	// 엔진 설정 (초기화 시 호출)
+	inline void SetEngine(class NetBase* eng) { engine = eng; }
+	inline class NetBase* GetEngine() const { return engine; }
 	
 	// IO Count 관리 함수들
 	inline void IncrementIOCount() noexcept

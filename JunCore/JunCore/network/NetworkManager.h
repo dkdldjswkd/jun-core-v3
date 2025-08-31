@@ -69,7 +69,7 @@ private:
     DWORD serverThreadCount = 4;
     DWORD clientThreadCount = 1;
     
-    // 공유 IOCP 워커 스레드
+    // IOCP 워커 스레드
     std::vector<std::thread> serverWorkerThreads;
     std::vector<std::thread> clientWorkerThreads;
     
@@ -105,7 +105,7 @@ inline ServerEngineType* NetworkManager::AddServerEngine(const char* systemFile,
     
     auto engine = std::make_unique<ServerEngineType>(systemFile, configSection);
     
-    // 공유 IOCP 설정 (Policy Initialize 후에 설정)
+    // IOCP 설정 (Policy Initialize 후에 설정)
     engine->InitializeIOCP(serverIOCP);
     
     ServerEngineType* rawPtr = engine.get();
@@ -126,7 +126,7 @@ inline ClientEngineType* NetworkManager::AddClientEngine(const char* systemFile,
     
     auto engine = std::make_unique<ClientEngineType>(systemFile, configSection);
     
-    // 공유 IOCP 설정
+    // IOCP 설정
     engine->InitializeIOCP(clientIOCP);
     
     ClientEngineType* rawPtr = engine.get();
@@ -166,7 +166,7 @@ inline ClientEngineType* NetworkManager::AddDummyClient(const char* systemFile, 
         policyData.availableIndexes.Push(i - 1);
     }
     
-    // 공유 IOCP 설정
+    // IOCP 설정
     engine->InitializeIOCP(clientIOCP);
     
     ClientEngineType* rawPtr = engine.get();
