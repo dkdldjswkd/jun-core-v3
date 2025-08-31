@@ -32,7 +32,7 @@ public:
 public:
 	void Enqueue(T data);
 	bool Dequeue(T* data);
-	int  GetUseCount();
+	int  GetUseCount() const;
 };
 
 //------------------------------
@@ -136,7 +136,7 @@ bool LFQueue<T>::Dequeue(T* data) {
 }
 
 template<typename T>
-int LFQueue<T>::GetUseCount() {
+int LFQueue<T>::GetUseCount() const {
 	return nodeCount;
 }
 

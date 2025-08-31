@@ -38,6 +38,9 @@ void NetworkManager::CreateServerIOCP(DWORD serverThreads)
         });
     }
     
+    // 기본 핸들러 풀도 함께 생성
+    CreateServerHandlerPool(serverThreads);
+    
     ownsServerIOCP = true;
 }
 
@@ -61,6 +64,9 @@ void NetworkManager::CreateClientIOCP(DWORD clientThreads)
             NetBase::RunSharedWorkerThread(clientIOCP);
         });
     }
+    
+    // 기본 핸들러 풀도 함께 생성
+    CreateClientHandlerPool(clientThreads);
     
     ownsClientIOCP = true;
 }
@@ -164,8 +170,71 @@ void NetworkManager::PrintTPS() const
     std::cout << "=================================" << std::endl;
 }
 
+void NetworkManager::CreateServerHandlerPool(DWORD handlerThreads)
+{
+    if (serverHandlerPool) return;  // 이미 생성됨
+    
+    serverHandlerPool = std::make_unique<ThreadPool>(handlerThreads, "ServerHandlerPool");
+}
+
+void NetworkManager::CreateClientHandlerPool(DWORD handlerThreads)
+{
+    if (clientHandlerPool) return;  // 이미 생성됨
+    
+    clientHandlerPool = std::make_unique<ThreadPool>(handlerThreads, "ClientHandlerPool");
+}
+
+void NetworkManager::SubmitServerJob(Job&& job)
+{
+    if (serverHandlerPool) {
+        serverHandlerPool->Submit(std::move(job));
+    }
+}
+
+void NetworkManager::SubmitClientJob(Job&& job)
+{
+    if (clientHandlerPool) {
+        clientHandlerPool->Submit(std::move(job));
+    }
+}
+
+void NetworkManager::SubmitServerPacketJob(PacketJob&& packetJob, DWORD priority)
+{
+    if (serverHandlerPool) {
+        // PacketJobHandler는 각 엔진에서 구현하도록 함
+        // 현재는 기본 Job으로 변환
+        auto job = packetJob.ToJob([](const PacketJob&){
+            // TODO: 실제 핸들러 연결 필요
+        }, priority);
+        serverHandlerPool->Submit(std::move(job));
+    }
+}
+
+void NetworkManager::SubmitClientPacketJob(PacketJob&& packetJob, DWORD priority)
+{
+    if (clientHandlerPool) {
+        // PacketJobHandler는 각 엔진에서 구현하도록 함
+        // 현재는 기본 Job으로 변환
+        auto job = packetJob.ToJob([](const PacketJob&){
+            // TODO: 실제 핸들러 연결 필요
+        }, priority);
+        clientHandlerPool->Submit(std::move(job));
+    }
+}
+
 void NetworkManager::CleanupIOCP()
 {
+    // HandlerPool 먼저 종료
+    if (serverHandlerPool) {
+        serverHandlerPool->Shutdown();
+        serverHandlerPool.reset();
+    }
+    
+    if (clientHandlerPool) {
+        clientHandlerPool->Shutdown();
+        clientHandlerPool.reset();
+    }
+    
     if (ownsServerIOCP && serverIOCP != INVALID_HANDLE_VALUE)
     {
         CloseHandle(serverIOCP);

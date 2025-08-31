@@ -170,6 +170,8 @@
     <ClInclude Include="timer\Profiler.h" />
     <ClInclude Include="crypto\AES128.h" />
     <ClInclude Include="crypto\RSA2048.h" />
+    <ClInclude Include="queue\JobQueue.h" />
+    <ClInclude Include="queue\PacketJob.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="algorithm\Parser.cpp" />

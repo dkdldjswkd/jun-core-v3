@@ -4,6 +4,8 @@
 #include <vector>
 #include <thread>
 #include "NetworkEngine.h"
+#include "../../JunCommon/queue/JobQueue.h"
+#include "../../JunCommon/queue/PacketJob.h"
 
 //------------------------------
 // NetworkManager - IOCP 공유 및 멀티 엔진 관리
@@ -18,6 +20,10 @@ public:
     // IOCP 생성 및 관리
     void CreateServerIOCP(DWORD serverThreads = 4);
     void CreateClientIOCP(DWORD clientThreads = 1);
+    
+    // HandlerThreadPool 생성 및 관리
+    void CreateServerHandlerPool(DWORD handlerThreads = 4);
+    void CreateClientHandlerPool(DWORD handlerThreads = 1);
     
     // 엔진 추가 (서버용)
     template<typename ServerEngineType>
@@ -44,6 +50,16 @@ public:
     HANDLE GetServerIOCP() const { return serverIOCP; }
     HANDLE GetClientIOCP() const { return clientIOCP; }
     
+    // HandlerPool Getter
+    ThreadPool* GetServerHandlerPool() const { return serverHandlerPool.get(); }
+    ThreadPool* GetClientHandlerPool() const { return clientHandlerPool.get(); }
+    
+    // Job 제출 인터페이스
+    void SubmitServerJob(Job&& job);
+    void SubmitClientJob(Job&& job);
+    void SubmitServerPacketJob(PacketJob&& packetJob, DWORD priority = 0);
+    void SubmitClientPacketJob(PacketJob&& packetJob, DWORD priority = 0);
+    
 private:
     // IOCP 핸들
     HANDLE serverIOCP = INVALID_HANDLE_VALUE;
@@ -56,6 +72,10 @@ private:
     // 공유 IOCP 워커 스레드
     std::vector<std::thread> serverWorkerThreads;
     std::vector<std::thread> clientWorkerThreads;
+    
+    // 핸들러 스레드 풀
+    std::unique_ptr<ThreadPool> serverHandlerPool;
+    std::unique_ptr<ThreadPool> clientHandlerPool;
     
     // 엔진 관리
     std::vector<std::unique_ptr<NetBase>> serverEngines;
