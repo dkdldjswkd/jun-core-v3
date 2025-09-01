@@ -1,6 +1,5 @@
 ﻿#pragma once
-#include <WinSock2.h>
-#include <Windows.h>
+#include "../core/WindowsIncludes.h"
 #include <vector>
 #include <thread>
 #include "Session.h"
@@ -259,8 +258,7 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 		data.sessionIdxStack.Push(data.maxSession - (1 + i));
 	}
 
-	// IOCP 초기화 (직접 NetworkEngine 사용 시 필요, NetworkManager 사용 시 덮어쓰기됨)
-	engine->InitializeIOCP(data.activeWorker);
+	// IOCP 초기화는 NetworkEngine에서 자동 처리됨
 
 	// listen
 	if (0 != listen(data.listenSock, SOMAXCONN)) 
@@ -275,11 +273,11 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 template<typename NetworkEngineT>
 inline void ServerPolicy::StartNetwork(NetworkEngineT* engine, PolicyData& data)
 {
-	// 워커 스레드 생성 (직접 NetworkEngine 사용 시 필요, NetworkManager 사용 시 중복되지만 무해함)
-	for (int i = 0; i < data.maxWorker; i++)
-	{
-	    data.workerThreadArr[i] = std::thread([engine] { engine->WorkerFunc(); });
-	}
+	// 워커 스레드는 NetworkManager의 IOCPResource에서 관리 (중복 생성 방지)
+	// for (int i = 0; i < data.maxWorker; i++)
+	// {
+	//     data.workerThreadArr[i] = std::thread([engine] { engine->WorkerFunc(); });
+	// }
 
 	// Accept 스레드 시작
 	data.acceptThread = std::thread([engine] { engine->AcceptFunc(); });
@@ -396,8 +394,7 @@ inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 		data.availableIndexes.Push(i - 1);
 	}
 
-	// IOCP 초기화 (직접 NetworkEngine 사용 시 필요, NetworkManager 사용 시 덮어쓰기됨)
-	engine->InitializeIOCP(1);
+	// IOCP 초기화는 NetworkEngine에서 자동 처리됨
 
 	// 모든 세션에 IOCP 핸들 설정 (NetworkManager가 설정한 공유 IOCP 사용)
 	for (auto& session : data.sessions) {

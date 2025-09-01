@@ -1,8 +1,7 @@
 ﻿#pragma once
+#include "../core/WindowsIncludes.h"
 #include <memory>
 #include <mutex>
-#include <Windows.h>
-#include <winnt.h>
 #include <cstdlib>
 #include "../protocol/message.h"
 #include <exception>

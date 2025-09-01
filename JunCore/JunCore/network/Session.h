@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <Windows.h>
+#include "../core/WindowsIncludes.h"
 #include "../buffer/packet.h"
 #include "../../JunCommon/container/LFQueue.h"
 #include "../../JunCommon/container/RingBuffer.h"

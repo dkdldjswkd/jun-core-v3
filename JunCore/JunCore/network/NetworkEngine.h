@@ -1,11 +1,10 @@
 ﻿#pragma once
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#include <WinSock2.h>
-#include <Windows.h>
+#include "../core/WindowsIncludes.h"
 #include <type_traits>
 #include "NetBase.h"
 #include "NetworkPolicy.h"
 #include "../../JunCommon/algorithm/Parser.h"
+#include "../../JunCommon/queue/PacketJob.h"
 
 // 템플릿 인자 NetworkPolicy로는 추적이 불편해서 NetworkPolicy의 구현부를 추적하기 위한 전방선언
 struct ServerPolicy;
@@ -30,6 +29,9 @@ private:
 
 	// 클라이언트 전용 Parser (ClientPolicy에서만 사용)
 	std::conditional_t<NetworkPolicy::IsServer, int, Parser> parser;
+	
+	// NetworkManager 참조 (PacketJob 제출용)
+	class NetworkManager* networkManager = nullptr;
 
 public:
 	// NetBase 순수 가상 함수 구현
@@ -108,6 +110,12 @@ public:
 			ReleaseSession(session);
 		}
 	}
+	
+	// PacketJob 제출 구현 - 우선순위별 HandlerPool로 전달
+	void SubmitPacketJob(Session* session, PacketBuffer* packet) override;
+	
+	// NetworkManager 참조 설정
+	void SetNetworkManager(class NetworkManager* manager) { networkManager = manager; }
 
 private:
 	// 세션 관련 (정책으로 위임)
@@ -170,6 +178,9 @@ NetworkEngine<NetworkPolicy>::NetworkEngine(const char* systemFile, const char* 
 	: NetBase(systemFile, configSection)
 {
 	NetworkPolicy::Initialize(this, policyData, configSection);
+	
+	// 하위 호환성: 자동 IOCP 연결 (싱글톤 방식)
+	EnsureSingletonIOCP();
 }
 
 template<typename NetworkPolicy>
@@ -200,12 +211,12 @@ void NetworkEngine<NetworkPolicy>::UpdateTPS()
 	NetworkPolicy::UpdatePolicyTPS(this, policyData);
 }
 
-template<typename NetworkPolicy>
-void NetworkEngine<NetworkPolicy>::WorkerFunc()
-{
-	NetworkEngineSessionManager sessionManager(this);
-	RunWorkerThread(sessionManager);
-}
+//template<typename NetworkPolicy>
+//void NetworkEngine<NetworkPolicy>::WorkerFunc()
+//{
+//	NetworkEngineSessionManager sessionManager(this);
+//	RunWorkerThread(sessionManager);
+//}
 
 // 정책 기반 핸들러들은 단순히 정책으로 위임
 template<typename NetworkPolicy>
@@ -240,50 +251,29 @@ void NetworkEngine<NetworkPolicy>::HandleSendCompletion(Session* session)
 template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::RecvCompletionLan(Session* session)
 {
+	// 새로운 NetBase 인터페이스: 패킷 조립만 담당, 핸들링은 SubmitPacketJob으로 위임
 	OnReceiveCompleteLAN(*session,
-		[this, session](PacketBuffer* packet) { 
-			if constexpr (NetworkPolicy::IsServer) {
-				OnRecv(session->sessionId, packet);
-			} else {
-				OnRecv(packet);  // 클라이언트는 SessionId 불필요
-			}
-		},
-		[this, session]() { 
-			session->DisconnectSession(); 
-		},
-		[this, session]() { 
-			AsyncRecv(session); 
-		},
-		[this]() { 
-			IncrementRecvCount(); 
-		}
-	);
+						 [this, session]() { session->DisconnectSession(); },
+						 [this, session]() { AsyncRecv(session); },
+						 [this]() { IncrementRecvCount(); });
 }
 
 template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::RecvCompletionNet(Session* session)
 {
+	// 새로운 NetBase 인터페이스: 패킷 조립만 담당, 핸들링은 SubmitPacketJob으로 위임
 	OnReceiveCompleteNET(*session,
-		[this, session](PacketBuffer* packet) { 
-			if constexpr (NetworkPolicy::IsServer) {
-				OnRecv(session->sessionId, packet);
-			} else {
-				OnRecv(packet);  // 클라이언트는 SessionId 불필요
-			}
-		},
-		[this, session]() { session->DisconnectSession(); },
-		[this, session]() { AsyncRecv(session); },
-		[this]() { IncrementRecvCount(); }
-	);
+						 [this, session]() { session->DisconnectSession(); },
+						 [this, session]() { AsyncRecv(session); },
+						 [this]() { IncrementRecvCount(); });
 }
 
 template<typename NetworkPolicy>
 void NetworkEngine<NetworkPolicy>::SendCompletion(Session* session)
 {
-	OnSendComplete(*session,
-		[this, session]() { SendPost(session); },
-		[this](int count) { IncrementSendCount(count); }
-	);
+	 OnSendComplete(*session,
+					[this, session]() { SendPost(session); },
+					[this](int count) { IncrementSendCount(count); });
 }
 
 // 누락된 메서드들 구현
@@ -609,8 +599,7 @@ NetworkEngine<NetworkPolicy>::SendPacket(PacketBuffer* sendPacket)
 template<typename NetworkPolicy>
 bool NetworkEngine<NetworkPolicy>::AsyncRecv(Session* session)
 {
-	return PostReceive(*session,
-		[](Session* s) { s->DecrementIOCount(); });
+	return PostReceive(*session, [](Session* s) { s->DecrementIOCount(); });
 }
 
 //==============================================
@@ -713,6 +702,30 @@ static constexpr const char* GetPolicyName() noexcept {
 template<typename T>
 static constexpr size_t GetPolicySize() noexcept {
     return sizeof(typename ExtractPolicy_t<T>::PolicyData);
+}
+
+//------------------------------
+// SubmitPacketJob 구현 - 패킷을 HandlerPool로 전달
+//------------------------------
+template<typename NetworkPolicy>
+void NetworkEngine<NetworkPolicy>::SubmitPacketJob(Session* session, PacketBuffer* packet)
+{
+    // 현재는 간단히 직접 처리 (나중에 JobQueue 통합 시 확장 가능)
+    SessionId sessionId = session->sessionId;
+    
+    if constexpr (NetworkPolicy::IsServer) {
+        OnRecv(sessionId, packet);
+    } else {
+        OnRecv(packet);
+    }
+    
+    // TODO: 향후 NetworkManager의 HandlerPool로 Job 제출하도록 확장
+    // if (networkManager) {
+    //     SessionInfo sessionInfo;
+    //     sessionInfo.sessionId.sessionId = sessionId.sessionId;
+    //     PacketJob job = PacketJob::CreateRecvJob(sessionInfo, packet);
+    //     networkManager->SubmitPacketJob(std::move(job));
+    // }
 }
 
 //==============================================

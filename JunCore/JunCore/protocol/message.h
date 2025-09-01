@@ -1,5 +1,5 @@
 #pragma once
-#include <Windows.h>
+#include "../core/WindowsIncludes.h"
 
 #pragma pack(push, 1)
 struct LanHeader 

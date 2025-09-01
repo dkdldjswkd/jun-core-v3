@@ -83,7 +83,8 @@
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\rpos\\jun-core-v3\\JunCore\\Test\\Test.vcxproj\" /p:Configuration=Debug /p:Platform=x64)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" JunCore.sln /t:Clean /p:Configuration=Debug /p:Platform=x64)",
       "Bash(./build/bin/x64/Debug/EchoServer.exe)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" JunCore.sln /p:Configuration=Debug /p:Platform=x64 /p:TreatWarningsAsErrors=false)"
     ],
     "deny": []
   }

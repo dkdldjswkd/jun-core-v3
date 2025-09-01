@@ -1,10 +1,11 @@
 ﻿#pragma once
-#include <Windows.h>
-#include <WinSock2.h>
+#include "../core/WindowsIncludes.h"
 #include <thread>
 #include <functional>
+#include <optional>
 #include "Session.h"
 #include "../buffer/packet.h"
+#include "IOCPResource.h"
 #include "../../JunCommon/algorithm/Parser.h"
 
 //------------------------------
@@ -39,8 +40,12 @@ protected:
 	BYTE privateKey;
 	NetType netType;
 
-	// IOCP 관련 (완전히 동일)
+	// IOCP 관련 - Resource 기반 인터페이스
+	std::optional<IOCPHandle> iocpHandle;  // Resource 기반 핸들
+	
+	// 호환성 유지용 핸들 (실제 소유권은 IOCPResource가 관리)
 	HANDLE h_iocp = INVALID_HANDLE_VALUE;
+	bool ownsIOCP = false;  // 항상 false (Resource가 소유권 관리)
 
 	// 모니터링 관련 (완전히 동일)
 	DWORD recvMsgTPS = 0;
@@ -51,8 +56,20 @@ protected:
 protected:
 	// 공통 초기화 함수들
 	virtual void InitializeProtocol(const char* systemFile, const char* configSection);
-	virtual void InitializeIOCP(DWORD maxConcurrentThreads = 0);
-	virtual void InitializeIOCP(HANDLE existingIOCP);  // 기존 IOCP 사용
+	
+public:
+	//------------------------------
+	// Resource 기반 IOCP 인터페이스
+	//------------------------------
+	void AttachToIOCP(const IOCPResource& resource);
+	void DetachFromIOCP();
+	bool IsIOCPAttached() const noexcept;
+	
+	// 하위 호환성: 싱글톤 IOCP 자동 연결
+	void EnsureSingletonIOCP();
+
+protected:
+	
 	virtual void CleanupIOCP();
 
 	// 공통 TPS 관리 함수들 (inline으로 성능 최적화)
@@ -86,26 +103,28 @@ protected:
 	template<typename OnSendPostFn, typename OnIncrementCountFn>
 	void OnSendComplete(Session& session, OnSendPostFn&& onSendPost, OnIncrementCountFn&& onIncrementCount);
 	
-	template<typename OnRecvFn, typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
-	void OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, OnDisconnectFn&& onDisconnect, 
+	template<typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
+	void OnReceiveCompleteLAN(Session& session, OnDisconnectFn&& onDisconnect, 
 							  OnAsyncRecvFn&& onAsyncRecv, OnIncrementCountFn&& onIncrementCount);
 	
-	template<typename OnRecvFn, typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
-	void OnReceiveCompleteNET(Session& session, OnRecvFn&& onRecv, OnDisconnectFn&& onDisconnect, 
+	template<typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
+	void OnReceiveCompleteNET(Session& session, OnDisconnectFn&& onDisconnect, 
 							  OnAsyncRecvFn&& onAsyncRecv, OnIncrementCountFn&& onIncrementCount);
 	
-	// 워커 스레드 메인 루프
-	template<typename SessionManagerT>
-	void RunWorkerThread(SessionManagerT& sessionManager);
-	
-	// IOCP 워커 스레드 (CompletionKey 라우팅)
+public:
+	// IOCP 워커 스레드 (CompletionKey 라우팅) - NetworkManager에서 사용
 	static void RunWorkerThread(HANDLE iocpHandle);
+
+protected:
 	
 	// IOCP에서 호출될 가상 핸들러들
 	virtual void HandleRecvComplete(Session* session) = 0;
 	virtual void HandleSendComplete(Session* session) = 0;
 	virtual void HandleSessionDisconnect(Session* session) = 0;
 	virtual void HandleDecrementIOCount(Session* session) = 0;
+	
+	// PacketJob 제출 인터페이스 (파생 클래스에서 NetworkManager에 연결)
+	virtual void SubmitPacketJob(Session* session, PacketBuffer* packet) = 0;
 
 protected:
 	// 순수 가상 함수 - 파생 클래스에서 구현해야 함
@@ -278,8 +297,9 @@ inline void NetBase::OnSendComplete(Session& session, OnSendPostFn&& onSendPost,
 }
 
 // OnReceiveCompleteLAN - Recv 완료 처리 (LAN 모드)
-template<typename OnRecvFn, typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
-inline void NetBase::OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, OnDisconnectFn&& onDisconnect, 
+// IOCP Worker Thread에서 호출 - 패킷 조립만 담당, 핸들링은 HandlerPool로 위임
+template<typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
+inline void NetBase::OnReceiveCompleteLAN(Session& session, OnDisconnectFn&& onDisconnect, 
 										  OnAsyncRecvFn&& onAsyncRecv, OnIncrementCountFn&& onIncrementCount)
 {
 	int loopCount = 0;
@@ -315,12 +335,14 @@ inline void NetBase::OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, O
 
 		session.recvBuf.MoveFront(LAN_HEADER_SIZE);
 
+		// 패킷 조립만 담당 - 실제 처리는 HandlerPool로 위임
 		PacketBuffer* contentsPacket = PacketBuffer::Alloc();
 		char tempBuffer[MAX_PAYLOAD_LEN];
 		session.recvBuf.Dequeue(tempBuffer, lanHeader.len);
 		contentsPacket->PutData(tempBuffer, lanHeader.len);
 
-		onRecv(contentsPacket);
+		// HandlerPool로 PacketJob 제출 (IOCP Worker는 패킷 조립만!)
+		SubmitPacketJob(&session, contentsPacket);
 		onIncrementCount();
 	}
 
@@ -331,8 +353,9 @@ inline void NetBase::OnReceiveCompleteLAN(Session& session, OnRecvFn&& onRecv, O
 }
 
 // OnReceiveCompleteNET - Recv 완료 처리 (NET 모드)
-template<typename OnRecvFn, typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
-inline void NetBase::OnReceiveCompleteNET(Session& session, OnRecvFn&& onRecv, OnDisconnectFn&& onDisconnect, 
+// IOCP Worker Thread에서 호출 - 패킷 조립만 담당, 핸들링은 HandlerPool로 위임
+template<typename OnDisconnectFn, typename OnAsyncRecvFn, typename OnIncrementCountFn>
+inline void NetBase::OnReceiveCompleteNET(Session& session, OnDisconnectFn&& onDisconnect, 
 										  OnAsyncRecvFn&& onAsyncRecv, OnIncrementCountFn&& onIncrementCount)
 {
 	for (;;)
@@ -363,7 +386,7 @@ inline void NetBase::OnReceiveCompleteNET(Session& session, OnRecvFn&& onRecv, O
 		session.recvBuf.Peek(encryptPacket, NET_HEADER_SIZE + netHeader.len);
 		session.recvBuf.MoveFront(NET_HEADER_SIZE + netHeader.len);
 
-		// 복호화
+		// 복호화 (패킷 조립)
 		PacketBuffer* decryptPacket = PacketBuffer::Alloc();
 		if (false == decryptPacket->DecryptPacket(encryptPacket, privateKey))
 		{
@@ -372,79 +395,13 @@ inline void NetBase::OnReceiveCompleteNET(Session& session, OnRecvFn&& onRecv, O
 			return;
 		}
 
-		onRecv(decryptPacket);
+		// HandlerPool로 PacketJob 제출 (IOCP Worker는 패킷 조립만!)
+		SubmitPacketJob(&session, decryptPacket);
 		onIncrementCount();
 	}
 
 	if (!session.disconnectFlag)
 	{
 		onAsyncRecv();
-	}
-}
-
-// RunWorkerThread - IOCP Worker 함수 공통 로직
-template<typename SessionManagerT>
-inline void NetBase::RunWorkerThread(SessionManagerT& sessionManager)
-{
-	for (;;) 
-	{
-		DWORD ioSize = 0;
-		Session* session = nullptr;
-		LPOVERLAPPED p_overlapped = nullptr;
-
-		BOOL retGQCS = GetQueuedCompletionStatus(h_iocp, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
-		
-
-		// 워커 스레드 종료
-		if (ioSize == 0 && session == nullptr && p_overlapped == nullptr) 
-		{
-			PostQueuedCompletionStatus(h_iocp, 0, 0, 0);
-			return;
-		}
-
-		// FIN
-		if (ioSize == 0) 
-		{
-			goto Decrement_IOCount;
-		}
-		// PQCS
-		else if ((ULONG_PTR)p_overlapped < 3) // PQCS_TYPE::NONE == 3
-		{
-			int pqcsType = (int)(ULONG_PTR)p_overlapped;
-			switch (pqcsType) 
-			{
-				case 1: // SEND_POST
-				{
-					sessionManager.HandleSendPost(session);
-					goto Decrement_IOCount;
-				}
-				case 2: // RELEASE_SESSION
-				{
-					sessionManager.HandleReleaseSession(session);
-					continue;
-				}
-			}
-		}
-		// recv 완료처리
-		else if (&session->recvOverlapped == p_overlapped) 
-		{
-			if (retGQCS) 
-			{
-				session->recvBuf.MoveRear(ioSize);
-				session->lastRecvTime = static_cast<DWORD>(GetTickCount64());
-				sessionManager.HandleRecvCompletion(session);
-			}
-		}
-		// send 완료처리
-		else if (&session->sendOverlapped == p_overlapped) 
-		{
-			if (retGQCS) 
-			{
-				sessionManager.HandleSendCompletion(session);
-			}
-		}
-
-	Decrement_IOCount:
-		sessionManager.HandleDecrementIOCount(session);
 	}
 }

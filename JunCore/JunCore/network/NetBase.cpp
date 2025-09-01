@@ -1,7 +1,5 @@
-﻿#include <WS2tcpip.h>
-#include <WinSock2.h>
-#include "NetBase.h"
-#pragma comment(lib, "ws2_32.lib")
+﻿#include "NetBase.h"
+#include <mutex>
 
 //------------------------------
 // NetBase 구현
@@ -24,43 +22,15 @@ void NetBase::InitializeProtocol(const char* systemFile, const char* configSecti
 	*/
 }
 
-void NetBase::InitializeIOCP(DWORD maxConcurrentThreads)
-{
-	// WSAStartup은 이미 생성자에서 호출됨
-	
-	// IOCP 생성 
-	h_iocp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, maxConcurrentThreads);
-	if (INVALID_HANDLE_VALUE == h_iocp) 
-	{
-		// LOG("NetBase", LOG_LEVEL_FATAL, "CreateIoCompletionPort() Error: %d", GetLastError());
-		throw std::exception("CreateIoCompletionPort_ERROR");
-	}
-}
-
-void NetBase::InitializeIOCP(HANDLE existingIOCP)
-{
-	// WSAStartup은 이미 생성자에서 호출됨
-	
-	// 기존 IOCP 사용
-	if (existingIOCP == INVALID_HANDLE_VALUE)
-	{
-		throw std::exception("Invalid IOCP handle");
-	}
-	
-	h_iocp = existingIOCP;
-	// 기존 IOCP이므로 CloseHandle 하지 않도록 플래그 설정
-	// (실제로는 소유권 관리가 필요하지만 간단히 구현)
-}
 
 void NetBase::CleanupIOCP()
 {
-	// IOCP 소유권 확인이 필요하지만
-	// 현재는 단순하게 구현 (실제로는 소유권 관리 필요)
-	if (INVALID_HANDLE_VALUE != h_iocp)
-	{
-		CloseHandle(h_iocp);
-		h_iocp = INVALID_HANDLE_VALUE;
-	}
+	// Resource 기반 핸들 해제
+	DetachFromIOCP();
+	
+	// 레거시 핸들 초기화 (Resource가 실제 소유권 관리)
+	h_iocp = INVALID_HANDLE_VALUE;
+	ownsIOCP = false;
 
 	WSACleanup();
 }
@@ -146,4 +116,66 @@ void NetBase::RunWorkerThread(HANDLE iocpHandle)
 			engine->HandleDecrementIOCount(session);
 		}
 	}
+}
+
+//------------------------------
+// 새로운 Resource 기반 IOCP 인터페이스 구현
+//------------------------------
+
+void NetBase::AttachToIOCP(const IOCPResource& resource)
+{
+	// 기존 연결이 있으면 해제
+	DetachFromIOCP();
+	
+	// 새로운 IOCPHandle 생성 및 연결
+	iocpHandle.emplace(resource);
+	
+	// 레거시 핸들도 동기화 (호환성 유지)
+	h_iocp = resource.GetHandle();
+	ownsIOCP = false;  // Resource가 소유권을 가짐
+}
+
+void NetBase::DetachFromIOCP()
+{
+	// IOCPHandle 해제
+	if (iocpHandle) {
+		iocpHandle.reset();
+	}
+	
+	// 호환성 핸들 초기화 (Resource가 소유권 관리하므로 항상 초기화)
+	h_iocp = INVALID_HANDLE_VALUE;
+	ownsIOCP = false;
+}
+
+bool NetBase::IsIOCPAttached() const noexcept
+{
+	// Resource 기반 핸들만 확인 (단일 IOCP 아키텍처)
+	return iocpHandle && iocpHandle->IsValid();
+}
+
+//------------------------------
+// 하위 호환성: 싱글톤 IOCP 관리
+//------------------------------
+void NetBase::EnsureSingletonIOCP()
+{
+	// 이미 연결되어 있으면 건너뛰기
+	if (IsIOCPAttached()) {
+		return;
+	}
+	
+	// 싱글톤 IOCPResource 생성 및 연결
+	static std::unique_ptr<IOCPResource> singletonIOCP = nullptr;
+	static std::once_flag initFlag;
+	
+	// 해당 함수가 템플릿 함수가 되거나, 템플릿 클래스가 되면 안된다!! IOCPResource가 두개 이상 생성될 수 있다.
+	 std::call_once(initFlag,
+					[]() {
+					singletonIOCP = IOCPResource::Builder()
+					.WithWorkerCount(5)  // 기본 5개 워커 스레드
+					.WithWorkerFunction([](HANDLE iocp) { NetBase::RunWorkerThread(iocp); })
+					.Build();
+		 });
+	
+	// 싱글톤 IOCP에 연결
+	AttachToIOCP(*singletonIOCP);
 }

@@ -18,6 +18,9 @@
     <ClCompile Include="network\NetBase.cpp">
       <Filter>network</Filter>
     </ClCompile>
+    <ClCompile Include="network\NetworkManager.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
     <ClCompile Include="buffer\packet.cpp">
       <Filter>buffer</Filter>
     </ClCompile>
@@ -44,6 +47,9 @@
     <ClInclude Include="core\base.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="core\WindowsIncludes.h">
+      <Filter>core</Filter>
+    </ClInclude>
     <ClInclude Include="protocol\handshake.pb.h">
       <Filter>protocol</Filter>
     </ClInclude>
@@ -54,6 +60,12 @@
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\NetworkTypes.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\IOCPResource.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\NetworkManager.h">
       <Filter>network</Filter>
     </ClInclude>
   </ItemGroup>

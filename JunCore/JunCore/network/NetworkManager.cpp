@@ -17,70 +17,28 @@ NetworkManager::~NetworkManager()
     CleanupIOCP();
 }
 
-void NetworkManager::CreateServerIOCP(DWORD serverThreads)
+void NetworkManager::CreateSharedIOCP(DWORD totalWorkerThreads)
 {
-    if (serverIOCP != INVALID_HANDLE_VALUE)
+    if (sharedIOCPResource)
         return;  // 이미 생성됨
-        
-    serverThreadCount = serverThreads;
-    serverIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, serverThreads);
-    if (serverIOCP == INVALID_HANDLE_VALUE)
-    {
-        throw std::exception("Failed to create server IOCP");
-    }
     
-    // IOCP 워커 스레드 생성
-    serverWorkerThreads.reserve(serverThreads);
-    for (DWORD i = 0; i < serverThreads; ++i)
-    {
-        serverWorkerThreads.emplace_back([this]() {
-            NetBase::RunWorkerThread(serverIOCP);
-        });
-    }
+    // IOCPResource Builder 패턴으로 생성
+    sharedIOCPResource = IOCPResource::Builder()
+        .WithWorkerCount(totalWorkerThreads)
+        .WithWorkerFunction([](HANDLE iocp) {
+            NetBase::RunWorkerThread(iocp);
+        })
+        .Build();
     
-    // 기본 핸들러 풀도 함께 생성
-    CreateServerHandlerPool(serverThreads);
-    
-    ownsServerIOCP = true;
-}
-
-void NetworkManager::CreateClientIOCP(DWORD clientThreads)
-{
-    if (clientIOCP != INVALID_HANDLE_VALUE)
-        return;  // 이미 생성됨
-        
-    clientThreadCount = clientThreads;
-    clientIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, clientThreads);
-    if (clientIOCP == INVALID_HANDLE_VALUE)
-    {
-        throw std::exception("Failed to create client IOCP");
-    }
-    
-    // IOCP 워커 스레드 생성
-    clientWorkerThreads.reserve(clientThreads);
-    for (DWORD i = 0; i < clientThreads; ++i)
-    {
-        clientWorkerThreads.emplace_back([this]() {
-            NetBase::RunWorkerThread(clientIOCP);
-        });
-    }
-    
-    // 기본 핸들러 풀도 함께 생성
-    CreateClientHandlerPool(clientThreads);
-    
-    ownsClientIOCP = true;
+    // 기본 핸들러 풀들도 함께 생성
+    CreateServerHandlerPool(4);  // 높은 우선순위
+    CreateClientHandlerPool(1);  // 낮은 우선순위
 }
 
 void NetworkManager::StartAll()
 {
-    // 모든 서버 엔진 시작
-    for (auto& engine : serverEngines)
-    {
-        engine->Start();
-    }
-    
-    // 모든 클라이언트 엔진 시작
-    for (auto& engine : clientEngines)
+    // 모든 엔진 시작 (통합)
+    for (auto& engine : allEngines)
     {
         engine->Start();
     }
@@ -88,60 +46,19 @@ void NetworkManager::StartAll()
 
 void NetworkManager::StopAll()
 {
-    // 모든 서버 엔진 정지
-    for (auto& engine : serverEngines)
+    // 모든 엔진 정지 (통합)
+    for (auto& engine : allEngines)
     {
         engine->Stop();
     }
     
-    // 모든 클라이언트 엔진 정지
-    for (auto& engine : clientEngines)
-    {
-        engine->Stop();
-    }
-    
-    // 워커 스레드 종료 신호
-    if (ownsServerIOCP && serverIOCP != INVALID_HANDLE_VALUE)
-    {
-        for (size_t i = 0; i < serverWorkerThreads.size(); ++i)
-        {
-            PostQueuedCompletionStatus(serverIOCP, 0, 0, 0);
-        }
-    }
-    
-    if (ownsClientIOCP && clientIOCP != INVALID_HANDLE_VALUE)
-    {
-        for (size_t i = 0; i < clientWorkerThreads.size(); ++i)
-        {
-            PostQueuedCompletionStatus(clientIOCP, 0, 0, 0);
-        }
-    }
-    
-    // 워커 스레드 종료 대기
-    for (auto& thread : serverWorkerThreads)
-    {
-        if (thread.joinable())
-            thread.join();
-    }
-    
-    for (auto& thread : clientWorkerThreads)
-    {
-        if (thread.joinable())
-            thread.join();
-    }
-    
-    serverWorkerThreads.clear();
-    clientWorkerThreads.clear();
+    // IOCPResource는 RAII로 자동 정리됨
+    // 별도의 워커 스레드 관리가 불필요
 }
 
 void NetworkManager::UpdateAllTPS()
 {
-    for (auto& engine : serverEngines)
-    {
-        engine->UpdateTPS();
-    }
-    
-    for (auto& engine : clientEngines)
+    for (auto& engine : allEngines)
     {
         engine->UpdateTPS();
     }
@@ -150,19 +67,13 @@ void NetworkManager::UpdateAllTPS()
 void NetworkManager::PrintTPS() const
 {
     std::cout << "=== NetworkManager TPS Report ===" << std::endl;
+    std::cout << "Shared IOCP Workers: " << 
+        (sharedIOCPResource ? sharedIOCPResource->GetWorkerCount() : 0) << std::endl;
     
-    std::cout << "Server Engines (" << serverEngines.size() << "):" << std::endl;
-    for (size_t i = 0; i < serverEngines.size(); ++i)
+    std::cout << "All Engines (" << allEngines.size() << "):" << std::endl;
+    for (size_t i = 0; i < allEngines.size(); ++i)
     {
-        const auto& engine = serverEngines[i];
-        std::cout << "  [" << i << "] SendTPS: " << std::setw(6) << engine->GetSendTPS()
-                  << ", RecvTPS: " << std::setw(6) << engine->GetRecvTPS() << std::endl;
-    }
-    
-    std::cout << "Client Engines (" << clientEngines.size() << "):" << std::endl;
-    for (size_t i = 0; i < clientEngines.size(); ++i)
-    {
-        const auto& engine = clientEngines[i];
+        const auto& engine = allEngines[i];
         std::cout << "  [" << i << "] SendTPS: " << std::setw(6) << engine->GetSendTPS()
                   << ", RecvTPS: " << std::setw(6) << engine->GetRecvTPS() << std::endl;
     }
@@ -224,7 +135,12 @@ void NetworkManager::SubmitClientPacketJob(PacketJob&& packetJob, DWORD priority
 
 void NetworkManager::CleanupIOCP()
 {
-    // HandlerPool 먼저 종료
+    // 1. 모든 엔진의 IOCP 연결 해제
+    for (auto& engine : allEngines) {
+        engine->DetachFromIOCP();
+    }
+    
+    // 2. HandlerPool 먼저 종료
     if (serverHandlerPool) {
         serverHandlerPool->Shutdown();
         serverHandlerPool.reset();
@@ -235,17 +151,7 @@ void NetworkManager::CleanupIOCP()
         clientHandlerPool.reset();
     }
     
-    if (ownsServerIOCP && serverIOCP != INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(serverIOCP);
-        serverIOCP = INVALID_HANDLE_VALUE;
-        ownsServerIOCP = false;
-    }
-    
-    if (ownsClientIOCP && clientIOCP != INVALID_HANDLE_VALUE)
-    {
-        CloseHandle(clientIOCP);
-        clientIOCP = INVALID_HANDLE_VALUE;
-        ownsClientIOCP = false;
-    }
+    // 3. IOCPResource 자동 정리 (RAII)
+    sharedIOCPResource.reset();
 }
+
