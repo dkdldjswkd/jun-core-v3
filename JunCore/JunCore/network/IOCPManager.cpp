@@ -1,10 +1,10 @@
 ﻿#include "IOCPManager.h"
 #include "IPacketHandler.h"
-#include "NetBase_New.h"
+#include "NetBase.h"
 #include "../protocol/message.h"
 
 //------------------------------
-// IOCPManager 구현 - 아름다운 패킷 조립 로직
+// IOCPManager 구현 - 패킷 조립 로직
 //------------------------------
 
 void IOCPManager::RunWorkerThread()
@@ -85,14 +85,9 @@ void IOCPManager::RunWorkerThread()
 
 void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 {
-    printf("📥 [IOCPManager] HandleRecvComplete - SessionID: %lld, ioSize: %lu\n", 
-           session->sessionId.sessionId, ioSize);
-    
     // 수신 버퍼 업데이트
     session->recvBuf.MoveRear(ioSize);
     session->lastRecvTime = static_cast<DWORD>(GetTickCount64());
-    
-    printf("📦 [IOCPManager] Buffer updated, starting packet assembly...\n");
     
     // 패킷 조립 (LAN 모드로 통일!)
     AssembleLANPackets(session);
@@ -100,8 +95,6 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 
 void IOCPManager::AssembleLANPackets(Session* session)
 {
-    printf("🔧 [IOCPManager] AssembleLANPackets - Buffer size: %d\n", session->recvBuf.GetUseSize());
-    
     int loopCount = 0;
     const int MAX_LOOP_COUNT = 100;  // 무한루프 방지
     
@@ -109,51 +102,42 @@ void IOCPManager::AssembleLANPackets(Session* session)
     {
         // 무한루프 방지
         if (++loopCount > MAX_LOOP_COUNT) {
-            printf("⚠️ [IOCPManager] MAX_LOOP_COUNT reached\n");
+            printf("[WARN] IOCPManager: MAX_LOOP_COUNT reached\n");
             break;
         }
         
         // 헤더 크기 확인
         if (session->recvBuf.GetUseSize() < LAN_HEADER_SIZE) {
-            printf("📏 [IOCPManager] Not enough data for header: %d < %d\n", 
-                   session->recvBuf.GetUseSize(), LAN_HEADER_SIZE);
-            break;
+            break; // 헤더가 완전히 도착하지 않음
         }
 
         // LAN 헤더 읽기 (2바이트 길이만)
         WORD payloadLen;
         session->recvBuf.Peek(&payloadLen, LAN_HEADER_SIZE);
-        
-        printf("📋 [IOCPManager] Header read - payloadLen: %d\n", payloadLen);
 
         // 패킷 크기 유효성 검사
         if (payloadLen > MAX_PAYLOAD_LEN || payloadLen == 0) 
         {
-            printf("❌ [IOCPManager] Invalid payload length: %d\n", payloadLen);
+            printf("[ERROR] Invalid packet length: %d\n", payloadLen);
             HandleSessionDisconnect(session);
             return;
         }
 
         // 전체 패킷이 도착했는지 확인
         if (session->recvBuf.GetUseSize() < LAN_HEADER_SIZE + payloadLen) {
-            printf("⏳ [IOCPManager] Waiting for complete packet: %d < %d\n", 
-                   session->recvBuf.GetUseSize(), LAN_HEADER_SIZE + payloadLen);
-            break;
+            break; // 패킷이 완전히 도착하지 않음
         }
 
         // 헤더 제거
         session->recvBuf.MoveFront(LAN_HEADER_SIZE);
-        printf("✂️ [IOCPManager] Header removed, assembling packet...\n");
 
-        // 🎨 아름다운 패킷 조립
+        // 패킷 조립
         PacketBuffer* packet = PacketBuffer::Alloc();
         
         // 임시 버퍼를 통한 안전한 복사
         char tempBuffer[MAX_PAYLOAD_LEN];
         session->recvBuf.Dequeue(tempBuffer, payloadLen);
         packet->PutData(tempBuffer, payloadLen);
-
-        printf("📦 [IOCPManager] Packet assembled successfully - Length: %d\n", payloadLen);
 
         // 완성된 패킷을 핸들러에게 전달
         DeliverPacketToHandler(session, packet);
@@ -189,10 +173,10 @@ void IOCPManager::HandleSessionDisconnect(Session* session)
     // 세션 연결 해제 처리
     session->DisconnectSession();
     
-    // 핸들러에게 연결 해제 알림
-    IPacketHandler* handler = PacketHandlerRegistry::GetCurrentHandler();
-    if (handler) {
-        handler->OnSessionDisconnected(session);
+    // 세션에서 직접 엔진 가져와서 호출 (패킷 처리와 일관성 유지)
+    NetBase* engine = session->GetEngine();
+    if (engine) {
+        engine->OnSessionDisconnected(session);
     }
 }
 
@@ -201,10 +185,8 @@ void IOCPManager::DeliverPacketToHandler(Session* session, PacketBuffer* packet)
     // 세션에서 직접 엔진 가져와서 호출 (Thread-local 방식 대신)
     NetBase* engine = session->GetEngine();
     if (engine && packet) {
-        printf("🚀 [IOCPManager] Delivering packet to handler (SessionID: %lld)\n", session->sessionId.sessionId);
         engine->HandleCompletePacket(session, packet);
     } else {
-        printf("❌ [IOCPManager] No engine or invalid packet - freeing memory\n");
         if (packet) {
             PacketBuffer::Free(packet);
         }

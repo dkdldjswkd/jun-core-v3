@@ -20,8 +20,9 @@ class IPacketHandler;
 //------------------------------
 class IOCPManager final
 {
-    // Builder를 friend로 선언
+    // Builder와 NetBase를 friend로 선언
     friend class Builder;
+    friend class NetBase;
     
 private:
     // IOCP 리소스

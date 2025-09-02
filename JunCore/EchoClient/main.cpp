@@ -8,9 +8,9 @@ int main()
 {
 	static CrashDump dump;
 
-	EchoClient client("../ClientConfig.ini", "EchoClient");
+	EchoClient client;
 	client.Start();
-	printf("StartEchoClient \n");
+	printf("EchoClient started\n");
 
 	// 인터랙티브 채팅 모드
 	Sleep(1000); // 서버 연결 완료 대기
@@ -37,10 +37,7 @@ int main()
 		}
 
 		// 서버에 메시지 전송
-		PacketBuffer* testPacket = PacketBuffer::Alloc();
-		testPacket->PutData(input.c_str(), static_cast<int>(input.length()));
-		client.SendPacket(testPacket);
-		cout << "[SENT] " << input << endl;
+		client.SendMessage(input.c_str());
 	}
 
 	cout << "클라이언트를 종료합니다..." << endl;

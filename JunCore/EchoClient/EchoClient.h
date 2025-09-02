@@ -1,23 +1,29 @@
 ﻿#pragma once
-#include "../JunCore/network/NetworkTypes.h"
+#include "../JunCore/network/NetBase.h"
 
-class EchoClient : public NetworkEngine<ClientPolicy> 
+class EchoClient : public NetBase 
 {
 public:
-	EchoClient(const char* systemFile, const char* client);
+	EchoClient();
 	~EchoClient();
 
 public:
-	// NetworkEngine 기본 순수 가상 함수들 (클라이언트에서는 사용하지 않지만 구현 필요)
-	bool OnConnectionRequest(in_addr ip, WORD port) override { return false; }
-	void OnClientJoin(SessionId sessionId) override {}
-	void OnRecv(SessionId sessionId, PacketBuffer* contentsPacket) override {}
-	void OnClientLeave(SessionId sessionId) override {}
-	void OnServerStop() override {}
+	// NetBase 순수 가상 함수 구현
+	void Start() override;
+	void Stop() override;
 
-	// 클라이언트 전용 함수들 - virtual 함수 override
-	void OnConnect() override;
-	void OnRecv(PacketBuffer* csContentsPacket) override;
-	void OnDisconnect() override;
-	void OnClientStop() override;
+protected:
+	// NetBase 순수 가상 함수 구현
+	void OnRecv(Session* session, PacketBuffer* packet) override;
+	void OnClientJoin(Session* session) override;
+	void OnClientLeave(Session* session) override;
+
+public:
+	// 클라이언트 전용 함수들
+	bool Connect(const char* serverIP, int port);
+	bool SendMessage(const char* message);
+
+private:
+	Session* clientSession = nullptr;
+	bool connected = false;
 };

@@ -154,10 +154,6 @@ void ServerSocketManager::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clie
     
     // 연결 성공
     currentSessionCount++;
-    char clientIP[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &clientAddr->sin_addr, clientIP, INET_ADDRSTRLEN);
-    printf("✅ Client connected: %s:%d (SessionID: %lld, Total: %lu)\n", 
-           clientIP, ntohs(clientAddr->sin_port), session->sessionId.sessionId, currentSessionCount.load());
     
     // 패킷 핸들러에 연결 알림
     netBaseHandler->OnSessionConnected(session);
@@ -169,9 +165,6 @@ void ServerSocketManager::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clie
 void ServerSocketManager::OnClientDisconnect(Session* session)
 {
     currentSessionCount--;
-    printf("❌ Client disconnected (SessionID: %lld, Remaining: %lu)\n", 
-           session->sessionId.sessionId, currentSessionCount.load());
-    
     netBaseHandler->OnSessionDisconnected(session);
     ReleaseSession(session);
 }

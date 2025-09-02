@@ -26,7 +26,20 @@ void NetworkManager::CreateSharedIOCP(DWORD totalWorkerThreads)
     sharedIOCPResource = IOCPResource::Builder()
         .WithWorkerCount(totalWorkerThreads)
         .WithWorkerFunction([](HANDLE iocp) {
-            NetBase::RunWorkerThread(iocp);
+            // 간단한 IOCP 워커 루프
+            while (true) {
+                DWORD bytesTransferred;
+                ULONG_PTR completionKey;
+                LPOVERLAPPED overlapped;
+                
+                if (!GetQueuedCompletionStatus(iocp, &bytesTransferred, &completionKey, &overlapped, INFINITE)) {
+                    break;
+                }
+                
+                if (bytesTransferred == 0 && completionKey == 0 && overlapped == nullptr) {
+                    break; // 종료 신호
+                }
+            }
         })
         .Build();
     
@@ -58,10 +71,7 @@ void NetworkManager::StopAll()
 
 void NetworkManager::UpdateAllTPS()
 {
-    for (auto& engine : allEngines)
-    {
-        engine->UpdateTPS();
-    }
+    // 모니터링 관련 제거 - 빈 구현
 }
 
 void NetworkManager::PrintTPS() const
@@ -74,8 +84,7 @@ void NetworkManager::PrintTPS() const
     for (size_t i = 0; i < allEngines.size(); ++i)
     {
         const auto& engine = allEngines[i];
-        std::cout << "  [" << i << "] SendTPS: " << std::setw(6) << engine->GetSendTPS()
-                  << ", RecvTPS: " << std::setw(6) << engine->GetRecvTPS() << std::endl;
+        std::cout << "  [" << i << "] Engine Status: Active" << std::endl;
     }
     
     std::cout << "=================================" << std::endl;
@@ -137,7 +146,7 @@ void NetworkManager::CleanupIOCP()
 {
     // 1. 모든 엔진의 IOCP 연결 해제
     for (auto& engine : allEngines) {
-        engine->DetachFromIOCP();
+        engine->DetachIOCPManager();
     }
     
     // 2. HandlerPool 먼저 종료

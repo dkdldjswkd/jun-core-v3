@@ -3,7 +3,6 @@
 #include <type_traits>
 #include "NetBase.h"
 #include "NetworkPolicy.h"
-#include "../../JunCommon/algorithm/Parser.h"
 #include "../../JunCommon/queue/PacketJob.h"
 
 // 템플릿 인자 NetworkPolicy로는 추적이 불편해서 NetworkPolicy의 구현부를 추적하기 위한 전방선언
@@ -20,15 +19,15 @@ template<typename NetworkPolicy>
 class NetworkEngine : public NetBase
 {
 public:
-	NetworkEngine(const char* systemFile, const char* configSection);
+	NetworkEngine();
 	virtual ~NetworkEngine();
 
 private:
 	// 정책 기반 데이터
 	typename NetworkPolicy::PolicyData policyData;
 
-	// 클라이언트 전용 Parser (ClientPolicy에서만 사용)
-	std::conditional_t<NetworkPolicy::IsServer, int, Parser> parser;
+	// 클라이언트 전용 플레이스홀더 (향후 확장용)
+	std::conditional_t<NetworkPolicy::IsServer, int, int> placeholder;
 	
 	// NetworkManager 참조 (PacketJob 제출용)
 	class NetworkManager* networkManager = nullptr;
@@ -71,9 +70,9 @@ public:
 	typename NetworkPolicy::PolicyData& GetPolicyData() { return policyData; }
 	const typename NetworkPolicy::PolicyData& GetPolicyData() const { return policyData; }
 	
-	// ClientPolicy에서 parser 접근 (조건부 컴파일)
+	// ClientPolicy에서 플레이스홀더 접근 (조건부 컴파일)
 	template<bool Enable = !NetworkPolicy::IsServer>
-	typename std::enable_if<Enable, Parser&>::type GetParser() { return parser; }
+	typename std::enable_if<Enable, int&>::type GetPlaceholder() { return placeholder; }
 	
 	// IOCP 관련 인터페이스
 	HANDLE GetIOCPHandle() const { return h_iocp; }
@@ -174,10 +173,10 @@ private:
 //------------------------------
 
 template<typename NetworkPolicy>
-NetworkEngine<NetworkPolicy>::NetworkEngine(const char* systemFile, const char* configSection)
-	: NetBase(systemFile, configSection)
+NetworkEngine<NetworkPolicy>::NetworkEngine()
+	: NetBase()
 {
-	NetworkPolicy::Initialize(this, policyData, configSection);
+	NetworkPolicy::Initialize(this, policyData);
 	
 	// 하위 호환성: 자동 IOCP 연결 (싱글톤 방식)
 	EnsureSingletonIOCP();

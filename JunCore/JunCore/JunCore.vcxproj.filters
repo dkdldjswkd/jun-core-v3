@@ -18,9 +18,6 @@
     <ClCompile Include="network\NetBase.cpp">
       <Filter>network</Filter>
     </ClCompile>
-    <ClCompile Include="network\NetBase_New.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
     <ClCompile Include="network\NetworkManager.cpp">
       <Filter>network</Filter>
     </ClCompile>
@@ -84,9 +81,6 @@
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\IPacketHandler.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\NetBase_New.h">
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\NetworkArchitecture.h">

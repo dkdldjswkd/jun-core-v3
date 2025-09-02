@@ -9,23 +9,23 @@ namespace NetworkFactory
 {
 	// 서버 생성 함수
 	template<typename ServerClass>
-	std::unique_ptr<ServerClass> CreateServer(const char* systemFile, const char* configSection)
+	std::unique_ptr<ServerClass> CreateServer()
 	{
-		return std::make_unique<ServerClass>(systemFile, configSection);
+		return std::make_unique<ServerClass>();
 	}
 
 	// 클라이언트 생성 함수  
 	template<typename ClientClass>
-	std::unique_ptr<ClientClass> CreateClient(const char* systemFile, const char* configSection)
+	std::unique_ptr<ClientClass> CreateClient()
 	{
-		return std::make_unique<ClientClass>(systemFile, configSection);
+		return std::make_unique<ClientClass>();
 	}
 
 	// 정책 기반 생성 함수
 	template<typename Policy>
-	std::unique_ptr<NetworkEngine<Policy>> Create(const char* systemFile, const char* configSection)
+	std::unique_ptr<NetworkEngine<Policy>> Create()
 	{
-		return std::make_unique<NetworkEngine<Policy>>(systemFile, configSection);
+		return std::make_unique<NetworkEngine<Policy>>();
 	}
 }
 
@@ -70,10 +70,10 @@ class EchoServer : public NetworkEngine<ServerPolicy>
 };
 
 // 팩토리를 사용한 생성
-auto server = NetworkFactory::CreateServer<EchoServer>("config.ini", "SERVER");
-auto client = NetworkFactory::CreateClient<EchoClient>("config.ini", "CLIENT");
+auto server = NetworkFactory::CreateServer<EchoServer>();
+auto client = NetworkFactory::CreateClient<EchoClient>();
 
 // 정책 기반 생성
-auto serverEngine = NetworkFactory::Create<ServerPolicy>("config.ini", "SERVER");
-auto clientEngine = NetworkFactory::Create<ClientPolicy>("config.ini", "CLIENT");
+auto serverEngine = NetworkFactory::Create<ServerPolicy>();
+auto clientEngine = NetworkFactory::Create<ClientPolicy>();
 */

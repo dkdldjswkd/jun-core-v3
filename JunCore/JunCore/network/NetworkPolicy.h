@@ -56,7 +56,7 @@ struct ServerPolicy
 
 	// Policy-specific operations
 	template<typename NetworkEngineT>
-	static void Initialize(NetworkEngineT* engine, PolicyData& data, const char* configSection);
+	static void Initialize(NetworkEngineT* engine, PolicyData& data);
 	
 	template<typename NetworkEngineT>
 	static void StartNetwork(NetworkEngineT* engine, PolicyData& data);
@@ -139,7 +139,7 @@ struct ClientPolicy
 
 	// Policy-specific operations
 	template<typename NetworkEngineT>
-	static void Initialize(NetworkEngineT* engine, PolicyData& data, const char* configSection);
+	static void Initialize(NetworkEngineT* engine, PolicyData& data);
 	
 	template<typename NetworkEngineT>
 	static void StartNetwork(NetworkEngineT* engine, PolicyData& data);
@@ -179,14 +179,13 @@ struct ClientPolicy
 // Template implementation - header only
 //==============================================
 
-#include "../../JunCommon/algorithm/Parser.h"
 
 //------------------------------
 // ServerPolicy 템플릿 구현
 //------------------------------
 
 template<typename NetworkEngineT>
-inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, const char* configSection)
+inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data)
 {
 	// 서버 설정 로딩 (현재는 하드코딩)
 	int serverPort = 7777;
@@ -198,18 +197,6 @@ inline void ServerPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 	data.maxWorker = 4;
 	data.activeWorker = 2;
 
-	/* TODO: Parser 사용 구현 예정
-	Parser parser;
-	parser.LoadFile(systemFile);
-	parser.GetValue(configSection, "PORT", (int*)&serverPort);
-	parser.GetValue(configSection, "MAX_SESSION", (int*)&data.maxSession);
-	parser.GetValue(configSection, "NAGLE", (int*)&nagle);
-	parser.GetValue(configSection, "TIME_OUT_FLAG", (int*)&data.timeoutFlag);
-	parser.GetValue(configSection, "TIME_OUT", (int*)&data.timeOut);
-	parser.GetValue(configSection, "TIME_OUT_CYCLE", (int*)&data.timeoutCycle);
-	parser.GetValue(configSection, "MAX_WORKER", (int*)&data.maxWorker);
-	parser.GetValue(configSection, "ACTIVE_WORKER", (int*)&data.activeWorker);
-	*/
 
 	// 시스템 검증
 	if (data.maxWorker < data.activeWorker) 
@@ -368,7 +355,7 @@ inline bool ServerPolicy::ReleaseSession(PolicyData& data, Session* session)
 //------------------------------
 
 template<typename NetworkEngineT>
-inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, const char* configSection)
+inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data)
 {
 	// 클라이언트 설정 로딩 (현재는 하드코딩)
 	strcpy_s(data.serverIP, "127.0.0.1");
@@ -376,15 +363,6 @@ inline void ClientPolicy::Initialize(NetworkEngineT* engine, PolicyData& data, c
 	data.maxSessions = 1;        // 기본 1개 세션
 	data.isDummyClient = false;  // 기본 일반 클라이언트
 
-	/* TODO: Parser 사용 구현 예정
-	Parser parser;
-	parser.LoadFile(systemFile);
-	parser.GetValue(configSection, "IP", data.serverIP);
-	parser.GetValue(configSection, "PORT", (int*)&data.serverPort);
-	parser.GetValue(configSection, "MAX_SESSIONS", (int*)&data.maxSessions);
-	parser.GetValue(configSection, "IS_DUMMY_CLIENT", (int*)&data.isDummyClient);
-	parser.GetValue(configSection, "CONNECT_INTERVAL", (int*)&data.connectInterval);
-	*/
 
 	// 세션 벡터 초기화
 	data.sessions.resize(data.maxSessions);

@@ -5,39 +5,33 @@
 #include "../JunCore/network/NetworkArchitecture.h"
 using namespace std;
 
+static CrashDump dump;
+
 // EchoServer.cpp, Define 확인
 void StartEchoServer()
 {
 	try 
 	{
-		printf("🌟 === New Network Architecture Demo === 🌟\n");
-		
-		// 1. 새로운 NetworkArchitecture 초기화
-		printf("1. Initializing NetworkArchitecture...\n");
 		INIT_NETWORK_ARCH(5);  // 5개 워커 스레드
 		
-		// 2. EchoServer 핸들러 생성
-		printf("2. Creating EchoServer handler...\n");
-		auto echoServer = CREATE_HANDLER(EchoServer, "../ServerConfig.ini", "EchoServer");
+		auto echoServer = CREATE_HANDLER(EchoServer);
 		
 		// 3. 서버 시작
 		printf("3. Starting EchoServer...\n");
 		echoServer->Start();
-		printf("✅ EchoServer started successfully with new architecture!\n");
+		printf("EchoServer started successfully with new architecture!\n");
 
-		// TPS 모니터링 비활성화 - RECV/SEND 로그만 표시
-		printf("\n📡 EchoServer started - Waiting for packets...\n");
-		printf("💡 Only RECV/SEND messages will be displayed\n");
+		printf("\nEchoServer started - Waiting for packets...\n");
+		printf("Only RECV/SEND messages will be displayed\n");
 		printf("--------------------------------------------------------\n");
 		
 		for (;;)
 		{
 			Sleep(1000);
-			// TPS 업데이트만 수행 (출력 없음)
-			NETWORK_ARCH.UpdateAllTPS();
+			// 대기 중
 		}
 
-		printf("\n🛑 Shutting down...\n");
+		printf("\nShutting down...\n");
 		echoServer->Stop();
 		SHUTDOWN_NETWORK_ARCH();
 	}
@@ -66,7 +60,6 @@ int main()
 	try {
 		printf("=== Initializing CrashDump ===\n");
 		fflush(stdout);
-		static CrashDump dump;
 		
 		printf("=== Starting EchoServer ===\n");
 		fflush(stdout);

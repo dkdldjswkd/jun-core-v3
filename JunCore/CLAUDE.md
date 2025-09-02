@@ -369,6 +369,14 @@ When using JunCommon classes from JunCore, use the correct relative paths:
 - **Always build after completing work** to verify no compilation issues
 - Use appropriate warning level settings in project configuration
 
+### Comments and Documentation
+- **No Emoji Comments**: Never use emoji characters in comments or code
+  - Use plain, professional language in comments
+  - Comments should be concise and descriptive
+  - Example: Use "Initialize network" instead of "🚀 Initialize network"
+- Keep comments clean and simple
+- Use Korean for user-facing messages when appropriate
+
 ## Code Refactoring History (2025-08)
 
 ### NetServer/NetClient 중복 코드 제거 프로젝트

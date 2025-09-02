@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
 #include "IOCPManager.h"
-#include "NetBase_New.h"
+#include "NetBase.h"
 #include "Session.h"
 #include "../protocol/message.h"
 #include "../../JunCommon/container/LFStack.h"
