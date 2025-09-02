@@ -20,7 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="network\NetBase.cpp" />
+    <ClCompile Include="network\NetBase_New.cpp" />
     <ClCompile Include="network\NetworkManager.cpp" />
+    <ClCompile Include="network\IOCPManager.cpp" />
+    <ClCompile Include="network\IPacketHandler.cpp" />
+    <ClCompile Include="network\ServerSocketManager.cpp" />
     <ClCompile Include="buffer\packet.cpp" />
     <ClCompile Include="network\Session.cpp" />
     <ClCompile Include="protocol\handshake.pb.cc" />
@@ -29,8 +33,13 @@
     <ClInclude Include="core\base.h" />
     <ClInclude Include="core\WindowsIncludes.h" />
     <ClInclude Include="network\IOCPResource.h" />
+    <ClInclude Include="network\IOCPManager.h" />
+    <ClInclude Include="network\IPacketHandler.h" />
     <ClInclude Include="network\NetBase.h" />
+    <ClInclude Include="network\NetBase_New.h" />
+    <ClInclude Include="network\NetworkArchitecture.h" />
     <ClInclude Include="network\NetworkEngine.h" />
+    <ClInclude Include="network\ServerSocketManager.h" />
     <ClInclude Include="network\NetworkManager.h" />
     <ClInclude Include="network\NetworkPolicy.h" />
     <ClInclude Include="network\NetworkTypes.h" />

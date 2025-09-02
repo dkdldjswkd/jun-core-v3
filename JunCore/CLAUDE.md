@@ -267,6 +267,79 @@ When using JunCommon classes from JunCore, use the correct relative paths:
 - **Windows SDK**: Required for IOCP and WinSock2 APIs
 - **Visual Studio 2022**: Primary development environment
 
+## 신규 파일 생성 시 프로젝트 추가 규칙
+
+### Visual Studio 프로젝트 파일 업데이트 필수
+- **신규 .cpp/.h 파일 생성 시 반드시 해당 .vcxproj 파일에 추가해야 함**
+- 파일을 생성한 후 바로 프로젝트 파일을 업데이트하여 빌드 오류 방지
+- 다음 명령으로 프로젝트 파일 구조 확인:
+  ```bash
+  # .vcxproj 파일에서 기존 파일 구조 파악
+  grep -A 5 -B 5 "ClInclude\|ClCompile" JunCore/JunCore.vcxproj
+  ```
+
+### 프로젝트별 파일 추가 위치
+- **JunCore 프로젝트**: `JunCore/JunCore.vcxproj`
+- **JunCommon 프로젝트**: `JunCommon/JunCommon.vcxproj`  
+- **EchoServer 프로젝트**: `EchoServer/EchoServer.vcxproj`
+- **EchoClient 프로젝트**: `EchoClient/EchoClient.vcxproj`
+- **Test 프로젝트**: `Test/Test.vcxproj`
+
+### 파일 추가 예시
+```xml
+<!-- .vcxproj 파일에 헤더 파일 추가 -->
+<ItemGroup>
+  <ClInclude Include="network\IOCPManager.h" />
+  <ClInclude Include="network\IPacketHandler.h" />
+  <ClInclude Include="network\NetBase_New.h" />
+  <ClInclude Include="network\NetworkArchitecture.h" />
+</ItemGroup>
+
+<!-- .vcxproj 파일에 소스 파일 추가 -->
+<ItemGroup>
+  <ClCompile Include="network\IOCPManager.cpp" />
+  <ClCompile Include="network\NetBase_New.cpp" />
+</ItemGroup>
+```
+
+### .vcxproj.filters 파일도 함께 업데이트
+- Visual Studio 솔루션 탐색기에서 폴더 구조를 제대로 보여주기 위해 필요
+- 필터 파일에도 동일하게 파일과 폴더 구조를 추가
+
+## 코어 수정/신규 코어 생성 시 필수 규칙
+
+### EchoServer/EchoClient 테스트 필수
+- **네트워크 코어 수정 시**: 반드시 EchoServer와 EchoClient에서 해당 코어를 활용하도록 수정
+- **신규 네트워크 아키텍처 생성 시**: 기존 EchoServer/EchoClient를 새로운 구조로 마이그레이션
+- **검증 프로세스**:
+  1. EchoServer와 EchoClient가 정상 빌드되는지 확인
+  2. 서버-클라이언트 간 패킷 송수신이 정상 동작하는지 테스트
+  3. 성능 저하가 없는지 확인 (TPS, 메모리 사용량 등)
+
+### 브레이크포인트 디버깅 확인 필수
+- **현재 문제**: `GetQueuedCompletionStatus` 호출이 여전히 `NetBase::RunWorkerThread`에서 발생
+- **신규 아키텍처 적용 시**: 실제로 `IOCPManager::RunWorkerThread`에서 호출되는지 브레이크포인트로 검증 필요
+- **검증 방법**:
+  ```cpp
+  // IOCPManager::RunWorkerThread에 브레이크포인트 설정
+  BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, ...);  // 여기서 중단되어야 함
+  
+  // NetBase::RunWorkerThread에는 중단되지 않아야 함 (구 코드)
+  ```
+
+### 마이그레이션 체크리스트
+1. **EchoServer.cpp/h 수정** - 새로운 네트워크 아키텍처 사용
+2. **EchoClient.cpp/h 수정** - 새로운 네트워크 아키텍처 사용  
+3. **컴파일 확인** - 모든 프로젝트가 오류 없이 빌드되는지 확인
+4. **런타임 테스트** - 실제 서버-클라이언트 통신 테스트
+5. **브레이크포인트 검증** - 새로운 코드 경로가 실행되는지 확인
+6. **성능 비교** - 기존 대비 성능 저하 없는지 확인
+
+### 주의사항
+- **절대 기존 코어만 수정하고 방치하지 말 것** - 반드시 예제 프로젝트까지 함께 업데이트
+- **단위별 검증** - 각 수정 사항마다 EchoServer/Client로 검증
+- **문서화** - 주요 아키텍처 변경 시 이 파일(CLAUDE.md)에도 변경사항 기록
+
 ## Coding Standards
 
 ### Naming Conventions

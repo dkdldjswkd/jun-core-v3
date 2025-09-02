@@ -2,6 +2,7 @@
 #include "EchoServer.h"
 #include "../JunCommon/system/CrashDump.h"
 #include "../JunCore/protocol/handshake.pb.h"
+#include "../JunCore/network/NetworkArchitecture.h"
 using namespace std;
 
 // EchoServer.cpp, Define 확인
@@ -9,42 +10,36 @@ void StartEchoServer()
 {
 	try 
 	{
-		printf("Creating EchoServer...\n");
-		EchoServer server("../ServerConfig.ini", "EchoServer");
+		printf("🌟 === New Network Architecture Demo === 🌟\n");
 		
-		printf("Starting EchoServer...\n");
-		server.Start();
-		printf("EchoServer started successfully on port 7777\n");
+		// 1. 새로운 NetworkArchitecture 초기화
+		printf("1. Initializing NetworkArchitecture...\n");
+		INIT_NETWORK_ARCH(5);  // 5개 워커 스레드
+		
+		// 2. EchoServer 핸들러 생성
+		printf("2. Creating EchoServer handler...\n");
+		auto echoServer = CREATE_HANDLER(EchoServer, "../ServerConfig.ini", "EchoServer");
+		
+		// 3. 서버 시작
+		printf("3. Starting EchoServer...\n");
+		echoServer->Start();
+		printf("✅ EchoServer started successfully with new architecture!\n");
 
-		// TPS 모니터링 옵션 (true: 활성화, false: 비활성화)
-		bool enableTpsMonitoring = false;
+		// TPS 모니터링 비활성화 - RECV/SEND 로그만 표시
+		printf("\n📡 EchoServer started - Waiting for packets...\n");
+		printf("💡 Only RECV/SEND messages will be displayed\n");
+		printf("--------------------------------------------------------\n");
 		
-		if (enableTpsMonitoring) {
-			for (;;)
-			{
-				// 1초 주기로 TPS 출력
-				Sleep(1000);
-				printf("NetworkLib ---------------------------------------------------- \n");
-				printf("세션 수          : %d \n", server.GetSessionCount());
-				printf("패킷 수          : %d \n", 0); // PacketBuffer::Get_UseCount() 사용 불가
-				printf("총 접속 수       : %d \n", server.GetAcceptTotal());
-				printf("초당 접속 수     : %d \n", server.GetAcceptTPS());
-				printf("초당 전송 메시지 : %d \n", server.GetSendTPS());
-				printf("초당 수신 메시지 : %d \n", server.GetRecvTPS());
-				printf("\n\n\n\n\n\n\n\n\n\n \n\n\n\n\n\n\n\n\n\n \n\n");
-			}
-		} else {
-			// TPS 모니터링 없이 조용히 대기 (RECV/SEND 로그만 표시)
-			printf("EchoServer started. Monitoring RECV/SEND messages only...\n");
-			for (;;)
-			{
-				Sleep(1000);
-				// TPS 업데이트만 수행 (출력 없음)
-				server.UpdateTPS();
-			}
+		for (;;)
+		{
+			Sleep(1000);
+			// TPS 업데이트만 수행 (출력 없음)
+			NETWORK_ARCH.UpdateAllTPS();
 		}
 
-		server.Stop();
+		printf("\n🛑 Shutting down...\n");
+		echoServer->Stop();
+		SHUTDOWN_NETWORK_ARCH();
 	}
 	catch (const std::exception& e) 
 	{
