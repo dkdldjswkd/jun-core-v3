@@ -28,7 +28,7 @@ void EchoServer::OnRecv(Session* session, PacketBuffer* cs_contentsPacket)
 		cs_contentsPacket->GetData(payloadData, cs_contentsPacket_len);
 		payloadData[cs_contentsPacket_len] = '\0';
 		
-		printf("[%04X][RECV] %s\n", (session->sessionId.SESSION_UNIQUE & 0xFFFF), payloadData);
+		printf("[%04X][RECV:%d] %s\n", (session->sessionId.SESSION_UNIQUE & 0xFFFF), cs_contentsPacket_len, payloadData);
 
 		// Echo back - 응답 패킷 생성
 		PacketBuffer* sc_contentsPacket = PacketBuffer::Alloc();
@@ -83,11 +83,9 @@ void EchoServer::OnError(int errorcode)
 //------------------------------
 void EchoServer::Start() 
 {
-    printf("EchoServer starting with new architecture...\n");
-    
-    // ServerSocketManager 생성 및 시작
-    if (!IsIOCPManagerAttached()) {
-        printf("IOCP Manager not attached!\n");
+    if (!IsIOCPManagerAttached()) 
+	{
+		LOG_ERROR("IOCP is not Attached!!");
         return;
     }
     

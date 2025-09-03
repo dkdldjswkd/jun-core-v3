@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="network\NetBase.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
     <ClCompile Include="network\NetworkManager.cpp">
       <Filter>network</Filter>
     </ClCompile>
@@ -61,15 +58,6 @@
     </ClInclude>
     <ClInclude Include="protocol\handshake.pb.h">
       <Filter>protocol</Filter>
-    </ClInclude>
-    <ClInclude Include="network\NetworkEngine.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\NetworkPolicy.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\NetworkTypes.h">
-      <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\IOCPResource.h">
       <Filter>network</Filter>

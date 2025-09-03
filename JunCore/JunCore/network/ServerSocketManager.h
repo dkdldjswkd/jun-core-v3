@@ -8,6 +8,7 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <vector>
 
 //------------------------------
 // ServerSocketManager - 서버 소켓 관리 전담
@@ -29,9 +30,8 @@ private:
     NetBase* netBaseHandler = nullptr;  // NetBase로 직접 저장
     
     // 세션 관리
-    Session* sessionArray = nullptr;
+    std::vector<Session> sessions;
     LFStack<DWORD> sessionIndexStack;
-    DWORD maxSessionCount = 0;
     std::atomic<DWORD> currentSessionCount{0};
     
 public:

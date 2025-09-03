@@ -23,7 +23,8 @@ private:
 
 public:
     // Singleton Pattern - 전역 아키텍처
-    static NetworkArchitecture& GetInstance() {
+    static NetworkArchitecture& GetInstance() 
+    {
         static NetworkArchitecture instance;
         return instance;
     }
@@ -40,13 +41,13 @@ private:
 
 public:
     // 아키텍처 초기화
-    void Initialize(int workerThreadCount = 5) {
-        if (!coreIOCP) {
+    void Initialize(int workerThreadCount) 
+    {
+        if (!coreIOCP) 
+        {
             coreIOCP = IOCPManager::Create()
                 .WithWorkerCount(workerThreadCount)
                 .Build();
-                
-            printf("NetworkArchitecture initialized with %d worker threads\n", workerThreadCount);
         }
     }
     
@@ -62,8 +63,10 @@ public:
 public:
     // 핸들러 등록/해제
     template<typename HandlerType>
-    std::shared_ptr<HandlerType> CreateHandler() {
-        if (!coreIOCP) {
+    std::shared_ptr<HandlerType> CreateHandler() 
+    {
+        if (!coreIOCP) 
+        {
             throw std::runtime_error("NetworkArchitecture not initialized");
         }
         
@@ -109,22 +112,6 @@ public:
     
     HANDLE GetIOCPHandle() const {
         return coreIOCP ? coreIOCP->GetHandle() : INVALID_HANDLE_VALUE;
-    }
-
-public:
-    // 편의 함수들
-    void UpdateAllTPS() {
-        // 모니터링 관련 제거됨 - 빈 구현
-    }
-    
-    // 고급 관리 기능 (향후 확장)
-    void SetHandlerPriority(const std::string& handlerName, int priority) {
-        // 향후 스레드 스케줄링에 활용
-    }
-    
-    // 동적 워커 스레드 수 조정 (향후 구현)
-    void AdjustWorkerThreadCount(int newCount) {
-        // 런타임 워커 스레드 수 조정 기능
     }
 };
 

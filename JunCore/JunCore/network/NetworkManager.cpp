@@ -69,27 +69,6 @@ void NetworkManager::StopAll()
     // 별도의 워커 스레드 관리가 불필요
 }
 
-void NetworkManager::UpdateAllTPS()
-{
-    // 모니터링 관련 제거 - 빈 구현
-}
-
-void NetworkManager::PrintTPS() const
-{
-    std::cout << "=== NetworkManager TPS Report ===" << std::endl;
-    std::cout << "Shared IOCP Workers: " << 
-        (sharedIOCPResource ? sharedIOCPResource->GetWorkerCount() : 0) << std::endl;
-    
-    std::cout << "All Engines (" << allEngines.size() << "):" << std::endl;
-    for (size_t i = 0; i < allEngines.size(); ++i)
-    {
-        const auto& engine = allEngines[i];
-        std::cout << "  [" << i << "] Engine Status: Active" << std::endl;
-    }
-    
-    std::cout << "=================================" << std::endl;
-}
-
 void NetworkManager::CreateServerHandlerPool(DWORD handlerThreads)
 {
     if (serverHandlerPool) return;  // 이미 생성됨

@@ -34,10 +34,6 @@ public:
     void StartAll();
     void StopAll();
     
-    // TPS 모니터링
-    void UpdateAllTPS();
-    void PrintTPS() const;
-    
     // Getter
     const IOCPResource* GetSharedIOCPResource() const { return sharedIOCPResource.get(); }
     HANDLE GetSharedIOCP() const { 

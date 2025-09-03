@@ -33,21 +33,19 @@ private:
     // 패킷 조립 정책은 message.h와 packet.h의 상수들을 사용
     
 public:
-    //------------------------------
-    // Builder Pattern - 아름다운 생성 인터페이스
-    //------------------------------
     class Builder {
     private:
         int workerCount = 5;
         
     public:
-        Builder& WithWorkerCount(int count) { 
+        Builder& WithWorkerCount(int count) 
+        {
             workerCount = count; 
             return *this; 
         }
         
-        std::unique_ptr<IOCPManager> Build() {
-            // Private 생성자 접근을 위해 new를 직접 사용
+        std::unique_ptr<IOCPManager> Build() 
+        {
             return std::unique_ptr<IOCPManager>(new IOCPManager(workerCount));
         }
     };
@@ -55,7 +53,7 @@ public:
     static Builder Create() { return Builder{}; }
 
 private:
-    // Private constructor - Builder를 통해서만 생성
+    // Builder를 통해서만 생성될 수 있음
     explicit IOCPManager(int workerCount);
     
 public:
@@ -120,13 +118,15 @@ private:
 inline IOCPManager::IOCPManager(int workerCount)
     : iocpHandle(CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0))
 {
-    if (iocpHandle == NULL) {
+    if (iocpHandle == NULL) 
+    {
         throw std::runtime_error("CreateIoCompletionPort failed");
     }
     
     // Worker threads 생성
     workerThreads.reserve(workerCount);
-    for (int i = 0; i < workerCount; ++i) {
+    for (int i = 0; i < workerCount; ++i) 
+    {
         workerThreads.emplace_back([this]() { RunWorkerThread(); });
     }
 }
