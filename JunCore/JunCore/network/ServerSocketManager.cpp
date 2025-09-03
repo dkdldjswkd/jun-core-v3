@@ -136,7 +136,8 @@ void ServerSocketManager::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clie
     
     // sendQ 청소 (Clear 메서드 없음)
     PacketBuffer* packet;
-    while (session->sendQ.Dequeue(&packet)) {
+    while (session->sendQ.Dequeue(&packet)) 
+    {
         PacketBuffer::Free(packet);
     }
     
@@ -144,8 +145,9 @@ void ServerSocketManager::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clie
     session->SetEngine(netBaseHandler);
     
     // IOCP에 소켓 등록
-    if (!iocpManager->RegisterSocket(clientSocket, session)) {
-        printf("IOCP registration failed for session %lld\n", session->sessionId.sessionId);
+    if (!iocpManager->RegisterSocket(clientSocket, session)) 
+    {
+		LOG_ERROR("IOCP registration failed for session %lld", session->sessionId.sessionId);
         ReleaseSession(session);
         closesocket(clientSocket);
         return;

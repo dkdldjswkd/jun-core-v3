@@ -110,13 +110,11 @@ inline void NetBase::OnSessionError(Session* session, const char* errorMsg)
 inline void NetBase::AttachIOCPManager(std::shared_ptr<IOCPManager> manager)
 {
     iocpManager = manager;
-    PacketHandlerRegistry::RegisterHandler(this);
 }
 
 inline void NetBase::DetachIOCPManager()
 {
     if (iocpManager) {
-        PacketHandlerRegistry::UnregisterHandler();
         iocpManager.reset();
     }
 }
@@ -138,7 +136,8 @@ inline bool NetBase::SendPacket(Session* session, PacketBuffer* packet)
     // Send flag 체크 후 비동기 송신 시작
     if (InterlockedExchange8((char*)&session->sendFlag, true) == false) {
         // IOCPManager를 통한 송신
-        if (iocpManager) {
+        if (iocpManager) 
+        {
             iocpManager->PostAsyncSend(session);
         }
     }

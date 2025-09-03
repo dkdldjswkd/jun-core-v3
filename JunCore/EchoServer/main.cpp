@@ -2,7 +2,7 @@
 #include "EchoServer.h"
 #include "../JunCommon/system/CrashDump.h"
 #include "../JunCore/protocol/handshake.pb.h"
-#include "../JunCore/network/NetworkArchitecture.h"
+#include "../JunCore/network/IOCPManager.h"
 using namespace std;
 
 static CrashDump dump;
@@ -11,10 +11,22 @@ int main()
 {
 	try
 	{
-		NetworkArchitecture::GetInstance().Initialize(3); // INIT_NETWORK_ARCH(2);
-		std::shared_ptr<EchoServer> echoServer = NetworkArchitecture::GetInstance().CreateHandler<EchoServer>(); // CREATE_HANDLER(EchoServer);
+		// IOCPManager 생성 (워커 스레드 3개)
+		auto iocpManager = IOCPManager::Create()
+		                              .WithWorkerCount(3)
+		                              .Build();
+		
+		if (!iocpManager->IsValid()) 
+		{
+			LOG_ERROR("Failed to create IOCPManager");
+			return -1;
+		}
 
-		echoServer->Start();
+		// EchoServer 생성 및 IOCP 연결 (shared_ptr로 변환)
+		EchoServer echoServer;
+		echoServer.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
+
+		echoServer.Start();
 		printf("\nEchoServer started\n");
 		printf("--------------------------------------------------------\n");
 
@@ -23,8 +35,8 @@ int main()
 			Sleep(1000);
 		}
 
-		echoServer->Stop();
-		NetworkArchitecture::GetInstance().Shutdown(); // SHUTDOWN_NETWORK_ARCH();
+		echoServer.Stop();
+		echoServer.DetachIOCPManager();
 	}
 	catch (const std::exception& e)
 	{

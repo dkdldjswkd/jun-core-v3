@@ -1,4 +1,3 @@
 ﻿#include "IPacketHandler.h"
 
-// Thread-local 정적 변수 정의
-thread_local IPacketHandler* PacketHandlerRegistry::currentHandler = nullptr;
+// IPacketHandler는 순수 인터페이스이므로 구현할 내용 없음

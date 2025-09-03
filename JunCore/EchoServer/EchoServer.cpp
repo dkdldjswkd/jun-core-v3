@@ -1,6 +1,5 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "EchoServer.h"
-#include "../JunCore/network/NetworkArchitecture.h"
 
 EchoServer::EchoServer() : NetBase()
 {
@@ -43,11 +42,11 @@ void EchoServer::OnRecv(Session* session, PacketBuffer* cs_contentsPacket)
 		SendPacket(session, sc_contentsPacket);
 	}
 	catch (const std::exception& e) {
-		printf("[ERROR] Exception in OnRecv: %s\n", e.what());
+		LOG_ERROR("Exception in OnRecv: %s", e.what());
 		PacketBuffer::Free(cs_contentsPacket);
 	}
 	catch (...) {
-		printf("[ERROR] Unknown exception in OnRecv\n");
+		LOG_DEBUG("Unknown exception in OnRecv");
 		PacketBuffer::Free(cs_contentsPacket);
 	}
 }
@@ -92,10 +91,13 @@ void EchoServer::Start()
     socketManager = std::make_unique<ServerSocketManager>(iocpManager, this);
     
     // 서버 시작 (기본 설정: 0.0.0.0:7777, 최대 1000 세션)
-    if (socketManager->StartServer("0.0.0.0", 7777, 1000)) {
-        printf("EchoServer started successfully on port 7777!\n");
-    } else {
-        printf("EchoServer failed to start!\n");
+    if (socketManager->StartServer("0.0.0.0", 7777, 1000)) 
+	{
+		LOG_DEBUG("EchoServer started successfully on port 7777!");
+    } 
+	else 
+	{
+		LOG_ERROR("EchoServer failed to start!");
         socketManager.reset();
     }
 }

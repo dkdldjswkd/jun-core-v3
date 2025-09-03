@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="network\NetworkManager.cpp" />
     <ClCompile Include="network\IOCPManager.cpp" />
     <ClCompile Include="network\IPacketHandler.cpp" />
     <ClCompile Include="network\ServerSocketManager.cpp" />
@@ -30,13 +29,10 @@
   <ItemGroup>
     <ClInclude Include="core\base.h" />
     <ClInclude Include="core\WindowsIncludes.h" />
-    <ClInclude Include="network\IOCPResource.h" />
     <ClInclude Include="network\IOCPManager.h" />
     <ClInclude Include="network\IPacketHandler.h" />
     <ClInclude Include="network\NetBase.h" />
-    <ClInclude Include="network\NetworkArchitecture.h" />
     <ClInclude Include="network\ServerSocketManager.h" />
-    <ClInclude Include="network\NetworkManager.h" />
     <ClInclude Include="buffer\packet.h" />
     <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />

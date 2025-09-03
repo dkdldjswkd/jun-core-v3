@@ -9,8 +9,7 @@
 
 void IOCPManager::RunWorkerThread()
 {
-    // Thread-local 핸들러 등록 (향후 확장용)
-    // PacketHandlerRegistry::RegisterHandler(someHandler);
+    // IOCP 워커 스레드 메인 루프
     
     for (;;) 
     {
@@ -79,8 +78,7 @@ void IOCPManager::RunWorkerThread()
         }
     }
     
-    // Thread-local 핸들러 해제
-    PacketHandlerRegistry::UnregisterHandler();
+    // 워커 스레드 종료
 }
 
 void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
@@ -184,10 +182,14 @@ void IOCPManager::DeliverPacketToHandler(Session* session, PacketBuffer* packet)
 {
     // 세션에서 직접 엔진 가져와서 호출 (Thread-local 방식 대신)
     NetBase* engine = session->GetEngine();
-    if (engine && packet) {
+    if (engine && packet) 
+    {
         engine->HandleCompletePacket(session, packet);
-    } else {
-        if (packet) {
+    } 
+    else 
+    {
+        if (packet) 
+        {
             PacketBuffer::Free(packet);
         }
     }
