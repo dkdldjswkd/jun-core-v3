@@ -53,10 +53,10 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId session_id, NetB
 	engine_				= eng;
 
 	recv_buf_.Clear();
-	PacketBuffer* packet;
-	while (send_q_.Dequeue(&packet)) 
+	std::vector<char>* packet_data;
+	while (send_q_.Dequeue(&packet_data)) 
 	{
-		PacketBuffer::Free(packet);
+		delete packet_data;  // vector<char> 메모리 해제
 	}
 }
 

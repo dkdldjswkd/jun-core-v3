@@ -1,9 +1,9 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
 #include "Session.h"
-#include "../buffer/packet.h"
 #include "IOCPManager.h"
 #include <memory>
+#include <iostream>
 
 // NetBase - 네트워크 엔진 베이스 클래스
 // 단일 책임: 패킷 처리와 세션 관리
@@ -39,19 +39,15 @@ public:
     virtual void Stop() = 0;
 
 protected:
-    // 유틸리티 함수들
-    bool SendPacket(Session* session, PacketBuffer* packet);
+    // 유틸리티 함수들 (PacketBuffer 완전 제거)
+    bool SendRawData(Session* session, const char* data, size_t dataSize);
+    bool SendRawData(Session* session, const std::vector<char>& data);
     void DisconnectSession(Session* session);
 
 private:
     // 세션 유효성 검사
     bool IsSessionValid(Session* session) const {
         return session != nullptr && session->sock_ != INVALID_SOCKET;
-    }
-    
-    // 패킷 유효성 검사
-    bool IsPacketValid(PacketBuffer* packet) const {
-        return packet != nullptr;
     }
 };
 
@@ -90,14 +86,18 @@ inline bool NetBase::IsIOCPManagerAttached() const noexcept
     return iocpManager != nullptr && iocpManager->IsValid();
 }
 
-inline bool NetBase::SendPacket(Session* session, PacketBuffer* packet)
+inline bool NetBase::SendRawData(Session* session, const std::vector<char>& data)
 {
-    if (!IsSessionValid(session) || !IsPacketValid(packet)) {
+    if (!IsSessionValid(session) || data.empty()) {
         return false;
     }
     
-    // 송신 큐에 패킷 추가
-    session->send_q_.Enqueue(packet);
+    std::cout << "[SEND_RAW] Queuing " << data.size() << " bytes for session " 
+              << (session->session_id_.SESSION_UNIQUE & 0xFFFF) << std::endl;
+    
+    // vector<char>를 동적 할당해서 송신 큐에 추가
+    std::vector<char>* packet_data = new std::vector<char>(data);
+    session->send_q_.Enqueue(packet_data);
     
     // Send flag 체크 후 비동기 송신 시작
     if (InterlockedExchange8((char*)&session->send_flag_, true) == false) {
@@ -116,4 +116,15 @@ inline void NetBase::DisconnectSession(Session* session)
     if (IsSessionValid(session)) {
         session->DisconnectSession();
     }
+}
+
+inline bool NetBase::SendRawData(Session* session, const char* data, size_t dataSize)
+{
+    if (!IsSessionValid(session) || !data || dataSize == 0) {
+        return false;
+    }
+    
+    // const char*를 vector<char>로 변환 후 전송
+    std::vector<char> packet_data(data, data + dataSize);
+    return SendRawData(session, packet_data);
 }

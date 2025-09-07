@@ -35,6 +35,7 @@ public:
     // 클라이언트 상태 확인
     //------------------------------
     bool IsConnected() const;
+    Session* GetCurrentSession() const;
     
     //------------------------------
     // 메시지 송신 (편의 함수)
@@ -184,6 +185,11 @@ inline bool Client::IsConnected() const
     return (currentSession != nullptr && currentSession->sock_ != INVALID_SOCKET);
 }
 
+inline Session* Client::GetCurrentSession() const
+{
+    return currentSession;
+}
+
 inline bool Client::SendPacket(const char* message)
 {
     if (!IsConnected() || !currentSession) 
@@ -192,13 +198,12 @@ inline bool Client::SendPacket(const char* message)
         return false;
     }
     
-    PacketBuffer* packet = PacketBuffer::Alloc();
     int messageLen = (int)strlen(message);
-    packet->PutData(message, messageLen);
+    std::vector<char> packet_data(message, message + messageLen);
     
     printf("[EchoClient][SEND] Sending message: '%s' (len=%d)\n", message, messageLen);
     
-    bool result = NetBase::SendPacket(currentSession, packet);
+    bool result = SendRawData(currentSession, packet_data);
     if (result) 
     {
         printf("[EchoClient][SEND] SendPacket returned success\n");
@@ -217,10 +222,9 @@ inline bool Client::SendPacket(const void* data, int dataSize)
         return false;
     }
     
-    PacketBuffer* packet = PacketBuffer::Alloc();
-    packet->PutData((const char*)data, dataSize);
+    std::vector<char> packet_data((const char*)data, (const char*)data + dataSize);
     
-    return NetBase::SendPacket(currentSession, packet);
+    return SendRawData(currentSession, packet_data);
 }
 
 inline void Client::OnClientJoin(Session* session)

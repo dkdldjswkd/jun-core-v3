@@ -24,6 +24,7 @@
     <ClCompile Include="buffer\packet.cpp" />
     <ClCompile Include="network\Session.cpp" />
     <ClCompile Include="protocol\handshake.pb.cc" />
+    <ClCompile Include="protocol\DirectProtobuf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h" />
@@ -36,6 +37,8 @@
     <ClInclude Include="buffer\packet.h" />
     <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />
+    <ClInclude Include="protocol\ProtobufPacket.h" />
+    <ClInclude Include="protocol\DirectProtobuf.h" />
     <ClInclude Include="network\Session.h" />
   </ItemGroup>
   <ItemGroup>

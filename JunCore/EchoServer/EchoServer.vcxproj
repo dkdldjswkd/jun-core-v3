@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClCompile Include="EchoServer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="echo_message.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JunCore\JunCore.vcxproj">
@@ -165,6 +166,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EchoServer.h" />
+    <ClInclude Include="echo_message.pb.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

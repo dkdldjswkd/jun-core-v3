@@ -3,51 +3,84 @@
 
 EchoServer::EchoServer() : Server()
 {
+	// PacketTest.cpp 방식: 패킷별 핸들러 등록
+	RegisterDirectPacketHandler<echo::EchoRequest>(
+		[this](const echo::EchoRequest& request) {
+			this->HandleEchoRequest(request);
+		}
+	);
 }
 
 EchoServer::~EchoServer() 
 {
 }
 
-void EchoServer::OnRecv(Session* session, PacketBuffer* cs_contentsPacket) 
+// PacketTest.cpp의 세션 저장 방식 - 현재 처리 중인 세션을 멤버로 관리
+void EchoServer::HandleEchoRequest(const echo::EchoRequest& request)
+{
+	std::cout << "[SERVER] HandleEchoRequest: " << request.message() << std::endl;
+	
+	// EchoResponse 생성
+	echo::EchoResponse response;
+	response.set_message(request.message());
+	response.set_timestamp(GetTickCount64());
+	
+	// 응답 패킷 직렬화
+	std::vector<char> response_data = SerializeDirectPacket(response);
+	
+	// 현재 처리 중인 세션에 직접 raw 데이터 응답 전송 (PacketBuffer 없이)
+	if (currentHandlingSession_) {
+		bool success = SendRawData(currentHandlingSession_, response_data);
+		std::cout << "[SERVER] Sent EchoResponse via raw send: " << response.message() 
+				  << " (success=" << success << ")" << std::endl;
+	}
+	else {
+		std::cout << "[SERVER] No current session to send response!" << std::endl;
+	}
+}
+
+void EchoServer::OnRecv(Session* session, PacketBuffer* packet)
 {
 	try {
-		// 받은 메시지 처리
-		auto cs_contentsPacket_len = cs_contentsPacket->GetPayloadSize();
+		// 현재 처리 중인 세션 저장 (PacketTest.cpp의 전역 변수 대신 멤버 변수 사용)
+		currentHandlingSession_ = session;
 		
-		// 안전성 검사
-		if (cs_contentsPacket_len <= 0 || cs_contentsPacket_len > 8000) {
-			LOG_ERROR("Invalid packet size: %d", cs_contentsPacket_len);
-			cs_contentsPacket->MoveRp(cs_contentsPacket_len);
-			PacketBuffer::Free(cs_contentsPacket);
+		// 패킷 길이 검사
+		auto packet_len = packet->GetPayloadSize();
+		if (packet_len <= 0 || packet_len > 8000) {
+			LOG_ERROR("Invalid packet size: %d", packet_len);
+			PacketBuffer::Free(packet);
+			currentHandlingSession_ = nullptr;
 			return;
 		}
-		
-		char* payloadData = new char[cs_contentsPacket_len + 1];
-		cs_contentsPacket->GetData(payloadData, cs_contentsPacket_len);
-		payloadData[cs_contentsPacket_len] = '\0';
-		
-		printf("[%04X][RECV:%d] %s\n", (session->session_id_.SESSION_UNIQUE & 0xFFFF), cs_contentsPacket_len, payloadData);
 
-		// Echo back - 응답 패킷 생성
-		PacketBuffer* sc_contentsPacket = PacketBuffer::Alloc();
-		sc_contentsPacket->PutData(payloadData, cs_contentsPacket_len);
-		delete[] payloadData;
-		
-		// 받은 패킷 포인터 이동 및 해제
-		cs_contentsPacket->MoveRp(cs_contentsPacket_len);
-		PacketBuffer::Free(cs_contentsPacket);
+		std::cout << "[SERVER] OnRecv: session=" << (session->session_id_.SESSION_UNIQUE & 0xFFFF) 
+				  << ", packet_len=" << packet_len << std::endl;
 
-		// SendPacket은 패킷을 큐에 넣으므로 바로 Free하면 안됨
-		SendPacket(session, sc_contentsPacket);
+		// raw 데이터 추출 (이미 LAN 헤더가 제거된 DirectPacket 데이터)
+		std::vector<char> packet_data(packet_len);
+		packet->GetData(packet_data.data(), packet_len);
+		packet->MoveRp(packet_len);
+		PacketBuffer::Free(packet);
+
+		// PacketTest.cpp 방식으로 패킷 처리
+		bool processed = ProcessDirectPacket(packet_data.data(), packet_len);
+		if (!processed) {
+			std::cout << "[SERVER] Failed to process direct packet" << std::endl;
+		}
+		
+		// 세션 정보 초기화
+		currentHandlingSession_ = nullptr;
 	}
 	catch (const std::exception& e) {
 		LOG_ERROR("Exception in OnRecv: %s", e.what());
-		PacketBuffer::Free(cs_contentsPacket);
+		PacketBuffer::Free(packet);
+		currentHandlingSession_ = nullptr;
 	}
 	catch (...) {
-		LOG_DEBUG("Unknown exception in OnRecv");
-		PacketBuffer::Free(cs_contentsPacket);
+		LOG_ERROR("Unknown exception in OnRecv");
+		PacketBuffer::Free(packet);
+		currentHandlingSession_ = nullptr;
 	}
 }
 
@@ -58,7 +91,7 @@ bool EchoServer::OnConnectionRequest(in_addr clientIP, WORD clientPort) {
 
 void EchoServer::OnClientJoin(Session* session) 
 {
-	LOG_INFO("[%04X][JOIN] Client connected\n", (session->session_id_.SESSION_UNIQUE & 0xFFFF));
+	LOG_INFO("[%04X][JOIN] Client connected", (session->session_id_.SESSION_UNIQUE & 0xFFFF));
 }
 
 void EchoServer::OnClientLeave(Session* session) 
@@ -79,4 +112,3 @@ void EchoServer::OnServerStop()
 void EchoServer::OnError(int errorcode) 
 {
 }
-

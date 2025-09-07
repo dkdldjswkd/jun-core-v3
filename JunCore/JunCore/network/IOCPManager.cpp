@@ -1,6 +1,8 @@
 ﻿#include "IOCPManager.h"
 #include "NetBase.h"
 #include "../protocol/message.h"
+#include "../protocol/ProtobufPacket.h"
+#include "../protocol/DirectProtobuf.h"
 
 //------------------------------
 // IOCPManager 구현 - 패킷 조립 로직
@@ -24,13 +26,6 @@ void IOCPManager::RunWorkerThread()
             break;
         }
 
-        // FIN 패킷 (정상 종료)
-        if (ioSize == 0) 
-        {
-            HandleSessionDisconnect(session);
-            continue;
-		}
-
 		if (PQCS::none < static_cast<PQCS>(reinterpret_cast<uintptr_t>(p_overlapped)) && static_cast<PQCS>(reinterpret_cast<uintptr_t>(p_overlapped)) < PQCS::max)
 		{
 			goto DecrementIOCount;
@@ -39,11 +34,13 @@ void IOCPManager::RunWorkerThread()
 		// 수신 완료 처리
 		if (p_overlapped == &session->recv_overlapped_)
 		{
+            LOG_DEBUG("recv size : %d", ioSize);
 			HandleRecvComplete(session, ioSize);
 		}
 		// 송신 완료 처리  
 		else if (p_overlapped == &session->send_overlapped_)
 		{
+            LOG_DEBUG("send size : %d", ioSize);
 			HandleSendComplete(session);
 		}
 
@@ -70,46 +67,43 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 			break;
 		}
 
-		// 헤더 크기 확인
-		if (session->recv_buf_.GetUseSize() < LAN_HEADER_SIZE)
+		const int _recv_byte = session->recv_buf_.GetUseSize();
+
+		// 최소 데이터 수신 여부 체크
+		if (_recv_byte <= PROTOBUF_HEADER_SIZE)
 		{
 			break; 
 		}
 
-		// LAN 헤더 읽기 (2바이트 길이만)
-		WORD payloadLen;
-		session->recv_buf_.Peek(&payloadLen, LAN_HEADER_SIZE);
-
-		unsigned char debugBytes[10];
-		int debugSize = min(10, session->recv_buf_.GetUseSize());
-		session->recv_buf_.Peek(debugBytes, debugSize);
+		unsigned short _packet_len;
+		session->recv_buf_.Peek(&_packet_len, PROTOBUF_PACKET_LEN_SIZE);
 
 		// 패킷 크기 유효성 검사
-		if (MAX_PAYLOAD_LEN < payloadLen || payloadLen == 0)
+		if (_packet_len < PROTOBUF_HEADER_SIZE || MAX_PAYLOAD_LEN <= _packet_len)
 		{
-			LOG_ERROR("Invalid packet length: %d (0x%04X)", payloadLen, payloadLen);
-			HandleSessionDisconnect(session);
+			LOG_ERROR("Invalid packet length: %d", _packet_len);
 			return;
 		}
 
-		// 전체 패킷이 도착했는지 확인
-		if (session->recv_buf_.GetUseSize() < LAN_HEADER_SIZE + payloadLen)
-		{
-			break;
-		}
+		// 충분한 패킷 데이터가 도착했는지 확인
+        if (_recv_byte < _packet_len)
+        {
+            break;
+        }
 
-		// 헤더 제거
-		session->recv_buf_.MoveFront(LAN_HEADER_SIZE);
+        // 패킷 추출
+		std::vector<char> packet(_packet_len);
+        session->recv_buf_.Dequeue(&packet[0], _packet_len);
 
-		// 패킷 완성 및 페이로드 제거
-		PacketBuffer* packet = PacketBuffer::Alloc();
-		char tempBuffer[MAX_PAYLOAD_LEN];
-		session->recv_buf_.Dequeue(tempBuffer, payloadLen);
-		packet->PutData(tempBuffer, payloadLen);
+        ProtobufHeader* header = (ProtobufHeader*)&packet[0];
 
-		// 엔진에게 완성된 패킷 전달
-		DeliverPacketToEngine(session, packet);
-		PacketBuffer::Free(packet);
+        const uint32_t _packet_id = header->packet_id_.packet_id_;
+        LOG_DEBUG("recv packet id : %d", _packet_id);
+
+        // 패킷 Payload 추출
+        std::vector<char> payload(packet.begin() + PROTOBUF_HEADER_SIZE, packet.end());
+
+        g_direct_packet_handler[header->packet_id_.packet_id_](payload);
 	}
 
 	if (!session->disconnect_flag_)
@@ -120,10 +114,11 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 
 void IOCPManager::HandleSendComplete(Session* session)
 {
-    // 송신 완료 처리
+    // 송신 완료 처리 (vector<char> 해제)
     for (int i = 0; i < session->send_packet_count_; i++) 
     {
-        PacketBuffer::Free(session->send_packet_arr_[i]);
+        delete session->send_packet_arr_[i];  // vector<char> 메모리 해제
+        session->send_packet_arr_[i] = nullptr;
     }
     session->send_packet_count_ = 0;
 
@@ -206,19 +201,21 @@ void IOCPManager::PostAsyncSend(Session* session)
         return;
     }
 
-    // 송신할 패킷들 준비
+    // 송신할 패킷들 준비 (vector<char> 직접 전송)
     for (int i = 0; i < MAX_SEND_MSG; i++)
     {
         if (session->send_q_.GetUseCount() <= 0) {
             break;
         }
 
-        session->send_q_.Dequeue((PacketBuffer**)&session->send_packet_arr_[i]);
+        session->send_q_.Dequeue(&session->send_packet_arr_[i]);
         ++preparedCount;
 
-        // LAN 모드로 통일
-        wsaBuf[i].buf = session->send_packet_arr_[i]->GetLanPacketPos();
-        wsaBuf[i].len = session->send_packet_arr_[i]->GetLanPacketSize();
+        // 직접 raw 데이터 전송 (PacketBuffer 없이)
+        wsaBuf[i].buf = session->send_packet_arr_[i]->data();
+        wsaBuf[i].len = static_cast<DWORD>(session->send_packet_arr_[i]->size());
+        
+        std::cout << "[IOCP_SEND] Packet " << i << " size: " << wsaBuf[i].len << " bytes" << std::endl;
     }
 
     // 보낼 것이 없으면 실패

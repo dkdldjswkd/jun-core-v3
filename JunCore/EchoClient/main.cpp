@@ -43,8 +43,8 @@ int main()
 				break;
 			}
 
-			// 서버에 메시지 전송
-			client.SendPacket(input.c_str());
+			// Protobuf 메시지로 서버에 전송
+			client.SendEchoRequest(input);
 		}
 
 		cout << "클라이언트를 종료합니다..." << endl;

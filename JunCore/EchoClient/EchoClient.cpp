@@ -4,6 +4,13 @@
 
 EchoClient::EchoClient() : Client()
 {
+	// Protobuf 패킷 핸들러 등록 (PacketTest.cpp 방식)
+	RegisterDirectPacketHandler<echo::EchoResponse>(
+		[this](const echo::EchoResponse& response) {
+			std::cout << "[CLIENT] Received EchoResponse: " << response.message() 
+					  << " (timestamp: " << response.timestamp() << ")" << std::endl;
+		}
+	);
 }
 
 EchoClient::~EchoClient() 
@@ -12,36 +19,35 @@ EchoClient::~EchoClient()
 
 void EchoClient::OnRecv(Session* session, PacketBuffer* packet)
 {
-    auto payloadSize = packet->GetPayloadSize();
-    LOG_DEBUG("[RECV] Payload size: %d", payloadSize);
-    
-    if (payloadSize <= 0 || 8000 < payloadSize)
-    {
-        LOG_ERROR("Invalid payload size: %d", payloadSize);
-        PacketBuffer::Free(packet);
-        return;
-    }
-    
-    // 8바이트 정수인지 확인 (서버의 OnClientJoin에서 보내는 패킷)
-    if (payloadSize == 8) 
-    {
-        int64_t joinMessage = 0;
-        *packet >> joinMessage;
-        printf("[EchoClient][RECV] Received join message: 0x%llx\n", joinMessage);
-    } 
-    else 
-    {
-        // 문자열 메시지 처리
-        char* payloadData = new char[payloadSize + 1];
-        payloadData[payloadSize] = '\0';
+	try {
+		// 패킷 길이 검사
+		auto packet_len = packet->GetPayloadSize();
+		if (packet_len <= 0 || packet_len > 8000) {
+			LOG_ERROR("Invalid packet size: %d", packet_len);
+			PacketBuffer::Free(packet);
+			return;
+		}
 
-        packet->GetData(payloadData, payloadSize);
-        printf("[EchoClient][RECV] Received message: '%s'\n", payloadData);
-        delete[] payloadData;
-        packet->MoveRp(payloadSize);
-    }
-    
-    PacketBuffer::Free(packet);
+		// raw 데이터 추출
+		std::vector<char> packet_data(packet_len);
+		packet->GetData(packet_data.data(), packet_len);
+		packet->MoveRp(packet_len);
+		PacketBuffer::Free(packet);
+
+		// 패킷 처리 (PacketTest.cpp와 동일)
+		bool processed = ProcessDirectPacket(packet_data.data(), packet_len);
+		if (!processed) {
+			std::cout << "[CLIENT] Failed to process direct packet" << std::endl;
+		}
+	}
+	catch (const std::exception& e) {
+		LOG_ERROR("Exception in OnRecv: %s", e.what());
+		PacketBuffer::Free(packet);
+	}
+	catch (...) {
+		LOG_ERROR("Unknown exception in OnRecv");
+		PacketBuffer::Free(packet);
+	}
 }
 
 void EchoClient::OnClientJoin(Session* session) 
@@ -52,4 +58,29 @@ void EchoClient::OnClientJoin(Session* session)
 void EchoClient::OnDisconnect()
 {
 	LOG_INFO("Disconnected from server.");
+}
+
+bool EchoClient::SendEchoRequest(const std::string& message)
+{
+	if (!IsConnected()) 
+	{
+		std::cout << "[CLIENT] Not connected to server!" << std::endl;
+		return false;
+	}
+
+	// EchoRequest 메시지 생성
+	echo::EchoRequest request;
+	request.set_message(message);
+
+	std::vector<char> packet_data = SerializeDirectPacket(request);
+
+	std::cout << "[CLIENT] Sending EchoRequest: " << message << std::endl;
+
+	// 직접 raw 데이터 전송 (PacketBuffer 없이)
+	bool success = SendRawData(GetCurrentSession(), packet_data);
+	if (!success) {
+		std::cout << "[CLIENT] Failed to send packet" << std::endl;
+	}
+
+	return success;
 }

@@ -15,13 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="network\NetworkManager.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
     <ClCompile Include="network\IOCPManager.cpp">
-      <Filter>network</Filter>
-    </ClCompile>
-    <ClCompile Include="network\IPacketHandler.cpp">
       <Filter>network</Filter>
     </ClCompile>
     <ClCompile Include="network\ServerSocketManager.cpp">
@@ -34,6 +28,9 @@
       <Filter>network</Filter>
     </ClCompile>
     <ClCompile Include="protocol\handshake.pb.cc">
+      <Filter>protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="protocol\DirectProtobuf.cpp">
       <Filter>protocol</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,19 +56,7 @@
     <ClInclude Include="protocol\handshake.pb.h">
       <Filter>protocol</Filter>
     </ClInclude>
-    <ClInclude Include="network\IOCPResource.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\NetworkManager.h">
-      <Filter>network</Filter>
-    </ClInclude>
     <ClInclude Include="network\IOCPManager.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\IPacketHandler.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\NetworkArchitecture.h">
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\ServerSocketManager.h">
@@ -82,6 +67,12 @@
     </ClInclude>
     <ClInclude Include="network\Client.h">
       <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol\DirectProtobuf.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="protocol\ProtobufPacket.h">
+      <Filter>protocol</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
-#include "../buffer/packet.h"
 #include "../../JunCommon/container/LFQueue.h"
 #include "../../JunCommon/container/LFStack.h"
 #include "../../JunCommon/container/RingBuffer.h"
@@ -58,8 +57,8 @@ public:
 	bool disconnect_flag_ = false;
 
 	// Send
-	LFQueue<PacketBuffer*> send_q_;				// 송신 대기 큐
-	PacketBuffer* send_packet_arr_[MAX_SEND_MSG];	// 현재 전송중인 패킷 (Send 완료 통지까지 보관되어야한다.)
+	LFQueue<std::vector<char>*> send_q_;			// 송신 대기 큐 (raw 데이터)
+	std::vector<char>* send_packet_arr_[MAX_SEND_MSG];	// 현재 전송중인 패킷 벡터들
 	LONG send_packet_count_ = 0;					// 현재 전송중인 패킷 개수
 
 	// Recv

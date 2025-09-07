@@ -160,9 +160,11 @@
   <ItemGroup>
     <ClCompile Include="EchoClient.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="echo_message.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EchoClient.h" />
+    <ClInclude Include="echo_message.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JunCore\JunCore.vcxproj">
