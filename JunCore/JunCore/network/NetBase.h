@@ -2,13 +2,12 @@
 #include "../core/WindowsIncludes.h"
 #include "Session.h"
 #include "../buffer/packet.h"
-#include "IPacketHandler.h"
 #include "IOCPManager.h"
 #include <memory>
 
-// NetBase - 순수 패킷 처리 핸들러
-// 단일 책임: 완성된 패킷만 처리
-class NetBase : public IPacketHandler
+// NetBase - 네트워크 엔진 베이스 클래스
+// 단일 책임: 패킷 처리와 세션 관리
+class NetBase
 {
 public:
     NetBase();
@@ -19,15 +18,7 @@ protected:
     std::shared_ptr<IOCPManager> iocpManager;
 
 public:
-    // IPacketHandler 인터페이스 구현
-    void HandleCompletePacket(Session* session, PacketBuffer* packet) override final;
-    void OnSessionConnected(Session* session) override;
-    void OnSessionDisconnected(Session* session) override;
-    void OnPacketProcessed() override;
-    void OnSessionError(Session* session, const char* errorMsg) override;
-
-protected:
-    // 순수 가상 함수 - 파생 클래스에서 구현
+    // 순수 가상 함수 - 파생 클래스에서 구현 (IOCPManager에서 호출하므로 public)
     virtual void OnRecv(Session* session, PacketBuffer* packet) = 0;
     virtual void OnClientJoin(Session* session) = 0;
     virtual void OnClientLeave(Session* session) = 0;
@@ -55,7 +46,7 @@ protected:
 private:
     // 세션 유효성 검사
     bool IsSessionValid(Session* session) const {
-        return session != nullptr && session->sock != INVALID_SOCKET;
+        return session != nullptr && session->sock_ != INVALID_SOCKET;
     }
     
     // 패킷 유효성 검사
@@ -82,31 +73,6 @@ inline NetBase::~NetBase()
     WSACleanup();
 }
 
-inline void NetBase::HandleCompletePacket(Session* session, PacketBuffer* packet)
-{
-    OnRecv(session, packet);
-}
-
-inline void NetBase::OnSessionConnected(Session* session)
-{
-    OnClientJoin(session);
-}
-
-inline void NetBase::OnSessionDisconnected(Session* session)
-{
-    OnClientLeave(session);
-}
-
-inline void NetBase::OnPacketProcessed()
-{
-    // 패킷 처리 완료 콜백
-}
-
-inline void NetBase::OnSessionError(Session* session, const char* errorMsg)
-{
-    OnError(session, errorMsg);
-}
-
 inline void NetBase::AttachIOCPManager(std::shared_ptr<IOCPManager> manager)
 {
     iocpManager = manager;
@@ -131,10 +97,10 @@ inline bool NetBase::SendPacket(Session* session, PacketBuffer* packet)
     }
     
     // 송신 큐에 패킷 추가
-    session->sendQ.Enqueue(packet);
+    session->send_q_.Enqueue(packet);
     
     // Send flag 체크 후 비동기 송신 시작
-    if (InterlockedExchange8((char*)&session->sendFlag, true) == false) {
+    if (InterlockedExchange8((char*)&session->send_flag_, true) == false) {
         // IOCPManager를 통한 송신
         if (iocpManager) 
         {

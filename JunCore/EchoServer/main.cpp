@@ -12,9 +12,7 @@ int main()
 	try
 	{
 		// IOCPManager 생성 (워커 스레드 3개)
-		auto iocpManager = IOCPManager::Create()
-		                              .WithWorkerCount(3)
-		                              .Build();
+		auto iocpManager = IOCPManager::Create().WithWorkerCount(3).Build();
 		
 		if (!iocpManager->IsValid()) 
 		{
@@ -26,16 +24,23 @@ int main()
 		EchoServer echoServer;
 		echoServer.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 
-		echoServer.Start();
-		printf("\nEchoServer started\n");
-		printf("--------------------------------------------------------\n");
+		// 서버 시작 (IP: 0.0.0.0, Port: 7777, Max Sessions: 1000)
+		if (echoServer.StartServer("0.0.0.0", 7777, 1000)) 
+		{
+			LOG_INFO("EchoServer started successfully on port 7777");
+		} 
+		else 
+		{
+			LOG_ERROR("Failed to start EchoServer");
+			return -1;
+		}
 
 		for (;;)
 		{
 			Sleep(1000);
 		}
 
-		echoServer.Stop();
+		echoServer.StopServer();
 		echoServer.DetachIOCPManager();
 	}
 	catch (const std::exception& e)

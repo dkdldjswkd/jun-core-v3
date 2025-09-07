@@ -1,31 +1,26 @@
 ﻿#pragma once
-#include "../JunCore/network/NetBase.h"
-#include "../JunCore/network/ServerSocketManager.h"
+#include "../JunCore/network/Server.h"
 
-class EchoServer : public NetBase 
+class EchoServer : public Server 
 {
 public:
 	EchoServer();
 	~EchoServer();
 
 public:
-	// NetBase 순수 가상 함수 구현
-	void Start() override;
-	void Stop() override;
 
 protected:
-	// NetBase 순수 가상 함수 구현
+	// NetBase 순수 가상 함수 구현 (핵심 비즈니스 로직)
 	void OnRecv(Session* session, PacketBuffer* packet) override;
 	void OnClientJoin(Session* session) override;
 	void OnClientLeave(Session* session) override;
 
-public:
-	// 기존 인터페이스 (호환성 유지용)
-	bool OnConnectionRequest(in_addr IP, WORD Port);
-	void OnServerStop();
-	void OnError(int errorcode);
-	
+	// Server 전용 가상함수 구현
+	bool OnConnectionRequest(in_addr clientIP, WORD clientPort) override;
+	void OnServerStart() override;
+	void OnServerStop() override;
 
-private:
-	std::unique_ptr<ServerSocketManager> socketManager;  // 서버 소켓 관리
+public:
+	// 편의 함수 (기존 인터페이스와의 호환성)
+	void OnError(int errorcode);
 };

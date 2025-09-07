@@ -340,6 +340,63 @@ When using JunCommon classes from JunCore, use the correct relative paths:
 - **단위별 검증** - 각 수정 사항마다 EchoServer/Client로 검증
 - **문서화** - 주요 아키텍처 변경 시 이 파일(CLAUDE.md)에도 변경사항 기록
 
+## 🚨 핵심 세션 생명주기 관리 (절대 수정 금지)
+
+### 핵심 원칙
+**이 두 코드 블록은 JunCore의 핵심 아키텍처이므로 절대 수정하지 말 것. 수정이 필요하다면 반드시 사용자와 논의 후 진행.**
+
+#### 1. Session::DecrementIOCount() - 세션 해제 트리거
+```cpp
+__forceinline void DecrementIOCount() noexcept
+{
+    if (0 == InterlockedDecrement(&io_count_))
+    {
+        // * release_flag_(0), IOCount(0) -> release_flag_(1), IOCount(0)
+        if (0 == InterlockedCompareExchange64((long long*)release_flag_, 1, 0))
+        {
+            Release();
+        }
+    }
+}
+```
+
+#### 2. IOCPManager::RunWorkerThread() - 필수 IOCount 감소
+```cpp
+DecrementIOCount:
+    session->DecrementIOCount();
+```
+
+### 아키텍처 설계 원리
+
+#### IOCount 기반 세션 생명주기
+1. **비동기 I/O 등록 시**: `IncrementIOCount()` 호출
+2. **IOCP 완료 통지 시**: 반드시 `DecrementIOCount()` 호출
+3. **IOCount가 0 도달 시**: 해당 스레드에서 세션 정리 수행
+
+#### 이중 보호 메커니즘
+- **release_flag_**: 세션 해제 중복 방지
+- **IOCount**: 활성 비동기 작업 수 추적
+- **InterlockedCompareExchange64**: 원자적 해제 상태 전환
+
+#### 세션 상태 전이
+```
+정상 세션: IOCount ≥ 1 (상시 recv 대기)
+비정상 세션: IOCount → 0 (연결 끊김/에러)
+해제 트리거: IOCount == 0 && release_flag_ == 0
+```
+
+### 핵심 보장 사항
+1. **세션 정리 단일 책임**: IOCount를 0으로 만든 스레드가 정리 담당
+2. **중복 해제 방지**: `release_flag_` CAS 연산으로 한 번만 해제
+3. **상시 활성 상태**: 정상 세션은 recv 대기로 IOCount ≥ 1 유지
+4. **자동 정리**: 비정상 종료 시 IOCount 수렴을 통한 자동 세션 해제
+
+### 수정 금지 이유
+- **스레드 안전성**: 정교한 원자적 연산 기반 구현
+- **메모리 안전성**: 댕글링 포인터 및 더블 프리 방지
+- **성능 최적화**: Lock-free 아키텍처로 고성능 보장
+- **아키텍처 핵심**: 전체 네트워크 시스템의 근간
+
 ## Coding Standards
 
 ### Naming Conventions
@@ -454,34 +511,83 @@ void NetServer::WorkerFunc()
 - 성능 저하 없는 리팩토링
 - 컴파일 타임 에러 감지로 안전성 보장
 
-## 공유 IOCP + Job Queue 분리 모델 (장기 계획)
+## 현재 서버 아키텍처 구조 (2025-01)
 
-### 🎯 목표
-현재 NetworkManager의 우선순위 기반 IOCP 분리는 유지하되, **패킷 조립과 비즈니스 로직 처리를 분리**하여 IOCP 성능을 극대화
+### 🎯 핵심 아키텍처: 공유 IOCP + Engine별 처리 모델
 
-### 현재 문제점
-- 패킷 조립 + 사용자 핸들러(`OnRecv`) 처리가 모두 IOCP 워커에서 실행
-- 비즈니스 로직이 오래 걸리면 IOCP I/O 처리에 영향
-- CPU 집약적 작업이 I/O 처리를 블로킹
-
-### 개선 아키텍처
+#### 현재 구조 개요
 ```
-IOCP Worker Thread (빠른 I/O만 처리)
-    ↓ 패킷 조립 완료 후 Job 생성
-Job Queue + Handler Thread Pool
-    ↓ 우선순위별 스레드 배분
-게임서버 JobQueue: 4개 핸들러 스레드
-클라이언트 JobQueue: 1개 핸들러 스레드
+SharedIOCPManager
+    ├── IOCP Handle (모든 엔진 공유)
+    ├── Worker Threads (순수 I/O 이벤트 처리)
+    └── 패킷 조립 완료 → Session의 Engine으로 전달
+
+NetEngine (NetBase 상속)
+    ├── Session 관리 (engine 포인터 이미 구현됨)
+    ├── 패킷 핸들링 (OnRecv 구현)
+    └── [향후] 전용 ThreadPool 추가 예정
 ```
 
-### 구현 단계
-1. **Phase 1**: JobQueue 및 ThreadPool 클래스 구현 (`JunCommon/queue/JobQueue.h`)
-2. **Phase 2**: IOCP 워커와 핸들러 분리 (`NetBase::RunSharedWorkerThread` 개선)
-3. **Phase 3**: NetworkManager에 HandlerThreadPool 추가
-4. **Phase 4**: API 호환성 유지하며 점진적 적용
+#### 현재 구현된 핵심 컴포넌트
+
+**IOCPManager.h** - IOCP 이벤트 처리 전담
+```cpp
+class IOCPManager final {
+private:
+    HANDLE iocpHandle;                    // 공유 IOCP 핸들
+    std::vector<std::thread> workerThreads; // I/O 워커들
+    
+public:
+    void RunWorkerThread();               // 순수 I/O 이벤트만 처리
+    void DeliverPacketToHandler(Session* session, PacketBuffer* packet);
+};
+```
+
+**Session.h** - 엔진 포인터 연결 구조
+```cpp
+class Session {
+private:
+    class NetBase* engine = nullptr;      // 이 세션을 소유한 엔진
+    
+public:
+    inline void SetEngine(class NetBase* eng) { engine = eng; }
+    inline class NetBase* GetEngine() const { return engine; }
+};
+```
+
+### 🚀 다음 구현 단계: Engine별 스레드풀 분리
+
+#### Phase 1: 패킷 처리를 Engine 스레드에게 위임
+현재: `IOCPManager::RunWorkerThread`에서 직접 `OnRecv()` 호출
+향후: Engine별 ThreadPool에 PacketJob으로 전달
+
+```cpp
+// 목표 구조
+class NetEngine : public NetBase {
+private:
+    std::unique_ptr<ThreadPool> packetHandlerPool;  // 엔진별 전용 스레드풀
+    LFQueue<PacketJob*> packetQueue;               // 비동기 패킷 처리 큐
+    
+public:
+    void ProcessPacketAsync(Session* session, PacketBuffer* packet);
+};
+```
+
+#### Phase 2: 우선순위 기반 리소스 배분
+```cpp
+// 엔진별 스레드 수 설정
+GameServer Engine: 4개 핸들러 스레드 (고성능)
+Client Engine: 1개 핸들러 스레드 (경량화)
+```
 
 ### 핵심 설계 원칙
-- **Zero Runtime Overhead**: 템플릿/인라인 기반 구현
-- **API 호환성 100% 유지**: 기존 `OnRecv` 시그니처 그대로 유지  
-- **우선순위별 리소스 배분**: 서버/클라이언트 별도 ThreadPool
-- **성능 측정 가능**: TPS 모니터링 및 레이턴시 추적
+- **역할 분리**: IOCP는 순수 I/O만, Engine은 패킷 핸들링만
+- **공유 리소스**: 하나의 IOCP 핸들을 여러 엔진이 효율적으로 활용
+- **확장성**: 엔진별 독립적 성능 튜닝 가능
+- **Zero Overhead**: 템플릿/인라인 기반 구현으로 런타임 오버헤드 없음
+
+### 현재 상태
+- ✅ IOCPManager 구현 완료 (Builder 패턴)
+- ✅ Session-Engine 연결 구조 구현 완료  
+- ✅ 패킷 조립 로직 완료
+- 🔄 **다음**: Engine별 ThreadPool + PacketJob 구현 예정

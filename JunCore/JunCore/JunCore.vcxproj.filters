@@ -77,6 +77,12 @@
     <ClInclude Include="network\ServerSocketManager.h">
       <Filter>network</Filter>
     </ClInclude>
+    <ClInclude Include="network\Server.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\Client.h">
+      <Filter>network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="protocol\handshake.proto">

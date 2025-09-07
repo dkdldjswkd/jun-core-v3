@@ -36,8 +36,8 @@ private:
 	inline void SetWritePos() { writePos = begin + MASKING_BIT((ULONG_PTR)rear + 1); }
 
 public:
-	inline void MoveFront(int size) { front = begin + MASKING_BIT((ULONG_PTR)front + size); SetReadPos();  }
-	inline void MoveRear(int size) { rear = begin + MASKING_BIT((ULONG_PTR)rear + size);    SetWritePos(); }
+	inline void MoveFront(int size) { front = begin + MASKING_BIT((ULONG_PTR)front + size);		SetReadPos();  }
+	inline void MoveRear(int size)	{ rear	= begin + MASKING_BIT((ULONG_PTR)rear + size);		SetWritePos(); }
 
 	inline bool Empty() const { return front == rear; }
 	inline bool Full() const { return front == writePos; }

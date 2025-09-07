@@ -9,10 +9,22 @@
 #include <memory>
 #include <atomic>
 
+enum class PQCS
+{
+    none            = 0,
+    async_recv_fail = 1,
+    async_send_fail = 2,
+    connect_fail    = 3,
+    accept_fail     = 4,
+    accept_success  = 5,
+    max
+};
+
 //------------------------------
 // Forward Declarations
 //------------------------------
-class IPacketHandler;
+class NetBase;
+class Session;
 
 //------------------------------
 // IOCPManager - IOCP 이벤트 처리와 패킷 조립 전담
@@ -75,11 +87,15 @@ public:
     // 소켓을 IOCP에 등록
     bool RegisterSocket(SOCKET socket, Session* session);
     
-    // 세션에 대해 첫 번째 비동기 수신 시작
-    void StartAsyncReceive(Session* session);
     
     // 종료 신호 전송
     void Shutdown();
+
+    //------------------------------
+    // 비동기 I/O 등록 함수들 (NetBase에서 사용)
+    //------------------------------
+    bool PostAsyncReceive(Session* session);
+    void PostAsyncSend(Session* session);
 
 private:
     //------------------------------
@@ -100,15 +116,10 @@ private:
     void HandleSessionDisconnect(Session* session);
     
     //------------------------------
-    // 완성된 패킷을 핸들러에게 전달
+    // 완성된 패킷을 엔진에게 전달
     //------------------------------
-    void DeliverPacketToHandler(Session* session, PacketBuffer* packet);
+    void DeliverPacketToEngine(Session* session, PacketBuffer* packet);
     
-    //------------------------------
-    // 비동기 I/O 등록 함수들 (NetBase에서 이동)
-    //------------------------------
-    void PostAsyncReceive(Session* session);
-    void PostAsyncSend(Session* session);
 };
 
 //------------------------------
@@ -143,25 +154,30 @@ inline bool IOCPManager::RegisterSocket(SOCKET socket, Session* session)
 
 inline void IOCPManager::Shutdown()
 {
-    if (shutdown.exchange(true)) {
-        return; // 이미 종료 중
+    if (shutdown.exchange(true)) 
+    {
+        return;
     }
     
     // 모든 워커 스레드에 종료 신호 전송
-    for (size_t i = 0; i < workerThreads.size(); ++i) {
+    for (size_t i = 0; i < workerThreads.size(); ++i) 
+    {
         PostQueuedCompletionStatus(iocpHandle, 0, 0, 0);
     }
     
     // 모든 워커 스레드 종료 대기
-    for (auto& thread : workerThreads) {
-        if (thread.joinable()) {
+    for (auto& thread : workerThreads) 
+    {
+        if (thread.joinable()) 
+        {
             thread.join();
         }
     }
     workerThreads.clear();
     
-    // IOCP 핸들 해제
-    if (iocpHandle != INVALID_HANDLE_VALUE) {
+    // IOCP 핸들 정리
+    if (iocpHandle != INVALID_HANDLE_VALUE) 
+    {
         CloseHandle(iocpHandle);
         iocpHandle = INVALID_HANDLE_VALUE;
     }

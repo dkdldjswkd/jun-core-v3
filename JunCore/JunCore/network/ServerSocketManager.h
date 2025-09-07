@@ -65,14 +65,17 @@ private:
     // 세션 관리
     //------------------------------
     Session* AllocateSession();
-    void ReleaseSession(Session* session);
+    [[deprecated("Session은 이제 자동으로 Pool에 반환됩니다. 이 함수는 불필요합니다.")]]
+    void ReleaseSession(Session* session);  // 기존 호환성만 유지
+    [[deprecated("Session은 이제 자동으로 Pool에 반환됩니다. 이 함수는 불필요합니다.")]]
+    void ReturnSessionToPool(Session* session);  // 기존 호환성만 유지
     void InitializeSessions(DWORD maxSessions);
     void CleanupSessions();
     
     //------------------------------
     // 클라이언트 연결 처리
     //------------------------------
-    void OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr);
+    bool OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr);
     void OnClientDisconnect(Session* session);
 };
 

@@ -1,7 +1,7 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "EchoServer.h"
 
-EchoServer::EchoServer() : NetBase()
+EchoServer::EchoServer() : Server()
 {
 }
 
@@ -17,7 +17,7 @@ void EchoServer::OnRecv(Session* session, PacketBuffer* cs_contentsPacket)
 		
 		// 안전성 검사
 		if (cs_contentsPacket_len <= 0 || cs_contentsPacket_len > 8000) {
-			printf("[ERROR] Invalid packet size: %d\n", cs_contentsPacket_len);
+			LOG_ERROR("Invalid packet size: %d", cs_contentsPacket_len);
 			cs_contentsPacket->MoveRp(cs_contentsPacket_len);
 			PacketBuffer::Free(cs_contentsPacket);
 			return;
@@ -27,7 +27,7 @@ void EchoServer::OnRecv(Session* session, PacketBuffer* cs_contentsPacket)
 		cs_contentsPacket->GetData(payloadData, cs_contentsPacket_len);
 		payloadData[cs_contentsPacket_len] = '\0';
 		
-		printf("[%04X][RECV:%d] %s\n", (session->sessionId.SESSION_UNIQUE & 0xFFFF), cs_contentsPacket_len, payloadData);
+		printf("[%04X][RECV:%d] %s\n", (session->session_id_.SESSION_UNIQUE & 0xFFFF), cs_contentsPacket_len, payloadData);
 
 		// Echo back - 응답 패킷 생성
 		PacketBuffer* sc_contentsPacket = PacketBuffer::Alloc();
@@ -51,66 +51,32 @@ void EchoServer::OnRecv(Session* session, PacketBuffer* cs_contentsPacket)
 	}
 }
 
-bool EchoServer::OnConnectionRequest(in_addr ip, WORD port) {
+bool EchoServer::OnConnectionRequest(in_addr clientIP, WORD clientPort) {
+	// 모든 클라이언트 허용
 	return true;
 }
 
-void EchoServer::OnClientJoin(Session* session) {
-	printf("[%04X][JOIN] Client connected\n", (session->sessionId.SESSION_UNIQUE & 0xFFFF));
-	
-	PacketBuffer* sc_packet = PacketBuffer::Alloc();
-	*sc_packet << 0x7fffffffffffffff;
-	SendPacket(session, sc_packet);
-	// SendPacket이 패킷을 큐에 넣으므로 Free하지 않음
+void EchoServer::OnClientJoin(Session* session) 
+{
+	LOG_INFO("[%04X][JOIN] Client connected\n", (session->session_id_.SESSION_UNIQUE & 0xFFFF));
 }
 
 void EchoServer::OnClientLeave(Session* session) 
 {
-	printf("[%04X][LEAVE] Client disconnected\n", (session->sessionId.SESSION_UNIQUE & 0xFFFF));
+	printf("[%04X][LEAVE] Client disconnected\n", (session->session_id_.SESSION_UNIQUE & 0xFFFF));
+}
+
+void EchoServer::OnServerStart()
+{
+	LOG_INFO("EchoServer started successfully!");
 }
 
 void EchoServer::OnServerStop() 
 {
+	LOG_INFO("EchoServer stopped successfully!");
 }
 
 void EchoServer::OnError(int errorcode) 
 {
 }
 
-//------------------------------
-// 새로운 아키텍처의 Start/Stop 구현
-//------------------------------
-void EchoServer::Start() 
-{
-    if (!IsIOCPManagerAttached()) 
-	{
-		LOG_ERROR("IOCP is not Attached!!");
-        return;
-    }
-    
-    socketManager = std::make_unique<ServerSocketManager>(iocpManager, this);
-    
-    // 서버 시작 (기본 설정: 0.0.0.0:7777, 최대 1000 세션)
-    if (socketManager->StartServer("0.0.0.0", 7777, 1000)) 
-	{
-		LOG_DEBUG("EchoServer started successfully on port 7777!");
-    } 
-	else 
-	{
-		LOG_ERROR("EchoServer failed to start!");
-        socketManager.reset();
-    }
-}
-
-void EchoServer::Stop() 
-{
-    printf("EchoServer stopping...\n");
-    
-    if (socketManager) {
-        socketManager->StopServer();
-        socketManager.reset();
-    }
-    
-    OnServerStop();
-    printf("EchoServer stopped successfully!\n");
-}

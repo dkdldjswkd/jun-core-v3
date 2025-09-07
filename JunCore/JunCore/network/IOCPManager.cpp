@@ -1,5 +1,4 @@
 ﻿#include "IOCPManager.h"
-#include "IPacketHandler.h"
 #include "NetBase.h"
 #include "../protocol/message.h"
 
@@ -9,8 +8,6 @@
 
 void IOCPManager::RunWorkerThread()
 {
-    // IOCP 워커 스레드 메인 루프
-    
     for (;;) 
     {
         DWORD ioSize = 0;
@@ -19,19 +16,12 @@ void IOCPManager::RunWorkerThread()
 
         BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
 
-        // 워커 스레드 종료 신호
-        if (shutdown.load() || (ioSize == 0 && session == nullptr && p_overlapped == nullptr)) 
+        // IOCP 종료 메시지
+        if (ioSize == 0 && session == nullptr && p_overlapped == nullptr)
         {
-            // 다른 워커들에게도 종료 신호 전파
-            if (!shutdown.load()) {
-                PostQueuedCompletionStatus(iocpHandle, 0, 0, 0);
-            }
+            // 다른 Worker에게도 종료를 알린다.
+			PostQueuedCompletionStatus(iocpHandle, 0, 0, 0);
             break;
-        }
-
-        // 세션 유효성 검사
-        if (session == nullptr) {
-            continue;
         }
 
         // FIN 패킷 (정상 종료)
@@ -39,203 +29,169 @@ void IOCPManager::RunWorkerThread()
         {
             HandleSessionDisconnect(session);
             continue;
-        }
+		}
 
-        // PQCS (PostQueuedCompletionStatus) 처리
-        if ((ULONG_PTR)p_overlapped < 3) 
-        {
-            // 향후 확장용 PQCS 타입들
-            continue;
-        }
+		if (PQCS::none < static_cast<PQCS>(reinterpret_cast<uintptr_t>(p_overlapped)) && static_cast<PQCS>(reinterpret_cast<uintptr_t>(p_overlapped)) < PQCS::max)
+		{
+			goto DecrementIOCount;
+		}
 
-        // 수신 완료 처리
-        if (p_overlapped == &session->recvOverlapped) 
-        {
-            if (retGQCS) 
-            {
-                HandleRecvComplete(session, ioSize);
-            }
-            
-            // IO Count 감소
-            if (session->DecrementIOCount()) {
-                // 세션이 해제된 경우 추가 처리 없음
-                continue;
-            }
-        }
-        // 송신 완료 처리  
-        else if (p_overlapped == &session->sendOverlapped)
-        {
-            if (retGQCS) 
-            {
-                HandleSendComplete(session);
-            }
-            
-            // IO Count 감소
-            if (session->DecrementIOCount()) {
-                // 세션이 해제된 경우 추가 처리 없음
-                continue;
-            }
-        }
-    }
-    
-    // 워커 스레드 종료
+		// 수신 완료 처리
+		if (p_overlapped == &session->recv_overlapped_)
+		{
+			HandleRecvComplete(session, ioSize);
+		}
+		// 송신 완료 처리  
+		else if (p_overlapped == &session->send_overlapped_)
+		{
+			HandleSendComplete(session);
+		}
+
+	DecrementIOCount:
+		session->DecrementIOCount();
+	}
 }
 
 void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 {
+	int loopCount = 0;
+	const int MAX_LOOP_COUNT = 100;
+
     // 수신 버퍼 업데이트
-    session->recvBuf.MoveRear(ioSize);
-    session->lastRecvTime = static_cast<DWORD>(GetTickCount64());
-    
-    // 패킷 조립 (LAN 모드로 통일!)
-    AssembleLANPackets(session);
-}
+    session->recv_buf_.MoveRear(ioSize);
+    session->last_recv_time_ = static_cast<DWORD>(GetTickCount64());
 
-void IOCPManager::AssembleLANPackets(Session* session)
-{
-    int loopCount = 0;
-    const int MAX_LOOP_COUNT = 100;  // 무한루프 방지
-    
-    for (;;)
-    {
-        // 무한루프 방지
-        if (++loopCount > MAX_LOOP_COUNT) {
-            printf("[WARN] IOCPManager: MAX_LOOP_COUNT reached\n");
-            break;
-        }
-        
-        // 헤더 크기 확인
-        if (session->recvBuf.GetUseSize() < LAN_HEADER_SIZE) {
-            break; // 헤더가 완전히 도착하지 않음
-        }
+	for (;;)
+	{
+		// 무한루프 방지
+		if (MAX_LOOP_COUNT < ++loopCount)
+		{
+			LOG_WARN("IOCPManager: MAX_LOOP_COUNT reached");
+			break;
+		}
 
-        // LAN 헤더 읽기 (2바이트 길이만)
-        WORD payloadLen;
-        session->recvBuf.Peek(&payloadLen, LAN_HEADER_SIZE);
+		// 헤더 크기 확인
+		if (session->recv_buf_.GetUseSize() < LAN_HEADER_SIZE)
+		{
+			break; 
+		}
 
-        // 패킷 크기 유효성 검사
-        if (payloadLen > MAX_PAYLOAD_LEN || payloadLen == 0) 
-        {
-            printf("[ERROR] Invalid packet length: %d\n", payloadLen);
-            HandleSessionDisconnect(session);
-            return;
-        }
+		// LAN 헤더 읽기 (2바이트 길이만)
+		WORD payloadLen;
+		session->recv_buf_.Peek(&payloadLen, LAN_HEADER_SIZE);
 
-        // 전체 패킷이 도착했는지 확인
-        if (session->recvBuf.GetUseSize() < LAN_HEADER_SIZE + payloadLen) {
-            break; // 패킷이 완전히 도착하지 않음
-        }
+		unsigned char debugBytes[10];
+		int debugSize = min(10, session->recv_buf_.GetUseSize());
+		session->recv_buf_.Peek(debugBytes, debugSize);
 
-        // 헤더 제거
-        session->recvBuf.MoveFront(LAN_HEADER_SIZE);
+		// 패킷 크기 유효성 검사
+		if (MAX_PAYLOAD_LEN < payloadLen || payloadLen == 0)
+		{
+			LOG_ERROR("Invalid packet length: %d (0x%04X)", payloadLen, payloadLen);
+			HandleSessionDisconnect(session);
+			return;
+		}
 
-        // 패킷 조립
-        PacketBuffer* packet = PacketBuffer::Alloc();
-        
-        // 임시 버퍼를 통한 안전한 복사
-        char tempBuffer[MAX_PAYLOAD_LEN];
-        session->recvBuf.Dequeue(tempBuffer, payloadLen);
-        packet->PutData(tempBuffer, payloadLen);
+		// 전체 패킷이 도착했는지 확인
+		if (session->recv_buf_.GetUseSize() < LAN_HEADER_SIZE + payloadLen)
+		{
+			break;
+		}
 
-        // 완성된 패킷을 핸들러에게 전달
-        DeliverPacketToHandler(session, packet);
-    }
+		// 헤더 제거
+		session->recv_buf_.MoveFront(LAN_HEADER_SIZE);
 
-    // 계속 수신 등록 (세션이 살아있다면)
-    if (!session->disconnectFlag) {
-        // 수신 재등록은 NetBase에서 처리하던 것을 여기서 직접 처리
-        PostAsyncReceive(session);
-    }
+		// 패킷 완성 및 페이로드 제거
+		PacketBuffer* packet = PacketBuffer::Alloc();
+		char tempBuffer[MAX_PAYLOAD_LEN];
+		session->recv_buf_.Dequeue(tempBuffer, payloadLen);
+		packet->PutData(tempBuffer, payloadLen);
+
+		// 엔진에게 완성된 패킷 전달
+		DeliverPacketToEngine(session, packet);
+		PacketBuffer::Free(packet);
+	}
+
+	if (!session->disconnect_flag_)
+	{
+		PostAsyncReceive(session);
+	}
 }
 
 void IOCPManager::HandleSendComplete(Session* session)
 {
     // 송신 완료 처리
-    for (int i = 0; i < session->sendPacketCount; i++) {
-        PacketBuffer::Free(session->sendPacketArr[i]);
+    for (int i = 0; i < session->send_packet_count_; i++) 
+    {
+        PacketBuffer::Free(session->send_packet_arr_[i]);
     }
-    session->sendPacketCount = 0;
+    session->send_packet_count_ = 0;
 
     // Send Flag OFF
-    InterlockedExchange8((char*)&session->sendFlag, false);
+    InterlockedExchange8((char*)&session->send_flag_, false);
 
     // 추가 송신이 필요한지 확인
-    if (!session->disconnectFlag && session->sendQ.GetUseCount() > 0) {
-        // 송신 재등록은 NetBase에서 처리하던 것을 여기서 직접 처리
+    if (!session->disconnect_flag_ && session->send_q_.GetUseCount() > 0) 
+    {
         PostAsyncSend(session);
     }
 }
 
 void IOCPManager::HandleSessionDisconnect(Session* session)
 {
-    // 세션 연결 해제 처리
-    session->DisconnectSession();
-    
-    // 세션에서 직접 엔진 가져와서 호출 (패킷 처리와 일관성 유지)
-    NetBase* engine = session->GetEngine();
-    if (engine) {
-        engine->OnSessionDisconnected(session);
-    }
+	if (NetBase* engine = session->GetEngine())
+	{
+		engine->OnClientLeave(session);
+	}
+
+	session->DisconnectSession();
 }
 
-void IOCPManager::DeliverPacketToHandler(Session* session, PacketBuffer* packet)
+void IOCPManager::DeliverPacketToEngine(Session* session, PacketBuffer* packet)
 {
-    // 세션에서 직접 엔진 가져와서 호출 (Thread-local 방식 대신)
-    NetBase* engine = session->GetEngine();
-    if (engine && packet) 
+    if (!packet)
     {
-        engine->HandleCompletePacket(session, packet);
+        LOG_ERROR("packet == nullptr");
+        return;
+    }
+
+    if (NetBase* engine = session->GetEngine())
+    {
+        engine->OnRecv(session, packet);
     } 
-    else 
-    {
-        if (packet) 
-        {
-            PacketBuffer::Free(packet);
-        }
-    }
 }
 
-void IOCPManager::StartAsyncReceive(Session* session)
-{
-    // 첫 번째 비동기 수신 시작 (ServerSocketManager에서 호출)
-    PostAsyncReceive(session);
-}
 
 //------------------------------
 // 비동기 I/O 등록 함수들 (NetBase에서 이동)
 //------------------------------
 
-void IOCPManager::PostAsyncReceive(Session* session)
+bool IOCPManager::PostAsyncReceive(Session* session)
 {
-    DWORD flags = 0;
-    WSABUF wsaBuf[2];
+    DWORD   flags = 0;
+    WSABUF  wsaBuf[2];
 
     // 수신 쓰기 위치
-    wsaBuf[0].buf = session->recvBuf.GetWritePos();
-    wsaBuf[0].len = session->recvBuf.DirectEnqueueSize();
+    wsaBuf[0].buf = session->recv_buf_.GetWritePos();
+    wsaBuf[0].len = session->recv_buf_.DirectEnqueueSize();
     // 수신 잔여 위치
-    wsaBuf[1].buf = session->recvBuf.GetBeginPos();
-    wsaBuf[1].len = session->recvBuf.RemainEnqueueSize();
+    wsaBuf[1].buf = session->recv_buf_.GetBeginPos();
+    wsaBuf[1].len = session->recv_buf_.RemainEnqueueSize();
 
     session->IncrementIOCount();
-    ZeroMemory(&session->recvOverlapped, sizeof(session->recvOverlapped));
+    ZeroMemory(&session->recv_overlapped_, sizeof(session->recv_overlapped_));
     
-    if (SOCKET_ERROR == WSARecv(session->sock, wsaBuf, 2, NULL, &flags, &session->recvOverlapped, NULL))
+    if (SOCKET_ERROR == WSARecv(session->sock_, wsaBuf, 2, NULL, &flags, &session->recv_overlapped_, NULL))
     {
-        if (WSAGetLastError() != ERROR_IO_PENDING)
+        if (ERROR_IO_PENDING != WSAGetLastError())
         {
-            // 즉시 실패 시 세션 해제
-            HandleSessionDisconnect(session);
-            session->DecrementIOCount();
-            return;
+            // Worker에서 IOCount를 감소 시키기 위함
+			PostQueuedCompletionStatus(session->GetIOCP(), 1, (ULONG_PTR)this, (LPOVERLAPPED)PQCS::async_recv_fail);
+            return false;
         }
     }
 
-    // 이미 끊기기로 한 세션이면 등록을 취소
-    if (session->disconnectFlag)
-    {
-        CancelIoEx((HANDLE)session->sock, NULL);
-    }
+    return true;
 }
 
 void IOCPManager::PostAsyncSend(Session* session)
@@ -244,7 +200,7 @@ void IOCPManager::PostAsyncSend(Session* session)
     int preparedCount = 0;
 
     // 운영 정책: 한 번에 보낼 수 있는 한도를 넘어선 세션은 즉시 차단
-    if (session->sendQ.GetUseCount() > MAX_SEND_MSG)
+    if (session->send_q_.GetUseCount() > MAX_SEND_MSG)
     {
         HandleSessionDisconnect(session);
         return;
@@ -253,16 +209,16 @@ void IOCPManager::PostAsyncSend(Session* session)
     // 송신할 패킷들 준비
     for (int i = 0; i < MAX_SEND_MSG; i++)
     {
-        if (session->sendQ.GetUseCount() <= 0) {
+        if (session->send_q_.GetUseCount() <= 0) {
             break;
         }
 
-        session->sendQ.Dequeue((PacketBuffer**)&session->sendPacketArr[i]);
+        session->send_q_.Dequeue((PacketBuffer**)&session->send_packet_arr_[i]);
         ++preparedCount;
 
         // LAN 모드로 통일
-        wsaBuf[i].buf = session->sendPacketArr[i]->GetLanPacketPos();
-        wsaBuf[i].len = session->sendPacketArr[i]->GetLanPacketSize();
+        wsaBuf[i].buf = session->send_packet_arr_[i]->GetLanPacketPos();
+        wsaBuf[i].len = session->send_packet_arr_[i]->GetLanPacketSize();
     }
 
     // 보낼 것이 없으면 실패
@@ -272,19 +228,17 @@ void IOCPManager::PostAsyncSend(Session* session)
     }
 
     // 준비된 패킷 수 커밋
-    session->sendPacketCount = preparedCount;
+    session->send_packet_count_ = preparedCount;
 
     session->IncrementIOCount();
-    ZeroMemory(&session->sendOverlapped, sizeof(session->sendOverlapped));
+    ZeroMemory(&session->send_overlapped_, sizeof(session->send_overlapped_));
     
-    if (SOCKET_ERROR == WSASend(session->sock, wsaBuf, session->sendPacketCount, NULL, 0, &session->sendOverlapped, NULL))
+    if (SOCKET_ERROR == WSASend(session->sock_, wsaBuf, session->send_packet_count_, NULL, 0, &session->send_overlapped_, NULL))
     {
-        const auto err_no = WSAGetLastError();
-        if (ERROR_IO_PENDING != err_no)
+        if (ERROR_IO_PENDING != WSAGetLastError())
         {
-            // 즉시 실패 시 세션 해제
-            HandleSessionDisconnect(session);
-            session->DecrementIOCount();
+			// Worker에서 IOCount를 감소 시키기 위함
+			PostQueuedCompletionStatus(session->GetIOCP(), 1, (ULONG_PTR)this, (LPOVERLAPPED)PQCS::async_recv_fail);
         }
     }
 }
