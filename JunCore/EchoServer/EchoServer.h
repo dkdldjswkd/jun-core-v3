@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/Server.h"
-#include "../JunCore/protocol/DirectProtobuf.h"
+#include "../JunCore/protocol/UnifiedPacketHeader.h"
+#include "../JunCore/protocol/DirectProtobuf.h"  // g_direct_packet_handler용
 #include "echo_message.pb.h"
 
 class EchoServer : public Server 
@@ -10,8 +11,6 @@ public:
 	~EchoServer();
 
 protected:
-	// NetBase 순수 가상 함수 구현 (핵심 비즈니스 로직)
-	void OnRecv(Session* session, PacketBuffer* packet) override;
 	void OnClientJoin(Session* session) override;
 	void OnClientLeave(Session* session) override;
 

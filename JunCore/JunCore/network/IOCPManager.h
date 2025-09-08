@@ -1,13 +1,13 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
 #include "Session.h"
-#include "../buffer/packet.h"
 #include "../protocol/message.h"
 #include <vector>
 #include <thread>
 #include <functional>
 #include <memory>
 #include <atomic>
+#include <stdexcept>
 
 enum class PQCS
 {
@@ -114,20 +114,13 @@ private:
     void HandleRecvComplete(Session* session, DWORD ioSize);
     void HandleSendComplete(Session* session);
     void HandleSessionDisconnect(Session* session);
-    
-    //------------------------------
-    // 완성된 패킷을 엔진에게 전달
-    //------------------------------
-    void DeliverPacketToEngine(Session* session, PacketBuffer* packet);
-    
 };
 
 //------------------------------
 // 인라인 구현
 //------------------------------
 
-inline IOCPManager::IOCPManager(int workerCount)
-    : iocpHandle(CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0))
+inline IOCPManager::IOCPManager(int workerCount) : iocpHandle(CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0))
 {
     if (iocpHandle == NULL) 
     {

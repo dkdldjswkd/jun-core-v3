@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/Client.h"
-#include "../JunCore/protocol/DirectProtobuf.h"
+#include "../JunCore/protocol/UnifiedPacketHeader.h"
+#include "../JunCore/protocol/DirectProtobuf.h"  // g_direct_packet_handler용
 #include "echo_message.pb.h"
 
 class EchoClient : public Client 
@@ -14,7 +15,6 @@ public:
 	bool SendEchoRequest(const std::string& message);
 
 protected:
-	void OnRecv(Session* session, PacketBuffer* packet) override;
 	void OnClientJoin(Session* session) override;
 	void OnDisconnect() override;
 };

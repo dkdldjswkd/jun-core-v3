@@ -4,9 +4,6 @@
     <Filter Include="network">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
     </Filter>
-    <Filter Include="buffer">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-    </Filter>
     <Filter Include="protocol">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
     </Filter>
@@ -21,9 +18,6 @@
     <ClCompile Include="network\ServerSocketManager.cpp">
       <Filter>network</Filter>
     </ClCompile>
-    <ClCompile Include="buffer\packet.cpp">
-      <Filter>buffer</Filter>
-    </ClCompile>
     <ClCompile Include="network\Session.cpp">
       <Filter>network</Filter>
     </ClCompile>
@@ -37,9 +31,6 @@
   <ItemGroup>
     <ClInclude Include="network\NetBase.h">
       <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="buffer\packet.h">
-      <Filter>buffer</Filter>
     </ClInclude>
     <ClInclude Include="protocol\message.h">
       <Filter>protocol</Filter>
@@ -71,7 +62,7 @@
     <ClInclude Include="protocol\DirectProtobuf.h">
       <Filter>protocol</Filter>
     </ClInclude>
-    <ClInclude Include="protocol\ProtobufPacket.h">
+    <ClInclude Include="protocol\UnifiedPacketHeader.h">
       <Filter>protocol</Filter>
     </ClInclude>
   </ItemGroup>

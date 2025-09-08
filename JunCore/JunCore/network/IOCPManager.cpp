@@ -1,7 +1,7 @@
 ﻿#include "IOCPManager.h"
 #include "NetBase.h"
 #include "../protocol/message.h"
-#include "../protocol/ProtobufPacket.h"
+#include "../protocol/UnifiedPacketHeader.h"
 #include "../protocol/DirectProtobuf.h"
 
 //------------------------------
@@ -69,17 +69,17 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 
 		const int _recv_byte = session->recv_buf_.GetUseSize();
 
-		// 최소 데이터 수신 여부 체크
-		if (_recv_byte <= PROTOBUF_HEADER_SIZE)
+		// 최소 데이터 수신 여부 체크 (UnifiedPacketHeader 크기)
+		if (_recv_byte <= UNIFIED_HEADER_SIZE)
 		{
 			break; 
 		}
 
-		unsigned short _packet_len;
-		session->recv_buf_.Peek(&_packet_len, PROTOBUF_PACKET_LEN_SIZE);
+		uint32_t _packet_len;
+		session->recv_buf_.Peek(&_packet_len, sizeof(uint32_t));
 
-		// 패킷 크기 유효성 검사
-		if (_packet_len < PROTOBUF_HEADER_SIZE || MAX_PAYLOAD_LEN <= _packet_len)
+		// 패킷 크기 유효성 검사 (UnifiedPacketHeader 기준)
+		if (!IsValidPacketSize(_packet_len))
 		{
 			LOG_ERROR("Invalid packet length: %d", _packet_len);
 			return;
@@ -91,19 +91,19 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
             break;
         }
 
-        // 패킷 추출
+        // 패킷 추출 (UnifiedPacketHeader 사용)
 		std::vector<char> packet(_packet_len);
         session->recv_buf_.Dequeue(&packet[0], _packet_len);
 
-        ProtobufHeader* header = (ProtobufHeader*)&packet[0];
+        const UnifiedPacketHeader* header = reinterpret_cast<const UnifiedPacketHeader*>(&packet[0]);
 
-        const uint32_t _packet_id = header->packet_id_.packet_id_;
+        const uint32_t _packet_id = header->packet_id;
         LOG_DEBUG("recv packet id : %d", _packet_id);
 
-        // 패킷 Payload 추출
-        std::vector<char> payload(packet.begin() + PROTOBUF_HEADER_SIZE, packet.end());
+        // 패킷 Payload 추출 (헤더 이후 부분)
+        std::vector<char> payload(packet.begin() + UNIFIED_HEADER_SIZE, packet.end());
 
-        g_direct_packet_handler[header->packet_id_.packet_id_](payload);
+        g_direct_packet_handler[header->packet_id](payload);
 	}
 
 	if (!session->disconnect_flag_)
@@ -141,21 +141,6 @@ void IOCPManager::HandleSessionDisconnect(Session* session)
 
 	session->DisconnectSession();
 }
-
-void IOCPManager::DeliverPacketToEngine(Session* session, PacketBuffer* packet)
-{
-    if (!packet)
-    {
-        LOG_ERROR("packet == nullptr");
-        return;
-    }
-
-    if (NetBase* engine = session->GetEngine())
-    {
-        engine->OnRecv(session, packet);
-    } 
-}
-
 
 //------------------------------
 // 비동기 I/O 등록 함수들 (NetBase에서 이동)
@@ -215,7 +200,7 @@ void IOCPManager::PostAsyncSend(Session* session)
         wsaBuf[i].buf = session->send_packet_arr_[i]->data();
         wsaBuf[i].len = static_cast<DWORD>(session->send_packet_arr_[i]->size());
         
-        std::cout << "[IOCP_SEND] Packet " << i << " size: " << wsaBuf[i].len << " bytes" << std::endl;
+        LOG_DEBUG("[IOCP_SEND] Packet %d size: %d bytes", i, wsaBuf[i].len);
     }
 
     // 보낼 것이 없으면 실패

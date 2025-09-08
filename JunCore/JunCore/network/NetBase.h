@@ -18,8 +18,6 @@ protected:
     std::shared_ptr<IOCPManager> iocpManager;
 
 public:
-    // 순수 가상 함수 - 파생 클래스에서 구현 (IOCPManager에서 호출하므로 public)
-    virtual void OnRecv(Session* session, PacketBuffer* packet) = 0;
     virtual void OnClientJoin(Session* session) = 0;
     virtual void OnClientLeave(Session* session) = 0;
 
