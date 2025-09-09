@@ -73,7 +73,6 @@ public:
 
 	// 암호화
 	std::vector<char> aes_key_;
-	unsigned long long send_seq_number_ = 0;
 
 	// 세션 해제여부와 카운트 관리 (release_flag_, io_count_를 8byte로 정렬, false 캐시라인과 분리되게 유도)
 	alignas(64) BOOL release_flag_ = true;

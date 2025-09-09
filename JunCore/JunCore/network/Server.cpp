@@ -1,12 +1,21 @@
-﻿#include "ServerSocketManager.h"
+﻿#include "Server.h"
 #include <iostream>
 
 //------------------------------
-// ServerSocketManager 구현
+// Server 구현 (기존 ServerSocketManager 로직 통합)
 //------------------------------
 
-bool ServerSocketManager::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
+bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
 {
+    LOG_ERROR_RETURN(IsIOCPManagerAttached(), false, "IOCP Manager is not attached!");
+    
+    // 이미 서버 가동되었는지 체크
+    if (running.load())
+    {
+        LOG_WARN("Server is already running!");
+        return false;
+    }
+
     try 
     {
         // 1. 세션 배열 초기화
@@ -55,7 +64,10 @@ bool ServerSocketManager::StartServer(const char* bindIP, WORD port, DWORD maxSe
         
         // 7. Accept 스레드 시작
         running = true;
-        acceptThread = std::thread(&ServerSocketManager::AcceptThreadFunc, this);
+        acceptThread = std::thread(&Server::AcceptThreadFunc, this);
+        
+        // 8. 사용자 콜백 호출
+        OnServerStart();
         
         LOG_INFO("Server started on %s:%d (Max Sessions: %lu)", bindIP ? bindIP : "0.0.0.0", port, maxSessions);
         return true;
@@ -67,13 +79,13 @@ bool ServerSocketManager::StartServer(const char* bindIP, WORD port, DWORD maxSe
     }
 }
 
-void ServerSocketManager::StopServer()
+void Server::StopServer()
 {
     if (!running.exchange(false)) {
         return; // 이미 정지됨
     }
     
-    printf("ServerSocketManager stopping...\n");
+    printf("Server stopping...\n");
     
     // Accept 스레드 종료
     if (listenSocket != INVALID_SOCKET) {
@@ -88,10 +100,14 @@ void ServerSocketManager::StopServer()
     // 세션 정리
     CleanupSessions();
     
-    printf(" ServerSocketManager stopped\n");
+    // 사용자 콜백 호출
+    OnServerStop();
+    
+    LOG_INFO("Server stopped successfully");
+    printf("Server stopped\n");
 }
 
-void ServerSocketManager::AcceptThreadFunc()
+void Server::AcceptThreadFunc()
 {
     LOG_INFO("Accept thread started");
     
@@ -119,27 +135,25 @@ void ServerSocketManager::AcceptThreadFunc()
 	LOG_INFO("Accept thread ended");
 }
 
-bool ServerSocketManager::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
+bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 {
     // 세션 할당
     Session* session = AllocateSession();
+    if (!session) 
     {
-        if (!session) 
-        {
-            LOG_ERROR("Session allocation failed - closing connection");
-            closesocket(clientSocket);
-            return false;
-        }
-    
-        // 다른 스레드에서 정리되지 않도록 IOCount를 미리 선점한다.
-        session->IncrementIOCount();
-
-        // 세션 초기화
-        in_addr clientIP = clientAddr->sin_addr;
-        WORD clientPort = ntohs(clientAddr->sin_port);
-        SessionId sessionId(static_cast<WORD>(session - &sessions[0]), GetTickCount());
-        session->Set(clientSocket, clientIP, clientPort, sessionId, netBaseHandler);
+        LOG_ERROR("Session allocation failed - closing connection");
+        closesocket(clientSocket);
+        return false;
     }
+
+    // 다른 스레드에서 정리되지 않도록 IOCount를 미리 선점한다.
+    session->IncrementIOCount();
+
+    // 세션 초기화
+    in_addr clientIP = clientAddr->sin_addr;
+    WORD clientPort = ntohs(clientAddr->sin_port);
+    SessionId sessionId(static_cast<WORD>(session - &sessions[0]), GetTickCount());
+    session->Set(clientSocket, clientIP, clientPort, sessionId, this);  // this로 변경
     
 	// IOCP에 SOCKET 등록
 	if (!iocpManager->RegisterSocket(clientSocket, session))
@@ -157,20 +171,20 @@ bool ServerSocketManager::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clie
 		return false;
 	}
 
-	netBaseHandler->OnClientJoin(session);
+	OnClientJoin(session);
 	currentSessionCount++;
 	session->DecrementIOCount();
 	return true;
 }
 
-void ServerSocketManager::OnClientDisconnect(Session* session)
+void Server::OnClientDisconnect(Session* session)
 {
     currentSessionCount--;
-    netBaseHandler->OnClientLeave(session);
+    OnClientLeave(session);
     // Session은 IOCount가 0이 되면 자동으로 Pool에 반환되므로 수동 해제 불필요
 }
 
-void ServerSocketManager::InitializeSessions(DWORD maxSessions)
+void Server::InitializeSessions(DWORD maxSessions)
 {
     sessions.resize(maxSessions);
     
@@ -185,13 +199,13 @@ void ServerSocketManager::InitializeSessions(DWORD maxSessions)
     printf("Sessions initialized: %lu\n", maxSessions);
 }
 
-void ServerSocketManager::CleanupSessions()
+void Server::CleanupSessions()
 {
     sessions.clear();
     currentSessionCount = 0;
 }
 
-Session* ServerSocketManager::AllocateSession()
+Session* Server::AllocateSession()
 {
     DWORD index;
     if (!sessionIndexStack.Pop(&index)) 
@@ -200,41 +214,4 @@ Session* ServerSocketManager::AllocateSession()
     }
     
     return &sessions[index];
-}
-
-void ServerSocketManager::ReleaseSession(Session* session)
-{
-    if (!session || sessions.empty()) {
-        return;
-    }
-    
-    // pool의 session인지 검사
-    if (session < &sessions[0] || session >= &sessions[0] + sessions.size()) 
-    {
-        return;
-    }
-    
-    // Session 자체의 Release 함수 호출
-    session->Release();
-    
-    // 인덱스 반환 (SessionManager의 책임)
-    DWORD index = (DWORD)(session - &sessions[0]);
-    sessionIndexStack.Push(index);
-}
-
-void ServerSocketManager::ReturnSessionToPool(Session* session)
-{
-    if (!session || sessions.empty()) {
-        return;
-    }
-    
-    // pool의 session인지 검사
-    if (session < &sessions[0] || session >= &sessions[0] + sessions.size()) 
-    {
-        return;
-    }
-    
-    // 인덱스 반환 (Session::Release()는 이미 호출됨)
-    DWORD index = (DWORD)(session - &sessions[0]);
-    sessionIndexStack.Push(index);
 }

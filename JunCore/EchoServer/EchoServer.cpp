@@ -5,7 +5,7 @@ EchoServer::EchoServer() : Server()
 {
 	RegisterDirectPacketHandler<echo::EchoRequest>([this](const echo::EchoRequest& request) {
 		this->HandleEchoRequest(request);
-		});
+	});
 }
 
 EchoServer::~EchoServer() 

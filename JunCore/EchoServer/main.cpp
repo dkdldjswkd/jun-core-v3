@@ -11,8 +11,7 @@ int main()
 {
 	try
 	{
-		// IOCPManager 생성 (워커 스레드 3개)
-		auto iocpManager = IOCPManager::Create().WithWorkerCount(3).Build();
+		std::unique_ptr<IOCPManager> iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
 		
 		if (!iocpManager->IsValid()) 
 		{
@@ -20,16 +19,14 @@ int main()
 			return -1;
 		}
 
-		// EchoServer 생성 및 IOCP 연결 (shared_ptr로 변환)
 		EchoServer echoServer;
 		echoServer.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 
-		// 서버 시작 (IP: 0.0.0.0, Port: 7777, Max Sessions: 1000)
-		if (echoServer.StartServer("0.0.0.0", 7777, 1000)) 
+		if (echoServer.StartServer("0.0.0.0"/*IP*/, 7777/*Port*/, 1000 /*Max session*/))
 		{
-			LOG_INFO("EchoServer started successfully on port 7777");
-		} 
-		else 
+			LOG_INFO("EchoServer started");
+		}
+		else
 		{
 			LOG_ERROR("Failed to start EchoServer");
 			return -1;
@@ -45,10 +42,10 @@ int main()
 	}
 	catch (const std::exception& e)
 	{
-		printf("Exception caught in StartEchoServer: %s\n", e.what());
+		LOG_ERROR("Exception caught in StartEchoServer: %s", e.what());
 	}
 	catch (...)
 	{
-		printf("Unknown exception caught in StartEchoServer\n");
+		LOG_ERROR("Unknown exception caught in StartEchoServer");
 	}
 }

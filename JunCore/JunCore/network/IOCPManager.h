@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
 #include "Session.h"
-#include "../protocol/message.h"
 #include <vector>
 #include <thread>
 #include <functional>
@@ -26,10 +25,6 @@ enum class PQCS
 class NetBase;
 class Session;
 
-//------------------------------
-// IOCPManager - IOCP 이벤트 처리와 패킷 조립 전담
-// 아름다운 단일 책임 원칙 구현: "IOCP 이벤트만 처리한다"
-//------------------------------
 class IOCPManager final
 {
     // Builder와 NetBase를 friend로 선언
@@ -41,8 +36,6 @@ private:
     HANDLE iocpHandle;
     std::vector<std::thread> workerThreads;
     std::atomic<bool> shutdown{false};
-    
-    // 패킷 조립 정책은 message.h와 packet.h의 상수들을 사용
     
 public:
     class Builder {

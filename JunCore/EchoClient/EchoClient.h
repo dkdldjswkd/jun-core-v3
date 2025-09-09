@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/Client.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
-#include "../JunCore/protocol/DirectProtobuf.h"  // g_direct_packet_handler용
+#include "../JunCore/protocol/DirectProtobuf.h"
 #include "echo_message.pb.h"
 
 class EchoClient : public Client 

@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="network\IOCPManager.cpp" />
-    <ClCompile Include="network\ServerSocketManager.cpp" />
+    <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="network\Session.cpp" />
     <ClCompile Include="protocol\handshake.pb.cc" />
     <ClCompile Include="protocol\DirectProtobuf.cpp" />
@@ -32,7 +32,6 @@
     <ClInclude Include="network\NetBase.h" />
     <ClInclude Include="network\Server.h" />
     <ClInclude Include="network\Client.h" />
-    <ClInclude Include="network\ServerSocketManager.h" />
     <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />
     <ClInclude Include="protocol\UnifiedPacketHeader.h" />

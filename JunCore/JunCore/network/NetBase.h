@@ -74,7 +74,8 @@ inline void NetBase::AttachIOCPManager(std::shared_ptr<IOCPManager> manager)
 
 inline void NetBase::DetachIOCPManager()
 {
-    if (iocpManager) {
+    if (iocpManager) 
+    {
         iocpManager.reset();
     }
 }

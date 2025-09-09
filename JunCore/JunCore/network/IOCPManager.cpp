@@ -1,6 +1,5 @@
 ﻿#include "IOCPManager.h"
 #include "NetBase.h"
-#include "../protocol/message.h"
 #include "../protocol/UnifiedPacketHeader.h"
 #include "../protocol/DirectProtobuf.h"
 

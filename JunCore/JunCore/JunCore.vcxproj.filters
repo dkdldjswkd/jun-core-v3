@@ -15,7 +15,7 @@
     <ClCompile Include="network\IOCPManager.cpp">
       <Filter>network</Filter>
     </ClCompile>
-    <ClCompile Include="network\ServerSocketManager.cpp">
+    <ClCompile Include="network\Server.cpp">
       <Filter>network</Filter>
     </ClCompile>
     <ClCompile Include="network\Session.cpp">
@@ -48,9 +48,6 @@
       <Filter>protocol</Filter>
     </ClInclude>
     <ClInclude Include="network\IOCPManager.h">
-      <Filter>network</Filter>
-    </ClInclude>
-    <ClInclude Include="network\ServerSocketManager.h">
       <Filter>network</Filter>
     </ClInclude>
     <ClInclude Include="network\Server.h">
