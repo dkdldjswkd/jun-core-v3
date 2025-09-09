@@ -21,30 +21,21 @@ public:
     virtual void OnClientJoin(Session* session) = 0;
     virtual void OnClientLeave(Session* session) = 0;
 
-    // 선택적 가상 함수 - 파생 클래스에서 재정의 가능
-    virtual void OnError(Session* session, const char* errorMsg) {
-        printf("Session Error: %s\n", errorMsg);
-    }
-
 public:
     // IOCP 매니저 연결 인터페이스
     void AttachIOCPManager(std::shared_ptr<IOCPManager> manager);
     void DetachIOCPManager();
     bool IsIOCPManagerAttached() const noexcept;
 
-    // 생명주기 관리
-    virtual void Start() = 0;
-    virtual void Stop() = 0;
-
 protected:
-    // 유틸리티 함수들 (PacketBuffer 완전 제거)
     bool SendRawData(Session* session, const char* data, size_t dataSize);
     bool SendRawData(Session* session, const std::vector<char>& data);
     void DisconnectSession(Session* session);
 
 private:
     // 세션 유효성 검사
-    bool IsSessionValid(Session* session) const {
+    bool IsSessionValid(Session* session) const 
+    {
         return session != nullptr && session->sock_ != INVALID_SOCKET;
     }
 };

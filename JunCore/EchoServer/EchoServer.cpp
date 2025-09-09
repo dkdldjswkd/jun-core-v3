@@ -60,7 +60,3 @@ void EchoServer::OnServerStop()
 {
 	LOG_INFO("EchoServer stopped successfully!");
 }
-
-void EchoServer::OnError(int errorcode) 
-{
-}

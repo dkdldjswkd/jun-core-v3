@@ -62,6 +62,8 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId session_id, NetB
 
 void Session::Release()
 {
+	LOG_DEBUG("[Session Release] SessionId : %llu", (DWORD64)session_id_);
+
 	// 소켓 정리
 	if (sock_ != INVALID_SOCKET) 
 	{

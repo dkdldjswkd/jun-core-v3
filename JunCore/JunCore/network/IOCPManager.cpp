@@ -25,6 +25,11 @@ void IOCPManager::RunWorkerThread()
             break;
         }
 
+        if (ioSize == 0)
+        {
+            goto DecrementIOCount;
+        }
+
 		if (PQCS::none < static_cast<PQCS>(reinterpret_cast<uintptr_t>(p_overlapped)) && static_cast<PQCS>(reinterpret_cast<uintptr_t>(p_overlapped)) < PQCS::max)
 		{
 			goto DecrementIOCount;

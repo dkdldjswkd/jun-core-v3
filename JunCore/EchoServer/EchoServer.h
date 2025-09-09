@@ -25,8 +25,4 @@ private:
 	
 	// 패킷별 핸들러 함수들 (PacketTest.cpp의 람다 대신 멤버 함수)
 	void HandleEchoRequest(const echo::EchoRequest& request);
-
-public:
-	// 편의 함수 (기존 인터페이스와의 호환성)
-	void OnError(int errorcode);
 };

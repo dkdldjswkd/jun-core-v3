@@ -9,7 +9,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
 {
     LOG_ERROR_RETURN(IsIOCPManagerAttached(), false, "IOCP Manager is not attached!");
     
-    // 이미 서버 가동되었는지 체크
+    // 이미 이미 서버 가동되었는지 체크
     if (running.load())
     {
         LOG_WARN("Server is already running!");
@@ -18,46 +18,39 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
 
     try 
     {
-        // 1. 세션 배열 초기화
+        // 1. 세션 세팅
         InitializeSessions(maxSessions);
         
-        // 2. 서버 소켓 생성
+        // 2. 소켓 생성
         listenSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (listenSocket == INVALID_SOCKET) 
         {
-            printf("Socket creation failed: %d\n", WSAGetLastError());
+            LOG_ERROR("Socket creation failed: %d", WSAGetLastError());
             return false;
         }
         
-        // 3. 소켓 옵션 설정
+        // 3. 소켓 옵션 세팅
         int optval = 1;
         setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval));
         
-        // 4. 주소 설정
+        // 4. 주소 세팅
         ZeroMemory(&serverAddr, sizeof(serverAddr));
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(port);
-        
-        if (bindIP && strlen(bindIP) > 0) 
-        {
-            inet_pton(AF_INET, bindIP, &serverAddr.sin_addr);
-        } else 
-        {
-            serverAddr.sin_addr.s_addr = INADDR_ANY;
-        }
+		inet_pton(AF_INET, bindIP, &serverAddr.sin_addr);
         
         // 5. 바인드
         if (bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
         {
-            printf("Bind failed: %d\n", WSAGetLastError());
+            LOG_ERROR("Bind failed: %d", WSAGetLastError());
             closesocket(listenSocket);
             return false;
         }
         
-        // 6. 리스닝 시작
+        // 6. 리슨
         if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) 
         {
-            printf("Listen failed: %d\n", WSAGetLastError());
+            LOG_ERROR("Listen failed: %d", WSAGetLastError());
             closesocket(listenSocket);
             return false;
         }
@@ -69,7 +62,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         // 8. 사용자 콜백 호출
         OnServerStart();
         
-        LOG_INFO("Server started on %s:%d (Max Sessions: %lu)", bindIP ? bindIP : "0.0.0.0", port, maxSessions);
+        LOG_INFO("Server started on %s:%d (Max Sessions: %lu)", bindIP, port, maxSessions);
         return true;
     }
     catch (const std::exception& e) 
@@ -85,15 +78,17 @@ void Server::StopServer()
         return; // 이미 정지됨
     }
     
-    printf("Server stopping...\n");
+    LOG_INFO("Server stopping...");
     
     // Accept 스레드 종료
-    if (listenSocket != INVALID_SOCKET) {
+    if (listenSocket != INVALID_SOCKET) 
+    {
         closesocket(listenSocket);
         listenSocket = INVALID_SOCKET;
     }
     
-    if (acceptThread.joinable()) {
+    if (acceptThread.joinable()) 
+    {
         acceptThread.join();
     }
     
@@ -195,8 +190,6 @@ void Server::InitializeSessions(DWORD maxSessions)
         // 각 세션에 Pool 정보 직접 설정 (간단하고 명확함)
         sessions[i].SetSessionPool(&sessions, &sessionIndexStack);
     }
-    
-    printf("Sessions initialized: %lu\n", maxSessions);
 }
 
 void Server::CleanupSessions()

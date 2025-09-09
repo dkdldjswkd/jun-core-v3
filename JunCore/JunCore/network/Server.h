@@ -9,10 +9,6 @@
 #include <memory>
 #include <vector>
 
-//------------------------------
-// Server - 서버 네트워크 엔진
-// 사용자는 이 클래스를 상속받아 서버를 구현
-//------------------------------
 class Server : public NetBase
 {
 public:
@@ -29,10 +25,6 @@ public:
     //------------------------------
     bool StartServer(const char* bindIP, WORD port, DWORD maxSessions = 1000);
     void StopServer();
-
-    // NetBase 순수 가상 함수 구현
-    void Start() override final;
-    void Stop() override final;
 
     //------------------------------
     // 모니터링 인터페이스
@@ -65,7 +57,7 @@ private:
     std::atomic<DWORD> currentSessionCount{0};
     
     //------------------------------
-    // 내부 메서드들 (기존 ServerSocketManager 메서드들)
+    // 내부 메서드들
     //------------------------------
     void AcceptThreadFunc();
     Session* AllocateSession();
@@ -84,17 +76,6 @@ inline Server::Server() : NetBase()
 }
 
 inline Server::~Server()
-{
-    StopServer();
-}
-
-inline void Server::Start()
-{
-    // 기본값으로 서버 시작 (사용자가 StartServer를 직접 호출하는 것을 권장)
-    StartServer("0.0.0.0", 7777, 1000);
-}
-
-inline void Server::Stop()
 {
     StopServer();
 }

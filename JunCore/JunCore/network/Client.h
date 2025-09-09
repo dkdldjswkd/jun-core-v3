@@ -26,10 +26,6 @@ public:
     //------------------------------
     bool Connect(const char* serverIP, WORD port);
     void Disconnect();
-    
-    // NetBase 순수 가상 함수 구현
-    void Start() override final;
-    void Stop() override final;
 
     //------------------------------
     // 클라이언트 상태 확인
@@ -167,17 +163,6 @@ inline void Client::Disconnect()
         currentSession->DecrementIOCount();
         currentSession = nullptr;
     }
-}
-
-inline void Client::Start()
-{
-    // 클라이언트는 Connect를 직접 호출해야 함
-    LOG_INFO("Client ready. Call Connect(serverIP, port) to connect to server.");
-}
-
-inline void Client::Stop()
-{
-    Disconnect();
 }
 
 inline bool Client::IsConnected() const
