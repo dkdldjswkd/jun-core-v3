@@ -3,7 +3,6 @@
 #include "Server.h"
 #include "Client.h"
 #include "../protocol/UnifiedPacketHeader.h"
-#include "../protocol/DirectProtobuf.h"
 
 //------------------------------
 // IOCPManager 구현 - 패킷 조립 로직
@@ -84,7 +83,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 		uint32_t _packet_len;
 		session->recv_buf_.Peek(&_packet_len, sizeof(uint32_t));
 
-		// 패킷 크기 유효성 검사 (UnifiedPacketHeader 기준)
+		// 패킷 크기 유효성 검사
 		if (!IsValidPacketSize(_packet_len))
 		{
 			LOG_ERROR("Invalid packet length: %d", _packet_len);
@@ -97,7 +96,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
             break;
         }
 
-        // 패킷 추출 (UnifiedPacketHeader 사용)
+        // 패킷 추출
 		std::vector<char> packet(_packet_len);
         session->recv_buf_.Dequeue(&packet[0], _packet_len);
 
@@ -106,10 +105,17 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         const uint32_t _packet_id = header->packet_id;
         LOG_DEBUG("recv packet id : %d", _packet_id);
 
-        // 패킷 Payload 추출 (헤더 이후 부분)
+        // Payload 추출
         std::vector<char> payload(packet.begin() + UNIFIED_HEADER_SIZE, packet.end());
 
-        g_direct_packet_handler[header->packet_id](*session, payload);
+        NetBase* engine = session->GetEngine();
+        if (engine) 
+        {
+            engine->OnPacketReceived(session, header->packet_id, payload);
+        }
+        else {
+            LOG_ERROR("Session has no engine assigned");
+        }
 	}
 
 	if (!session->disconnect_flag_)

@@ -20,6 +20,10 @@ int main()
 		}
 
 		EchoServer echoServer;
+		
+		// 엔진 초기화 (패킷 핸들러 등록)
+		echoServer.Initialize();
+		
 		echoServer.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 
 		if (echoServer.StartServer("0.0.0.0"/*IP*/, 7777/*Port*/, 1000 /*Max session*/))

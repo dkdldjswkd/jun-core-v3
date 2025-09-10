@@ -80,6 +80,13 @@ inline Client::~Client()
 
 inline bool Client::Connect(const char* serverIP, WORD port)
 {
+    // 초기화 검사 (패킷 핸들러 등록 여부)
+    if (!IsInitialized())
+    {
+        LOG_ERROR("Must call Initialize() before Connect()!");
+        return false;
+    }
+    
     LOG_WARN_RETURN(currentSession == nullptr, false, "Client is already connected!");
 	LOG_ERROR_RETURN(IsIOCPManagerAttached(), false, "IOCP Manager is not attached!");
 

@@ -15,6 +15,10 @@ int main()
 		LOG_ERROR_RETURN(iocpManager->IsValid(), -1, "Failed to create IOCPManager for client");
 
 		EchoClient client;
+		
+		// 엔진 초기화 (패킷 핸들러 등록)
+		client.Initialize();
+		
 		client.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 		LOG_ERROR_RETURN(client.Connect("127.0.0.1", 7777), -1, "Failed to connect to server");
 

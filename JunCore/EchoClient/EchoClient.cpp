@@ -4,13 +4,18 @@
 
 EchoClient::EchoClient() : Client()
 {
-	RegisterDirectPacketHandler<echo::EchoResponse>([this](Session& session, const echo::EchoResponse& response) {
-		std::cout << "[CLIENT] Received EchoResponse: " << response.message() << " (timestamp: " << response.timestamp() << ")" << std::endl;
-	});
 }
 
 EchoClient::~EchoClient()
 {
+}
+
+void EchoClient::RegisterPacketHandlers()
+{
+	RegisterPacketHandler<echo::EchoResponse>([this](Session& session, const echo::EchoResponse& response) 
+	{
+		LOG_DEBUG("Received EchoResponse : %s", response.message().c_str());
+	});
 }
 
 void EchoClient::OnConnect(Session* session)

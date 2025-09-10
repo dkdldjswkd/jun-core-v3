@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "../JunCore/network/Server.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
-#include "../JunCore/protocol/DirectProtobuf.h"
 #include "echo_message.pb.h"
 
 class EchoServer : public Server 
@@ -18,6 +17,9 @@ protected:
 	bool OnConnectionRequest(in_addr clientIP, WORD clientPort) override;
 	void OnServerStart() override;
 	void OnServerStop() override;
+	
+	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
+	void RegisterPacketHandlers() override;
 
 private:
 	Session* currentHandlingSession_ = nullptr;

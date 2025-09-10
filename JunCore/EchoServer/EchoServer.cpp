@@ -3,26 +3,29 @@
 
 EchoServer::EchoServer() : Server()
 {
-	RegisterDirectPacketHandler<echo::EchoRequest>([this](Session& _session, const echo::EchoRequest& request) 
-	{
-		this->HandleEchoRequest(_session, request);
-	});
 }
 
 EchoServer::~EchoServer() 
 {
 }
 
-// PacketTest.cpp의 세션 저장 방식 - 현재 처리 중인 세션을 멤버로 관리
+void EchoServer::RegisterPacketHandlers()
+{
+	RegisterPacketHandler<echo::EchoRequest>([this](Session& _session, const echo::EchoRequest& request)
+		{
+			this->HandleEchoRequest(_session, request);
+		});
+}
+
 void EchoServer::HandleEchoRequest(Session& _session, const echo::EchoRequest& request)
 {
-	std::cout << "[SERVER] HandleEchoRequest: " << request.message() << std::endl;
+	LOG_DEBUG("HandleEchoRequest : %s", request.message().c_str());
 	
-	// EchoResponse 생성
 	echo::EchoResponse response;
 	response.set_message(request.message());
-	
 	SendPacket(_session, response);
+
+	return;
 }
 
 bool EchoServer::OnConnectionRequest(in_addr clientIP, WORD clientPort) 

@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 #include "../protocol/UnifiedPacketHeader.h"
+#include <functional>
+#include <unordered_map>
 
 class NetBase
 {
@@ -17,15 +19,31 @@ public:
 
 protected:
     std::shared_ptr<IOCPManager> iocpManager;
+    
+    std::unordered_map<uint32_t, std::function<void(Session&, const std::vector<char>&)>> packet_handlers_;
+    
+    bool initialized_ = false;
+    
+    // 사용자 재정의 패킷 핸들러 등록 함수
+    virtual void RegisterPacketHandlers() = 0;
 
 public:
     // IOCP 매니저 연결 인터페이스
     void AttachIOCPManager(std::shared_ptr<IOCPManager> manager);
     void DetachIOCPManager();
     bool IsIOCPManagerAttached() const noexcept;
-
+    
+    // 패킷 수신 처리 (IOCPManager에서 호출)
+    void OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload);
+    
+    // 엔진 초기화
+    void Initialize();
+    bool IsInitialized() const noexcept;
 
 protected:
+    // 패킷 핸들러 등록 템플릿 함수
+    template<typename T>
+    void RegisterPacketHandler(std::function<void(Session&, const T&)> handler);
 	template<typename T>
     bool SendPacket(Session& session, const T& packet);
     void DisconnectSession(Session* session);
@@ -38,7 +56,6 @@ private:
     }
 };
 
-// 인라인 구현
 inline NetBase::NetBase()
 {
     WSADATA wsaData;
@@ -129,4 +146,52 @@ inline void NetBase::DisconnectSession(Session* session)
     {
         session->DisconnectSession();
     }
+}
+
+inline void NetBase::OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload)
+{
+    auto it = packet_handlers_.find(packet_id);
+    if (it != packet_handlers_.end()) {
+        it->second(*session, payload);  // 등록된 핸들러 실행
+    }
+    else {
+        LOG_WARN("No handler registered for packet ID: %d", packet_id);
+    }
+}
+
+template<typename T>
+void NetBase::RegisterPacketHandler(std::function<void(Session&, const T&)> handler)
+{
+    const std::string type_name = T::descriptor()->full_name();
+    const uint32_t packet_id = fnv1a(type_name.c_str());
+    
+    LOG_DEBUG("Registering packet handler for %s (ID: %d)", type_name.c_str(), packet_id);
+    
+    packet_handlers_[packet_id] = [handler](Session& session, const std::vector<char>& payload)
+    {
+        T message;
+        if (message.ParseFromArray(payload.data(), payload.size()))
+        {
+            handler(session, message);
+        }
+        else
+        {
+            LOG_ERROR("Failed to parse packet for type: %s", T::descriptor()->full_name().c_str());
+        }
+    };
+}
+
+inline void NetBase::Initialize()
+{
+    if (!initialized_) 
+    {
+        RegisterPacketHandlers();
+        initialized_ = true;
+        LOG_DEBUG("NetBase engine initialized successfully");
+    }
+}
+
+inline bool NetBase::IsInitialized() const noexcept
+{
+    return initialized_;
 }

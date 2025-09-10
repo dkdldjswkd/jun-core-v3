@@ -101,6 +101,330 @@ This is a Windows C++ IOCP-based game server framework with the following compon
 - **EchoServer/EchoClient**: Example echo server and client implementations 
 - **Test**: Protobuf integration test project
 
+## 🚀 현재 네트워크 아키텍처 (2025-01 최신)
+
+### 핵심 아키텍처: **공유 IOCP + Engine별 패킷 처리 모델**
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Application Layer                    │
+│  EchoServer │  GameServer  │  EchoClient  │ GameClient  │
+├─────────────────────────────────────────────────────────┤
+│            Engine Layer (NetBase 기반)                 │
+│     Server (다중 세션)     │     Client (단일 세션)     │
+├─────────────────────────────────────────────────────────┤
+│              Network Layer (IOCPManager)                │
+│         순수 I/O 이벤트 처리 + 패킷 조립               │
+├─────────────────────────────────────────────────────────┤
+│                    Session Layer                        │
+│              개별 연결 상태 + IOCount 관리              │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 🎯 **Engine별 패킷 핸들러 시스템** (2025-01 신규)
+
+#### 전역 핸들러 완전 제거
+- ❌ **기존**: `g_direct_packet_handler` (전역 상태, 멀티 엔진 충돌)
+- ✅ **현재**: **Engine별 독립 패킷 핸들러 맵** (완전 분리, 타입 안전)
+
+#### 새로운 패킷 처리 흐름
+```cpp
+[IOCPManager] 패킷 조립 → [NetBase::OnPacketReceived] 엔진별 디스패치 
+→ [RegisteredHandler] 사용자 비즈니스 로직
+```
+
+#### 사용자 코드 패턴
+```cpp
+// EchoServer.h - 사용자는 이것만 구현하면 됨!
+class EchoServer : public Server {
+protected:
+    void RegisterPacketHandlers() override {  // 순수 가상함수 강제 구현
+        RegisterPacketHandler<echo::EchoRequest>([this](Session& session, const echo::EchoRequest& req) {
+            HandleEchoRequest(session, req);  // 비즈니스 로직
+        });
+    }
+    
+    void HandleEchoRequest(Session& session, const echo::EchoRequest& req) {
+        echo::EchoResponse response;
+        response.set_message(req.message());
+        SendPacket(session, response);
+    }
+};
+```
+
+### 🔧 **Two-Phase Construction 패턴** (필수)
+
+#### 표준 초기화 패턴
+```cpp
+// Phase 1: 객체 생성 및 초기화
+EchoServer server;
+server.Initialize();  // 패킷 핸들러 등록 (필수!)
+
+// Phase 2: 리소스 연결 및 시작
+auto iocpManager = IOCPManager::Create().WithWorkerCount(4).Build();
+server.AttachIOCPManager(iocpManager);
+server.StartServer("127.0.0.1", 9090);  // 초기화 검사 통과 후 시작
+```
+
+#### 안전성 보장
+- **컴파일 타임**: `RegisterPacketHandlers()` 구현 안 하면 컴파일 에러
+- **런타임**: `Initialize()` 호출 안 하면 `StartServer()`/`Connect()` 실패
+- **명확한 에러**: "Must call Initialize() before StartServer()!" 메시지
+
+## 🏗️ 클래스별 책임과 역할 정의
+
+### **NetBase** (추상 엔진 기반 클래스)
+**핵심 책임**:
+- 🔧 IOCP Manager 연결 인터페이스 (`AttachIOCPManager`, `DetachIOCPManager`)
+- 📦 Engine별 패킷 핸들러 시스템 관리
+- 🚀 Two-Phase Construction 패턴 구현 (`Initialize()`, `IsInitialized()`)
+- 📤 공통 송신 인터페이스 (`SendPacket<T>` 템플릿)
+
+**설계 원칙**:
+- **추상 클래스**: 순수 가상함수 `RegisterPacketHandlers()` 강제 구현
+- **타입 안전**: 템플릿 기반 패킷 핸들러 등록/실행
+- **Engine 독립성**: 각 엔진별 독립된 패킷 핸들러 맵 보유
+- **Zero Overhead**: 인라인 함수와 템플릿으로 런타임 오버헤드 없음
+
+**금지 사항**:
+- ❌ 직접 인스턴스화 불가 (추상 클래스)
+- ❌ I/O 로직 직접 처리 (IOCPManager에게 위임)
+
+### **IOCPManager** (I/O 이벤트 처리 전담)
+**핵심 책임**:
+- ⚡ **순수 I/O 이벤트 처리**: `GetQueuedCompletionStatus` 루프
+- 📦 **패킷 조립**: `UnifiedPacketHeader` 기반 완전한 패킷 구성
+- 🔄 **비동기 I/O 등록**: `PostAsyncSend`, `PostAsyncReceive`
+- 🎯 **Engine으로 위임**: `NetBase::OnPacketReceived` 호출
+
+**설계 특징**:
+- **Builder 패턴**: `IOCPManager::Create().WithWorkerCount(4).Build()`
+- **RAII 관리**: 자동 리소스 정리 (`HANDLE` 관리)
+- **복사/이동 금지**: 리소스 안전성 보장
+- **Single Responsibility**: 오직 네트워크 I/O만 담당
+
+**처리하지 않는 것**:
+- ❌ 비즈니스 로직 (Engine에게 위임)
+- ❌ 패킷 해석 (바이트 스트림만 조립)
+- ❌ 세션 생명주기 관리 (Session 자체 관리)
+
+### **Server** (서버 엔진)
+**핵심 책임**:
+- 🎧 **Accept 스레드 관리**: 클라이언트 연결 수락
+- 👥 **다중 세션 관리**: Lock-Free 세션 풀 (`LFStack<DWORD>`)
+- 📞 **연결 이벤트 처리**: `OnClientJoin`, `OnClientLeave`
+- 🛡️ **연결 요청 검증**: `OnConnectionRequest` (IP/Port 필터링)
+
+**아키텍처 특징**:
+- **세션 풀링**: 미리 할당된 세션 배열과 인덱스 스택
+- **Lock-Free**: 세션 인덱스 할당/해제에서 뮤텍스 없음
+- **자동 세션 정리**: IOCount 기반 자동 세션 반환
+- **확장성**: 최대 세션 수 동적 설정 가능
+
+### **Client** (클라이언트 엔진) 
+**핵심 책임**:
+- 🔗 **단일 서버 연결**: 하나의 서버에 대한 연결 관리
+- 📡 **연결 상태 관리**: `Connect`, `Disconnect`, `IsConnected`
+- 🎯 **단일 세션 최적화**: 클라이언트 특화 세션 관리
+- 📤 **편의 함수 제공**: 문자열/바이너리 직접 전송 지원
+
+**설계 특징**:
+- **Server와 통일**: 동일한 세션 풀 패턴 사용 (1개 세션으로 최적화)
+- **상태 자동 관리**: 연결/해제 시 자동 세션 정리
+- **편의성**: 개발자 친화적인 전송 API 제공
+
+### **Session** (연결 상태 관리)
+**핵심 책임**:
+- 🔐 **생명주기 관리**: IOCount 기반 자동 해제 시스템
+- 📊 **연결 상태**: 소켓, 버퍼, 타임아웃 관리  
+- 🔄 **I/O 버퍼 관리**: RingBuffer 기반 송수신 버퍼
+- 🏷️ **Engine 연결**: 자신이 속한 Engine 포인터 보유
+
+**🚨 절대 수정 금지 - 핵심 아키텍처**:
+```cpp
+// Session::DecrementIOCount() - 세션 해제 트리거
+__forceinline void DecrementIOCount() noexcept {
+    if (0 == InterlockedDecrement(&io_count_)) {
+        if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0)) {
+            Release();  // 자동 세션 정리
+        }
+    }
+}
+```
+
+**설계 원리**:
+- **IOCount**: 활성 비동기 작업 수 추적 (recv 대기 = IOCount ≥ 1)
+- **이중 보호**: `release_flag_` + `IOCount`로 더블 프리 방지
+- **자동 정리**: IOCount가 0이 되면 해당 스레드에서 세션 해제
+- **Thread-Safe**: 모든 조작이 원자적 연산 기반
+
+### **역할 분리 원칙**
+
+#### **Network Layer** (IOCPManager)
+- ✅ 소켓 I/O 이벤트 처리
+- ✅ 패킷 바이트 스트림 조립
+- ✅ 비동기 I/O 등록/완료
+- ❌ 패킷 내용 해석 금지
+- ❌ 비즈니스 로직 처리 금지
+
+#### **Engine Layer** (NetBase, Server, Client)  
+- ✅ 패킷 핸들러 등록/실행
+- ✅ 비즈니스 로직 처리
+- ✅ 세션 생명주기 이벤트
+- ❌ 직접 I/O 처리 금지
+- ❌ 소켓 레벨 조작 금지
+
+#### **Session Layer** (Session)
+- ✅ 개별 연결 상태 관리
+- ✅ 자동 생명주기 관리
+- ✅ I/O 버퍼 관리
+- ❌ 패킷 해석 금지
+- ❌ 비즈니스 로직 금지
+
+## 📋 개발 정책 및 규칙 (2025-01)
+
+### 🚨 **Two-Phase Construction 패턴 필수 적용**
+
+#### 모든 Engine은 반드시 이 순서를 따를 것
+```cpp
+// ✅ 올바른 사용법
+Engine engine;
+engine.Initialize();        // Phase 1: 패킷 핸들러 등록
+engine.AttachIOCPManager(); // Phase 2: 리소스 연결
+engine.Start();             // Phase 3: 실제 시작
+
+// ❌ 잘못된 사용법 - 런타임 에러 발생
+Engine engine;
+engine.Start();  // "Must call Initialize() before Start()!" 에러
+```
+
+#### 사용자 구현 강제사항
+- **필수 구현**: `RegisterPacketHandlers()` 순수 가상함수
+- **컴파일 에러**: 구현하지 않으면 빌드 실패
+- **런타임 안전**: 초기화 없이 시작 시도하면 명확한 에러 메시지
+
+### 🔒 **핵심 세션 생명주기 관리 (절대 수정 금지)**
+
+#### 수정 금지 코드 영역
+```cpp
+// Session::DecrementIOCount() - JunCore 핵심 아키텍처
+__forceinline void DecrementIOCount() noexcept {
+    if (0 == InterlockedDecrement(&io_count_)) {
+        if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0)) {
+            Release();  // 유일한 해제 지점
+        }
+    }
+}
+
+// IOCPManager::RunWorkerThread() - 필수 IOCount 감소
+// 모든 IOCP 완료 시 반드시 호출
+session->DecrementIOCount();
+```
+
+#### 수정 금지 이유
+- **Thread Safety**: 정교한 원자적 연산 기반 구현
+- **Memory Safety**: 댕글링 포인터 및 더블 프리 완전 방지  
+- **Performance**: Lock-free 아키텍처로 고성능 보장
+- **Architecture Core**: 전체 네트워크 시스템의 근간
+
+### 🏗️ **신규 엔진 생성 시 필수 체크리스트**
+
+#### 1. NetBase 상속 및 필수 구현
+```cpp
+class NewGameServer : public Server {
+protected:
+    void RegisterPacketHandlers() override {  // 필수!
+        RegisterPacketHandler<LoginRequest>([this](Session& s, const LoginRequest& req) {
+            HandleLogin(s, req);
+        });
+        RegisterPacketHandler<GameCommand>([this](Session& s, const GameCommand& cmd) {
+            HandleGameCommand(s, cmd);  
+        });
+    }
+};
+```
+
+#### 2. EchoServer/EchoClient에서 검증 필수
+- **변경된 코어 적용**: 새로운 네트워크 아키텍처 사용
+- **컴파일 확인**: 모든 프로젝트 오류 없이 빌드
+- **런타임 테스트**: 실제 서버-클라이언트 통신 확인
+- **브레이크포인트 검증**: 새 코드 경로가 실제 실행되는지 확인
+- **성능 비교**: 기존 대비 성능 저하 없는지 확인
+
+#### 3. 마이그레이션 단계별 접근
+- **Phase 1**: 새 엔진 클래스 작성 및 컴파일 확인
+- **Phase 2**: EchoServer/Client를 새 구조로 업데이트  
+- **Phase 3**: 기존 기능 동작 확인 (패킷 송수신)
+- **Phase 4**: 성능 및 안정성 검증
+
+### ⚡ **성능 최적화 원칙**
+
+#### Zero Runtime Overhead 유지
+- **템플릿 기반**: 모든 공통화가 컴파일 타임에 해결됨
+- **인라인 함수**: 함수 호출 오버헤드 제거
+- **가상함수 최소화**: 성능 중요 경로에서는 피할 것
+- **캐시 친화적**: `alignas(64)` 적용으로 메모리 레이아웃 최적화
+
+#### Lock-Free 원칙 준수
+- **원자적 연산**: `InterlockedXXX` 함수 사용
+- **뮤텍스 금지**: 고성능 경로에서 뮤텍스 사용 금지  
+- **메모리 배리어**: 필요시 적절한 메모리 배리어 사용
+- **ABA 방지**: 메모리 스탬핑 기법 활용
+
+### 🎯 **패킷 핸들러 설계 원칙**
+
+#### 타입 안전성 보장
+```cpp
+// ✅ 권장: 강타입 패킷 핸들러
+RegisterPacketHandler<LoginRequest>([this](Session& session, const LoginRequest& req) {
+    // 컴파일 타임에 타입 체크됨
+    HandleLogin(session, req);  
+});
+
+// ❌ 금지: 바이트 배열 직접 처리
+RegisterRawHandler(PACKET_ID_LOGIN, [](Session& session, const std::vector<char>& data) {
+    // 런타임 에러 가능성 높음
+});
+```
+
+#### Protobuf 패킷 ID 자동 생성
+- **FNV-1a 해시**: Protobuf 타입명으로 자동 패킷 ID 생성
+- **충돌 방지**: 패키지명 포함으로 네임스페이스 분리  
+- **일관성**: 서버/클라이언트 간 동일한 ID 보장
+
+### 🔧 **개발 도구 및 빌드 정책**
+
+#### 필수 빌드 명령어
+```bash
+# 에러만 표시하는 빠른 빌드 확인
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" JunCore.sln /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly
+
+# 작업 완료 후 반드시 전체 빌드 확인
+"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe" JunCore.sln /p:Configuration=Debug /p:Platform=x64
+```
+
+#### Zero Warnings 정책
+- **모든 경고 해결**: 컴파일 경고 0개 유지  
+- **경고 무시 금지**: 경고는 반드시 근본적으로 해결
+- **새 파일 생성 시**: UTF-8 BOM 인코딩 사용
+
+#### 프로젝트 파일 관리
+- **신규 파일 생성 시**: 반드시 해당 `.vcxproj` 파일에 추가
+- **필터 파일 업데이트**: `.vcxproj.filters`도 함께 업데이트
+- **빌드 전 확인**: 새 파일이 프로젝트에 포함되었는지 검증
+
+### 📚 **문서화 규칙**
+
+#### CLAUDE.md 업데이트 의무
+- **아키텍처 변경 시**: 즉시 이 문서 업데이트
+- **새 정책 추가 시**: 명확한 예시와 함께 문서화
+- **성능 최적화 시**: 설계 원칙과 벤치마크 결과 기록
+
+#### 주석 정책
+- **이모지 금지**: 코드 주석에 이모지 사용 금지
+- **한글 주석**: 비즈니스 로직은 한글로 설명  
+- **영문 주석**: 시스템 아키텍처는 영문으로 설명
+
 ### Key Architecture Patterns
 
 #### Session Management
@@ -189,11 +513,51 @@ JunCommon is organized using **Boost-style** folder structure for better maintai
 
 ### Development Notes
 
-#### Adding New Protocol Messages
-1. Create or modify `.proto` files in the appropriate project directory
-2. Run `./generate_protobuf.bat` to generate C++ code
-3. Add generated `.pb.h` and `.pb.cc` files to the Visual Studio project
-4. Include the header and use the generated classes
+#### Adding New Protocol Messages (2025-01 신규 방식)
+1. **Protobuf 메시지 정의**:
+   ```protobuf
+   // game_messages.proto
+   syntax = "proto3";
+   package game;
+   
+   message LoginRequest {
+       string username = 1;
+       string password = 2;
+   }
+   
+   message LoginResponse {
+       bool success = 1;
+       string message = 2;
+   }
+   ```
+
+2. **Protobuf 코드 생성**:
+   ```bash
+   ./generate_protobuf.bat  # C++ 코드 자동 생성
+   ```
+
+3. **패킷 핸들러 등록** (Engine에서):
+   ```cpp
+   // GameServer.h
+   class GameServer : public Server {
+   protected:
+       void RegisterPacketHandlers() override {
+           RegisterPacketHandler<game::LoginRequest>([this](Session& session, const game::LoginRequest& req) {
+               HandleLogin(session, req);  // 비즈니스 로직 구현
+           });
+       }
+       
+   private:
+       void HandleLogin(Session& session, const game::LoginRequest& req) {
+           game::LoginResponse response;
+           response.set_success(ValidateLogin(req.username(), req.password()));
+           SendPacket(session, response);
+       }
+   };
+   ```
+
+4. **패킷 ID 자동 생성**: FNV-1a 해시로 `game.LoginRequest` → 패킷 ID 자동 변환
+5. **타입 안전성**: 컴파일 타임에 타입 체크 및 자동 직렬화/역직렬화
 
 #### Configuration System
 - Uses `Parser` class to load configuration from text files (e.g., `ServerConfig.ini`)

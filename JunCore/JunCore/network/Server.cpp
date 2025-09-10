@@ -7,6 +7,13 @@
 
 bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
 {
+    // 초기화 검사 (패킷 핸들러 등록 여부)
+    if (!IsInitialized())
+    {
+        LOG_ERROR("Must call Initialize() before StartServer()!");
+        return false;
+    }
+    
     LOG_ERROR_RETURN(IsIOCPManagerAttached(), false, "IOCP Manager is not attached!");
     
     // 이미 이미 서버 가동되었는지 체크

@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "../JunCore/network/Client.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
-#include "../JunCore/protocol/DirectProtobuf.h"
 #include "echo_message.pb.h"
 
 class EchoClient : public Client 
@@ -17,4 +16,7 @@ public:
 protected:
 	void OnConnect(Session* session) override;
 	void OnDisconnect() override;
+	
+	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
+	void RegisterPacketHandlers() override;
 };
