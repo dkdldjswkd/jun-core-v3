@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/Server.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
-#include "../JunCore/protocol/DirectProtobuf.h"  // g_direct_packet_handler용
+#include "../JunCore/protocol/DirectProtobuf.h"
 #include "echo_message.pb.h"
 
 class EchoServer : public Server 
@@ -20,9 +20,8 @@ protected:
 	void OnServerStop() override;
 
 private:
-	// PacketTest.cpp 방식: 현재 처리 중인 세션 저장
 	Session* currentHandlingSession_ = nullptr;
 	
 	// 패킷별 핸들러 함수들 (PacketTest.cpp의 람다 대신 멤버 함수)
-	void HandleEchoRequest(const echo::EchoRequest& request);
+	void HandleEchoRequest(Session& _session, const echo::EchoRequest& request);
 };

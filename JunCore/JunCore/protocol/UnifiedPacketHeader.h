@@ -2,27 +2,12 @@
 #include "../core/base.h"
 #include <cstdint>
 
-//=============================================================================
-// JunCore 통합 패킷 헤더 시스템
-// 
-// 기존의 여러 패킷 헤더들을 하나로 통일하여 코드 일관성과 유지보수성 향상
-// - message.h의 LanHeader/NetHeader
-// - ProtobufPacket.h의 ProtobufHeader  
-// - DirectProtobuf.h의 DirectPacketHeader
-// - SecureProtocol.h의 BasePacketHeader
-//
-// 모든 패킷은 이 헤더를 사용하여 통일된 처리 가능
-//=============================================================================
-
 #pragma pack(push, 1)
-
-// JunCore 표준 패킷 헤더 (8바이트)
 struct UnifiedPacketHeader
 {
     uint32_t length;        // 전체 패킷 길이 (헤더 + 페이로드)
-    uint32_t packet_id;     // 패킷 식별자 (FNV-1a 해시 또는 사용자 정의)
+    uint32_t packet_id;     // 패킷 식별자 (protobuf name FNV-1a 해시)
 };
-
 #pragma pack(pop)
 
 // 헤더 크기 상수

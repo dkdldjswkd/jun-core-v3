@@ -1,5 +1,7 @@
 ﻿#include "IOCPManager.h"
 #include "NetBase.h"
+#include "Server.h"
+#include "Client.h"
 #include "../protocol/UnifiedPacketHeader.h"
 #include "../protocol/DirectProtobuf.h"
 
@@ -107,7 +109,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         // 패킷 Payload 추출 (헤더 이후 부분)
         std::vector<char> payload(packet.begin() + UNIFIED_HEADER_SIZE, packet.end());
 
-        g_direct_packet_handler[header->packet_id](payload);
+        g_direct_packet_handler[header->packet_id](*session, payload);
 	}
 
 	if (!session->disconnect_flag_)
@@ -138,11 +140,9 @@ void IOCPManager::HandleSendComplete(Session* session)
 
 void IOCPManager::HandleSessionDisconnect(Session* session)
 {
-	if (NetBase* engine = session->GetEngine())
-	{
-		engine->OnClientLeave(session);
-	}
-
+	// NetBase에 공통 disconnect 콜백 인터페이스 추가하는 것이 좋겠지만
+	// 일단 기존 방식대로 처리 - 각 엔진에서 자체적으로 처리하도록
+	
 	session->DisconnectSession();
 }
 
@@ -208,7 +208,8 @@ void IOCPManager::PostAsyncSend(Session* session)
     }
 
     // 보낼 것이 없으면 실패
-    if (preparedCount == 0) {
+    if (preparedCount == 0) 
+    {
         HandleSessionDisconnect(session);
         return;
     }

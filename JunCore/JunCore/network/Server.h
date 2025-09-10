@@ -25,17 +25,19 @@ public:
     //------------------------------
     bool StartServer(const char* bindIP, WORD port, DWORD maxSessions = 1000);
     void StopServer();
+    bool IsServerRunning() const noexcept { return running.load(); }
 
     //------------------------------
     // 모니터링 인터페이스
     //------------------------------
     DWORD GetCurrentSessionCount() const noexcept { return currentSessionCount.load(); }
-    bool IsServerRunning() const noexcept { return running.load(); }
 
 protected:
     //------------------------------
     // 서버 전용 가상함수 - 사용자가 재정의
     //------------------------------
+	virtual void OnClientJoin(Session* session) = 0;
+	virtual void OnClientLeave(Session* session) = 0;
     virtual bool OnConnectionRequest(in_addr clientIP, WORD clientPort) { return true; }
     virtual void OnServerStart() {}
     virtual void OnServerStop() {}
@@ -54,7 +56,7 @@ private:
     // 세션 관리
     std::vector<Session> sessions;
     LFStack<DWORD> sessionIndexStack;
-    std::atomic<DWORD> currentSessionCount{0};
+    std::atomic<DWORD> currentSessionCount = 0;
     
     //------------------------------
     // 내부 메서드들

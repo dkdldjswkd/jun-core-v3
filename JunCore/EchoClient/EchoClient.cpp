@@ -4,16 +4,16 @@
 
 EchoClient::EchoClient() : Client()
 {
-	RegisterDirectPacketHandler<echo::EchoResponse>([this](const echo::EchoResponse& response) {
+	RegisterDirectPacketHandler<echo::EchoResponse>([this](Session& session, const echo::EchoResponse& response) {
 		std::cout << "[CLIENT] Received EchoResponse: " << response.message() << " (timestamp: " << response.timestamp() << ")" << std::endl;
-		});
+	});
 }
 
 EchoClient::~EchoClient()
 {
 }
 
-void EchoClient::OnClientJoin(Session* session)
+void EchoClient::OnConnect(Session* session)
 {
 	LOG_INFO("Connected to server successfully! Session ID: %lld", session->session_id_.sessionId);
 }
@@ -35,12 +35,10 @@ bool EchoClient::SendEchoRequest(const std::string& message)
 	echo::EchoRequest request;
 	request.set_message(message);
 
-	std::vector<char> packet_data = SerializeUnifiedPacket(request);
-
 	std::cout << "[CLIENT] Sending EchoRequest: " << message << std::endl;
 
-	// 직접 raw 데이터 전송 (PacketBuffer 없이)
-	bool success = SendRawData(GetCurrentSession(), packet_data);
+	// SendPacket으로 직접 protobuf 메시지 전송
+	bool success = NetBase::SendPacket(*GetCurrentSession(), request);
 	if (!success) {
 		std::cout << "[CLIENT] Failed to send packet" << std::endl;
 	}

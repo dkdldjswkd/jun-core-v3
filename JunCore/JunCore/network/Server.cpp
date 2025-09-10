@@ -99,7 +99,6 @@ void Server::StopServer()
     OnServerStop();
     
     LOG_INFO("Server stopped successfully");
-    printf("Server stopped\n");
 }
 
 void Server::AcceptThreadFunc()

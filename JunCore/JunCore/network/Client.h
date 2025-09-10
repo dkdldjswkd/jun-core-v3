@@ -2,7 +2,6 @@
 #include "NetBase.h"
 #include "Session.h"
 #include <atomic>
-#include <boost/scope_exit.hpp>
 #include <vector>
 #include "../../JunCommon/container/LFStack.h"
 
@@ -43,11 +42,9 @@ protected:
     //------------------------------
     // 클라이언트 전용 가상함수 - 사용자가 재정의
     //------------------------------
-    virtual void OnDisconnect() {}
+    virtual void OnConnect(Session* session) = 0;
+    virtual void OnDisconnect() = 0;
 
-    // NetBase의 OnClientJoin/Leave를 내부적으로 사용 (final 제거)
-    void OnClientJoin(Session* session) override;
-    void OnClientLeave(Session* session) override;
 
 private:
     //------------------------------
@@ -146,7 +143,7 @@ inline bool Client::Connect(const char* serverIP, WORD port)
         return false;
     }
 
-    OnClientJoin(currentSession);
+    OnConnect(currentSession);
 	currentSession->DecrementIOCount();
     return true;
 }
@@ -184,21 +181,23 @@ inline bool Client::SendPacket(const char* message)
     }
     
     int messageLen = (int)strlen(message);
-    std::vector<char> packet_data(message, message + messageLen);
+    std::vector<char>* packet_data = new std::vector<char>(message, message + messageLen);
     
     printf("[EchoClient][SEND] Sending message: '%s' (len=%d)\n", message, messageLen);
     
-    bool result = SendRawData(currentSession, packet_data);
-    if (result) 
+    // SendRawData 로직을 직접 구현 (SendPacket template과 동일한 방식)
+    currentSession->send_q_.Enqueue(packet_data);
+    
+    if (InterlockedExchange8((char*)&currentSession->send_flag_, true) == false) 
     {
-        printf("[EchoClient][SEND] SendPacket returned success\n");
-    } 
-    else 
-    {
-        printf("[EchoClient][SEND] SendPacket returned failure\n");
+        if (iocpManager) 
+        {
+            iocpManager->PostAsyncSend(currentSession);
+        }
     }
     
-    return result;
+    printf("[EchoClient][SEND] SendPacket completed\n");
+    return true;
 }
 
 inline bool Client::SendPacket(const void* data, int dataSize)
@@ -207,21 +206,22 @@ inline bool Client::SendPacket(const void* data, int dataSize)
         return false;
     }
     
-    std::vector<char> packet_data((const char*)data, (const char*)data + dataSize);
+    std::vector<char>* packet_data = new std::vector<char>((const char*)data, (const char*)data + dataSize);
     
-    return SendRawData(currentSession, packet_data);
+    // SendRawData 로직을 직접 구현 (SendPacket template과 동일한 방식)
+    currentSession->send_q_.Enqueue(packet_data);
+    
+    if (InterlockedExchange8((char*)&currentSession->send_flag_, true) == false) 
+    {
+        if (iocpManager) 
+        {
+            iocpManager->PostAsyncSend(currentSession);
+        }
+    }
+    
+    return true;
 }
 
-inline void Client::OnClientJoin(Session* session)
-{
-    LOG_DEBUG("OnClientJoin called for session %lld", session->session_id_.sessionId);
-}
-
-inline void Client::OnClientLeave(Session* session)
-{
-    LOG_DEBUG("OnClientLeave called for session %lld", session->session_id_.sessionId);
-    // Disconnect()에서 OnDisconnect()가 호출될 것임
-}
 
 inline bool Client::RegisterToIOCP(Session* session)
 {

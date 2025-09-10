@@ -1,12 +1,14 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
+#include "../core/base.h"
 #include "Session.h"
 #include "IOCPManager.h"
 #include <memory>
 #include <iostream>
+#include <string>
+#include <vector>
+#include "../protocol/UnifiedPacketHeader.h"
 
-// NetBase - 네트워크 엔진 베이스 클래스
-// 단일 책임: 패킷 처리와 세션 관리
 class NetBase
 {
 public:
@@ -14,12 +16,7 @@ public:
     virtual ~NetBase();
 
 protected:
-    // IOCP 매니저 참조
     std::shared_ptr<IOCPManager> iocpManager;
-
-public:
-    virtual void OnClientJoin(Session* session) = 0;
-    virtual void OnClientLeave(Session* session) = 0;
 
 public:
     // IOCP 매니저 연결 인터페이스
@@ -27,9 +24,10 @@ public:
     void DetachIOCPManager();
     bool IsIOCPManagerAttached() const noexcept;
 
+
 protected:
-    bool SendRawData(Session* session, const char* data, size_t dataSize);
-    bool SendRawData(Session* session, const std::vector<char>& data);
+	template<typename T>
+    bool SendPacket(Session& session, const T& packet);
     void DisconnectSession(Session* session);
 
 private:
@@ -76,45 +74,59 @@ inline bool NetBase::IsIOCPManagerAttached() const noexcept
     return iocpManager != nullptr && iocpManager->IsValid();
 }
 
-inline bool NetBase::SendRawData(Session* session, const std::vector<char>& data)
+template<typename T>
+bool NetBase::SendPacket(Session& session, const T& packet)
 {
-    if (!IsSessionValid(session) || data.empty()) {
+    // 세션 유효성 검사
+    if (!IsSessionValid(&session)) 
+    {
         return false;
     }
     
-    std::cout << "[SEND_RAW] Queuing " << data.size() << " bytes for session " 
-              << (session->session_id_.SESSION_UNIQUE & 0xFFFF) << std::endl;
+    // 1. 프로토버프 메시지 직렬화 크기 계산
+    size_t payload_size = packet.ByteSizeLong();
+    size_t total_size   = UNIFIED_HEADER_SIZE + payload_size;
     
-    // vector<char>를 동적 할당해서 송신 큐에 추가
-    std::vector<char>* packet_data = new std::vector<char>(data);
-    session->send_q_.Enqueue(packet_data);
+    // 2. 패킷 ID 생성 (프로토버프 타입명 해시)
+    const std::string& type_name = packet.GetDescriptor()->full_name();
+    uint32_t packet_id = fnv1a(type_name.c_str());
     
-    // Send flag 체크 후 비동기 송신 시작
-    if (InterlockedExchange8((char*)&session->send_flag_, true) == false) {
-        // IOCPManager를 통한 송신
-        if (iocpManager) 
-        {
-            iocpManager->PostAsyncSend(session);
-        }
+    // 3. 패킷 버퍼 생성
+    std::vector<char>* packet_data = new std::vector<char>(total_size);
+    
+    // 4. 헤더 설정
+    UnifiedPacketHeader* header = reinterpret_cast<UnifiedPacketHeader*>(packet_data->data());
+    header->length = static_cast<uint32_t>(total_size);
+    header->packet_id = packet_id;
+    
+    // 5. 페이로드 직렬화
+    if (!packet.SerializeToArray(packet_data->data() + sizeof(UnifiedPacketHeader), payload_size))
+    {
+        std::cout << "[SEND_PACKET] Failed to serialize packet" << std::endl;
+        return false;
     }
     
-    return true;
+    std::cout << "[SEND_PACKET] Sending packet ID: " << packet_id << " Size: " << total_size << " bytes, session : " << (session.session_id_.SESSION_UNIQUE & 0xFFFF) << std::endl;
+    
+	// 6. 송신 큐에 추가
+	session.send_q_.Enqueue(packet_data);
+
+	// 7. Send flag에 따른 패킷 송신
+	if (InterlockedExchange8((char*)&session.send_flag_, true) == false) 
+    {
+		if (iocpManager)
+		{
+			iocpManager->PostAsyncSend(&session);
+		}
+	}
+
+	return true;
 }
 
 inline void NetBase::DisconnectSession(Session* session)
 {
-    if (IsSessionValid(session)) {
+    if (IsSessionValid(session)) 
+    {
         session->DisconnectSession();
     }
-}
-
-inline bool NetBase::SendRawData(Session* session, const char* data, size_t dataSize)
-{
-    if (!IsSessionValid(session) || !data || dataSize == 0) {
-        return false;
-    }
-    
-    // const char*를 vector<char>로 변환 후 전송
-    std::vector<char> packet_data(data, data + dataSize);
-    return SendRawData(session, packet_data);
 }

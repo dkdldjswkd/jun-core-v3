@@ -15,6 +15,6 @@ public:
 	bool SendEchoRequest(const std::string& message);
 
 protected:
-	void OnClientJoin(Session* session) override;
+	void OnConnect(Session* session) override;
 	void OnDisconnect() override;
 };
