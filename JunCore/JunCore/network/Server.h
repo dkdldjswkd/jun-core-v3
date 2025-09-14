@@ -12,10 +12,9 @@
 class Server : public NetBase
 {
 public:
-    Server();
+    Server(std::shared_ptr<IOCPManager> manager);
     virtual ~Server();
 
-    // 복사/이동 금지
     Server(const Server&) = delete;
     Server& operator=(const Server&) = delete;
 
@@ -73,7 +72,7 @@ private:
 // 인라인 구현
 //------------------------------
 
-inline Server::Server() : NetBase()
+inline Server::Server(std::shared_ptr<IOCPManager> manager) : NetBase(manager)
 {
 }
 

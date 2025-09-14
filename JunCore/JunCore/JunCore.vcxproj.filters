@@ -10,6 +10,9 @@
     <Filter Include="core">
       <UniqueIdentifier>{f2e94480-91bc-4a56-9f5b-9e42c7c7c07e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{5ab9afe6-cae2-4541-824a-be8572be4eeb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="network\IOCPManager.cpp">
@@ -22,9 +25,6 @@
       <Filter>network</Filter>
     </ClCompile>
     <ClCompile Include="protocol\handshake.pb.cc">
-      <Filter>protocol</Filter>
-    </ClCompile>
-    <ClCompile Include="protocol\DirectProtobuf.cpp">
       <Filter>protocol</Filter>
     </ClCompile>
   </ItemGroup>
@@ -56,11 +56,11 @@
     <ClInclude Include="network\Client.h">
       <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="protocol\DirectProtobuf.h">
-      <Filter>protocol</Filter>
-    </ClInclude>
     <ClInclude Include="protocol\UnifiedPacketHeader.h">
       <Filter>protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="log.h">
+      <Filter>util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

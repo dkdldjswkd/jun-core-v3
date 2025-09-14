@@ -23,11 +23,11 @@
     <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="network\Session.cpp" />
     <ClCompile Include="protocol\handshake.pb.cc" />
-    <ClCompile Include="protocol\DirectProtobuf.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h" />
     <ClInclude Include="core\WindowsIncludes.h" />
+    <ClInclude Include="log.h" />
     <ClInclude Include="network\IOCPManager.h" />
     <ClInclude Include="network\NetBase.h" />
     <ClInclude Include="network\Server.h" />
@@ -35,8 +35,8 @@
     <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />
     <ClInclude Include="protocol\UnifiedPacketHeader.h" />
-    <ClInclude Include="protocol\DirectProtobuf.h" />
     <ClInclude Include="network\Session.h" />
+    <ClInclude Include="network\WSAInitializer.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JunCommon\JunCommon.vcxproj">

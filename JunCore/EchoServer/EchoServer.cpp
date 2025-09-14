@@ -1,7 +1,7 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "EchoServer.h"
 
-EchoServer::EchoServer() : Server()
+EchoServer::EchoServer(std::shared_ptr<IOCPManager> manager) : Server(manager)
 {
 }
 

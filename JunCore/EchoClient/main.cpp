@@ -11,15 +11,12 @@ int main()
 {
 	try
 	{
-		std::unique_ptr<IOCPManager> iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
+		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
 		LOG_ERROR_RETURN(iocpManager->IsValid(), -1, "Failed to create IOCPManager for client");
 
-		EchoClient client;
+		EchoClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 		
-		// 엔진 초기화 (패킷 핸들러 등록)
 		client.Initialize();
-		
-		client.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 		LOG_ERROR_RETURN(client.Connect("127.0.0.1", 7777), -1, "Failed to connect to server");
 
 		Sleep(1000);
@@ -53,7 +50,6 @@ int main()
 
 		cout << "클라이언트를 종료합니다..." << endl;
 		client.Disconnect();
-		client.DetachIOCPManager();
 		cout << "클라이언트가 종료되었습니다." << endl;
 	}
 	catch (const std::exception& e)

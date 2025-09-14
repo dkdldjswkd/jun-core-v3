@@ -9,6 +9,7 @@ void TestRSA();
 void RunHandshakeSimulation();
 int packet_test();
 void RunJobQueueTests();
+void RunOnceInitializerTests();
 
 void ShowMainMenu()
 {
@@ -22,10 +23,11 @@ void ShowMainMenu()
     std::cout << "  4. Handshake Simulation Test" << std::endl;
     std::cout << "  5. Packet Test" << std::endl;
     std::cout << "  6. JobQueue/ThreadPool Test" << std::endl;
-    std::cout << "  7. Run All Tests" << std::endl;
+    std::cout << "  7. OnceInitializer Test" << std::endl;
+    std::cout << "  8. Run All Tests" << std::endl;
     std::cout << "  0. Exit" << std::endl;
     std::cout << "========================================" << std::endl;
-    std::cout << "Enter your choice (0-7): ";
+    std::cout << "Enter your choice (0-8): ";
 }
 
 void ClearInputBuffer()
@@ -94,6 +96,12 @@ int main()
                 break;
                 
             case 7:
+                std::cout << "\n[RUNNING] OnceInitializer Test\n" << std::endl;
+                RunOnceInitializerTests();
+                PressAnyKeyToContinue();
+                break;
+                
+            case 8:
                 std::cout << "\n[RUNNING] All Tests\n" << std::endl;
                 
                 std::cout << ">>> Starting Protobuf Test..." << std::endl;
@@ -114,6 +122,9 @@ int main()
                 std::cout << "\n>>> Starting JobQueue/ThreadPool Test..." << std::endl;
                 RunJobQueueTests();
                 
+                std::cout << "\n>>> Starting OnceInitializer Test..." << std::endl;
+                RunOnceInitializerTests();
+                
                 std::cout << "\n=== All Tests Complete ===" << std::endl;
                 PressAnyKeyToContinue();
                 break;
@@ -124,7 +135,7 @@ int main()
                 break;
                 
             default:
-                std::cout << "\nInvalid choice! Please select 0-7.\n" << std::endl;
+                std::cout << "\nInvalid choice! Please select 0-8.\n" << std::endl;
                 break;
         }
     }

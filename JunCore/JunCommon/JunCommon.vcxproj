@@ -162,6 +162,8 @@
     <ClInclude Include="pool\LFObjectPool.h" />
     <ClInclude Include="pool\LFObjectPoolTLS.h" />
     <ClInclude Include="pool\ObjectPool.h" />
+    <ClInclude Include="synchronization\OnceInitializer.h" />
+    <ClInclude Include="synchronization\OnceInitializerPolicies.h" />
     <ClInclude Include="synchronization\RecursiveLock.h" />
     <ClInclude Include="system\CrashDump.h" />
     <ClInclude Include="timer\MachineCpuMonitor.h" />

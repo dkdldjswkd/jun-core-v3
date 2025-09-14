@@ -171,6 +171,7 @@
     <ClCompile Include="RSAExample.cpp" />
     <ClCompile Include="HandshakeExample.cpp" />
     <ClCompile Include="JobQueueTest.cpp" />
+    <ClCompile Include="OnceInitializerTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="game_message.proto" />

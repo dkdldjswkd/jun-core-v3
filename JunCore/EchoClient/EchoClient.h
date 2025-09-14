@@ -6,7 +6,7 @@
 class EchoClient : public Client 
 {
 public:
-	EchoClient();
+	EchoClient(std::shared_ptr<IOCPManager> manager);
 	~EchoClient();
 
 public:

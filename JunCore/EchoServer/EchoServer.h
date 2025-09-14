@@ -6,7 +6,7 @@
 class EchoServer : public Server 
 {
 public:
-	EchoServer();
+	EchoServer(std::shared_ptr<IOCPManager> manager);
 	~EchoServer();
 
 protected:

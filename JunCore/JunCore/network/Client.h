@@ -12,7 +12,7 @@
 class Client : public NetBase
 {
 public:
-    Client();
+    Client(std::shared_ptr<IOCPManager> manager);
     virtual ~Client();
 
     // 복사/이동 금지
@@ -67,7 +67,7 @@ private:
 // 인라인 구현
 //------------------------------
 
-inline Client::Client() : NetBase()
+inline Client::Client(std::shared_ptr<IOCPManager> manager) : NetBase(manager)
 {
     InitializeSessionPool(1);  // 1개 세션으로 풀 초기화
 }
@@ -88,7 +88,6 @@ inline bool Client::Connect(const char* serverIP, WORD port)
     }
     
     LOG_WARN_RETURN(currentSession == nullptr, false, "Client is already connected!");
-	LOG_ERROR_RETURN(IsIOCPManagerAttached(), false, "IOCP Manager is not attached!");
 
 	currentSession = AllocateSession();
 	{

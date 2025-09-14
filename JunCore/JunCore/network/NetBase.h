@@ -3,6 +3,7 @@
 #include "../core/base.h"
 #include "Session.h"
 #include "IOCPManager.h"
+#include "WSAInitializer.h"
 #include <memory>
 #include <iostream>
 #include <string>
@@ -14,12 +15,11 @@
 class NetBase
 {
 public:
-    NetBase();
+    NetBase(std::shared_ptr<IOCPManager> manager);
     virtual ~NetBase();
 
 protected:
     std::shared_ptr<IOCPManager> iocpManager;
-    
     std::unordered_map<uint32_t, std::function<void(Session&, const std::vector<char>&)>> packet_handlers_;
     
     bool initialized_ = false;
@@ -28,11 +28,6 @@ protected:
     virtual void RegisterPacketHandlers() = 0;
 
 public:
-    // IOCP 매니저 연결 인터페이스
-    void AttachIOCPManager(std::shared_ptr<IOCPManager> manager);
-    void DetachIOCPManager();
-    bool IsIOCPManagerAttached() const noexcept;
-    
     // 패킷 수신 처리 (IOCPManager에서 호출)
     void OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload);
     
@@ -56,39 +51,23 @@ private:
     }
 };
 
-inline NetBase::NetBase()
+inline NetBase::NetBase(std::shared_ptr<IOCPManager> manager) : iocpManager(manager)
 {
-    WSADATA wsaData;
-    int wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-    if (0 != wsaResult) 
+    if (!manager) 
     {
-        printf("WSAStartup failed with error: %d\n", wsaResult);
+        throw std::invalid_argument("IOCPManager cannot be null");
+    }
+    
+    if (!WSAInitializer::Initialize()) 
+    {
         throw std::runtime_error("WSAStartup_ERROR");
     }
 }
 
 inline NetBase::~NetBase()
 {
-    DetachIOCPManager();
-    WSACleanup();
-}
-
-inline void NetBase::AttachIOCPManager(std::shared_ptr<IOCPManager> manager)
-{
-    iocpManager = manager;
-}
-
-inline void NetBase::DetachIOCPManager()
-{
-    if (iocpManager) 
-    {
-        iocpManager.reset();
-    }
-}
-
-inline bool NetBase::IsIOCPManagerAttached() const noexcept
-{
-    return iocpManager != nullptr && iocpManager->IsValid();
+    iocpManager.reset();
+    WSAInitializer::Cleanup();
 }
 
 template<typename T>

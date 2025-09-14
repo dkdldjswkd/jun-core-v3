@@ -11,7 +11,7 @@ int main()
 {
 	try
 	{
-		std::unique_ptr<IOCPManager> iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
+		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
 		
 		if (!iocpManager->IsValid()) 
 		{
@@ -19,12 +19,8 @@ int main()
 			return -1;
 		}
 
-		EchoServer echoServer;
-		
-		// 엔진 초기화 (패킷 핸들러 등록)
+		EchoServer echoServer(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 		echoServer.Initialize();
-		
-		echoServer.AttachIOCPManager(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 
 		if (echoServer.StartServer("0.0.0.0"/*IP*/, 7777/*Port*/, 1000 /*Max session*/))
 		{
@@ -42,7 +38,6 @@ int main()
 		}
 
 		echoServer.StopServer();
-		echoServer.DetachIOCPManager();
 	}
 	catch (const std::exception& e)
 	{

@@ -2,7 +2,7 @@
 #include "EchoClient.h"
 #include <iostream>
 
-EchoClient::EchoClient() : Client()
+EchoClient::EchoClient(std::shared_ptr<IOCPManager> manager) : Client(manager)
 {
 }
 
