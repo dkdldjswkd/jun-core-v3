@@ -102,21 +102,10 @@ bool NetBase::SendPacket(Session& session, const T& packet)
         return false;
     }
     
-    std::cout << "[SEND_PACKET] Sending packet ID: " << packet_id << " Size: " << total_size << " bytes, session : " << (session.session_id_.SESSION_UNIQUE & 0xFFFF) << std::endl;
-    
-	// 6. 송신 큐에 추가
-	session.send_q_.Enqueue(packet_data);
+	LOG_DEBUG("[SEND_PACKET] Sending packet ID: %d, bytes: %d, session_id: 0x%04X", packet_id, total_size, (session.session_id_.SESSION_UNIQUE & 0xFFFF));
 
-	// 7. Send flag에 따른 패킷 송신
-	if (InterlockedExchange8((char*)&session.send_flag_, true) == false) 
-    {
-		if (iocpManager)
-		{
-			iocpManager->PostAsyncSend(&session);
-		}
-	}
-
-	return true;
+	// 6. Session에게 송신 처리 위임 (캡슐화 개선)
+	return session.SendPacket(packet_data);
 }
 
 inline void NetBase::DisconnectSession(Session* session)
@@ -130,10 +119,12 @@ inline void NetBase::DisconnectSession(Session* session)
 inline void NetBase::OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload)
 {
     auto it = packet_handlers_.find(packet_id);
-    if (it != packet_handlers_.end()) {
+    if (it != packet_handlers_.end()) 
+    {
         it->second(*session, payload);  // 등록된 핸들러 실행
     }
-    else {
+    else 
+    {
         LOG_WARN("No handler registered for packet ID: %d", packet_id);
     }
 }

@@ -88,7 +88,6 @@ public:
     // 비동기 I/O 등록 함수들 (NetBase에서 사용)
     //------------------------------
     bool PostAsyncReceive(Session* session);
-    void PostAsyncSend(Session* session);
 
 private:
     //------------------------------

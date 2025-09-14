@@ -1,5 +1,7 @@
 ﻿#include "Session.h"
 #include <timeapi.h>
+#include "../log.h"
+#include "../protocol/UnifiedPacketHeader.h"
 
 //------------------------------
 // SESSION ID
@@ -95,4 +97,81 @@ void Session::SetSessionPool(std::vector<Session>* pool, LFStack<DWORD>* indexSt
 {
 	session_pool_ = pool;
 	session_index_stack_ = indexStack;
+}
+
+//------------------------------
+// 패킷 송신 관리 (NetBase에서 이동)
+//------------------------------
+
+bool Session::SendPacket(std::vector<char>* packet_data)
+{
+	// 세션 유효성 검사
+	if (sock_ == INVALID_SOCKET || disconnect_flag_) 
+	{
+		delete packet_data;  // 메모리 해제
+		return false;
+	}
+	
+	// 송신 큐에 패킷 추가
+	send_q_.Enqueue(packet_data);
+	
+	// Send flag 체크 후 비동기 송신 시작
+	if (InterlockedExchange8((char*)&send_flag_, true) == false) 
+	{
+		PostAsyncSend();
+	}
+	
+	return true;
+}
+
+void Session::PostAsyncSend()
+{
+    WSABUF wsaBuf[MAX_SEND_MSG];
+    int preparedCount = 0;
+
+    // 운영 정책: 한 번에 보낼 수 있는 한도를 넘어선 세션은 즉시 차단
+    if (send_q_.GetUseCount() > MAX_SEND_MSG)
+    {
+        DisconnectSession();
+        return;
+    }
+
+    // 송신할 패킷들 준비 (vector<char> 직접 전송)
+    for (int i = 0; i < MAX_SEND_MSG; i++)
+    {
+        if (send_q_.GetUseCount() <= 0) {
+            break;
+        }
+
+        send_q_.Dequeue(&send_packet_arr_[i]);
+        ++preparedCount;
+
+        // 직접 raw 데이터 전송 (PacketBuffer 없이)
+        wsaBuf[i].buf = send_packet_arr_[i]->data();
+        wsaBuf[i].len = static_cast<DWORD>(send_packet_arr_[i]->size());
+        
+        LOG_DEBUG("[SESSION_SEND] Packet %d size: %d bytes", i, wsaBuf[i].len);
+    }
+
+    // 보낼 것이 없으면 실패
+    if (preparedCount == 0) 
+    {
+        DisconnectSession();
+        return;
+    }
+
+    // 준비된 패킷 수 커밋
+    send_packet_count_ = preparedCount;
+
+    IncrementIOCount();
+    ZeroMemory(&send_overlapped_, sizeof(send_overlapped_));
+    
+    if (SOCKET_ERROR == WSASend(sock_, wsaBuf, send_packet_count_, NULL, 0, &send_overlapped_, NULL))
+    {
+        if (ERROR_IO_PENDING != WSAGetLastError())
+        {
+			// Worker에서 IOCount를 감소 시키기 위함 (자신의 IOCP 핸들 사용)
+			PostQueuedCompletionStatus(h_iocp_, 1, (ULONG_PTR)this, (LPOVERLAPPED)1);  // PQCS::async_send_fail
+        }
+    }
 }

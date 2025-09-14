@@ -140,7 +140,7 @@ void IOCPManager::HandleSendComplete(Session* session)
     // 추가 송신이 필요한지 확인
     if (!session->disconnect_flag_ && session->send_q_.GetUseCount() > 0) 
     {
-        PostAsyncSend(session);
+        session->PostAsyncSend();  // Session이 직접 처리
     }
 }
 
@@ -184,54 +184,3 @@ bool IOCPManager::PostAsyncReceive(Session* session)
     return true;
 }
 
-void IOCPManager::PostAsyncSend(Session* session)
-{
-    WSABUF wsaBuf[MAX_SEND_MSG];
-    int preparedCount = 0;
-
-    // 운영 정책: 한 번에 보낼 수 있는 한도를 넘어선 세션은 즉시 차단
-    if (session->send_q_.GetUseCount() > MAX_SEND_MSG)
-    {
-        HandleSessionDisconnect(session);
-        return;
-    }
-
-    // 송신할 패킷들 준비 (vector<char> 직접 전송)
-    for (int i = 0; i < MAX_SEND_MSG; i++)
-    {
-        if (session->send_q_.GetUseCount() <= 0) {
-            break;
-        }
-
-        session->send_q_.Dequeue(&session->send_packet_arr_[i]);
-        ++preparedCount;
-
-        // 직접 raw 데이터 전송 (PacketBuffer 없이)
-        wsaBuf[i].buf = session->send_packet_arr_[i]->data();
-        wsaBuf[i].len = static_cast<DWORD>(session->send_packet_arr_[i]->size());
-        
-        LOG_DEBUG("[IOCP_SEND] Packet %d size: %d bytes", i, wsaBuf[i].len);
-    }
-
-    // 보낼 것이 없으면 실패
-    if (preparedCount == 0) 
-    {
-        HandleSessionDisconnect(session);
-        return;
-    }
-
-    // 준비된 패킷 수 커밋
-    session->send_packet_count_ = preparedCount;
-
-    session->IncrementIOCount();
-    ZeroMemory(&session->send_overlapped_, sizeof(session->send_overlapped_));
-    
-    if (SOCKET_ERROR == WSASend(session->sock_, wsaBuf, session->send_packet_count_, NULL, 0, &session->send_overlapped_, NULL))
-    {
-        if (ERROR_IO_PENDING != WSAGetLastError())
-        {
-			// Worker에서 IOCount를 감소 시키기 위함
-			PostQueuedCompletionStatus(session->GetIOCP(), 1, (ULONG_PTR)this, (LPOVERLAPPED)PQCS::async_recv_fail);
-        }
-    }
-}

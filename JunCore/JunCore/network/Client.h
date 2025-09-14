@@ -196,10 +196,7 @@ inline bool Client::SendPacket(const char* message)
     
     if (InterlockedExchange8((char*)&currentSession->send_flag_, true) == false) 
     {
-        if (iocpManager) 
-        {
-            iocpManager->PostAsyncSend(currentSession);
-        }
+        currentSession->PostAsyncSend();  // Session이 직접 처리
     }
     
     printf("[EchoClient][SEND] SendPacket completed\n");
@@ -219,10 +216,7 @@ inline bool Client::SendPacket(const void* data, int dataSize)
     
     if (InterlockedExchange8((char*)&currentSession->send_flag_, true) == false) 
     {
-        if (iocpManager) 
-        {
-            iocpManager->PostAsyncSend(currentSession);
-        }
+        currentSession->PostAsyncSend();  // Session이 직접 처리
     }
     
     return true;

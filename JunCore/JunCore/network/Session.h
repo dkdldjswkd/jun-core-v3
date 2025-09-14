@@ -122,5 +122,11 @@ public:
 		disconnect_flag_ = true;
 		CancelIoEx((HANDLE)sock_, NULL);
 	}
+	
+	// 패킷 송신 (NetBase에서 이동)
+	bool SendPacket(std::vector<char>* packet_data);
+	
+	// 비동기 송신 등록 (IOCPManager에서 이동)
+	void PostAsyncSend();
 };
 typedef Session* PSession;
