@@ -42,8 +42,8 @@ bool EchoClient::SendEchoRequest(const std::string& message)
 
 	std::cout << "[CLIENT] Sending EchoRequest: " << message << std::endl;
 
-	// SendPacket으로 직접 protobuf 메시지 전송
-	bool success = NetBase::SendPacket(*GetCurrentSession(), request);
+	// Session에서 직접 protobuf 메시지 전송
+	bool success = GetCurrentSession()->SendPacket(request);
 	if (!success) {
 		std::cout << "[CLIENT] Failed to send packet" << std::endl;
 	}

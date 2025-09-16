@@ -23,7 +23,7 @@ void EchoServer::HandleEchoRequest(Session& _session, const echo::EchoRequest& r
 	
 	echo::EchoResponse response;
 	response.set_message(request.message());
-	SendPacket(_session, response);
+	_session.SendPacket(response);
 
 	return;
 }

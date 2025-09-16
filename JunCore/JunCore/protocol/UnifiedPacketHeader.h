@@ -1,6 +1,9 @@
 ﻿#pragma once
 #include "../core/base.h"
 #include <cstdint>
+#include <vector>
+#include <unordered_map>
+#include <functional>
 
 #pragma pack(push, 1)
 struct UnifiedPacketHeader

@@ -3,7 +3,10 @@
 #include "../../JunCommon/container/LFQueue.h"
 #include "../../JunCommon/container/LFStack.h"
 #include "../../JunCommon/container/RingBuffer.h"
+#include "../core/base.h"
+#include "../protocol/UnifiedPacketHeader.h"
 #include <vector>
+#include <string>
 #include "IOCPManager.h"
 
 constexpr int MAX_SEND_MSG = 100;
@@ -126,7 +129,48 @@ public:
 	// 패킷 송신 (NetBase에서 이동)
 	bool SendPacket(std::vector<char>* packet_data);
 	
+	// 템플릿 패킷 송신 (Protobuf 메시지)
+	template<typename T>
+	bool SendPacket(const T& packet);
+	
 	// 비동기 송신 등록 (IOCPManager에서 이동)
 	void PostAsyncSend();
 };
 typedef Session* PSession;
+
+// 템플릿 구현부
+template<typename T>
+inline bool Session::SendPacket(const T& packet)
+{
+    // 세션 유효성 검사
+    if (sock_ == INVALID_SOCKET || disconnect_flag_) 
+    {
+        return false;
+    }
+    
+    // 1. 프로토버프 메시지 직렬화 크기 계산
+    size_t payload_size = packet.ByteSizeLong();
+    size_t total_size   = UNIFIED_HEADER_SIZE + payload_size;
+    
+    // 2. 패킷 ID 생성 (프로토버프 타입명 해시)
+    const std::string& type_name = packet.GetDescriptor()->full_name();
+    uint32_t packet_id = fnv1a(type_name.c_str());
+    
+    // 3. 패킷 버퍼 생성
+    std::vector<char>* packet_data = new std::vector<char>(total_size);
+    
+    // 4. 헤더 설정
+    UnifiedPacketHeader* header = reinterpret_cast<UnifiedPacketHeader*>(packet_data->data());
+    header->length = static_cast<uint32_t>(total_size);
+    header->packet_id = packet_id;
+    
+    // 5. 페이로드 직렬화
+    if (!packet.SerializeToArray(packet_data->data() + sizeof(UnifiedPacketHeader), payload_size))
+    {
+        delete packet_data;  // 실패 시 메모리 해제
+        return false;
+    }
+    
+    // 6. 기존 SendPacket(raw data)로 전달
+    return SendPacket(packet_data);
+}

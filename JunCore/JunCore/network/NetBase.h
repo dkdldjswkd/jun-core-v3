@@ -39,8 +39,6 @@ protected:
     // 패킷 핸들러 등록 템플릿 함수
     template<typename T>
     void RegisterPacketHandler(std::function<void(Session&, const T&)> handler);
-	template<typename T>
-    bool SendPacket(Session& session, const T& packet);
     void DisconnectSession(Session* session);
 
 private:
@@ -70,43 +68,6 @@ inline NetBase::~NetBase()
     WSAInitializer::Cleanup();
 }
 
-template<typename T>
-bool NetBase::SendPacket(Session& session, const T& packet)
-{
-    // 세션 유효성 검사
-    if (!IsSessionValid(&session)) 
-    {
-        return false;
-    }
-    
-    // 1. 프로토버프 메시지 직렬화 크기 계산
-    size_t payload_size = packet.ByteSizeLong();
-    size_t total_size   = UNIFIED_HEADER_SIZE + payload_size;
-    
-    // 2. 패킷 ID 생성 (프로토버프 타입명 해시)
-    const std::string& type_name = packet.GetDescriptor()->full_name();
-    uint32_t packet_id = fnv1a(type_name.c_str());
-    
-    // 3. 패킷 버퍼 생성
-    std::vector<char>* packet_data = new std::vector<char>(total_size);
-    
-    // 4. 헤더 설정
-    UnifiedPacketHeader* header = reinterpret_cast<UnifiedPacketHeader*>(packet_data->data());
-    header->length = static_cast<uint32_t>(total_size);
-    header->packet_id = packet_id;
-    
-    // 5. 페이로드 직렬화
-    if (!packet.SerializeToArray(packet_data->data() + sizeof(UnifiedPacketHeader), payload_size))
-    {
-        std::cout << "[SEND_PACKET] Failed to serialize packet" << std::endl;
-        return false;
-    }
-    
-	LOG_DEBUG("[SEND_PACKET] Sending packet ID: %d, bytes: %d, session_id: 0x%04X", packet_id, total_size, (session.session_id_.SESSION_UNIQUE & 0xFFFF));
-
-	// 6. Session에게 송신 처리 위임 (캡슐화 개선)
-	return session.SendPacket(packet_data);
-}
 
 inline void NetBase::DisconnectSession(Session* session)
 {

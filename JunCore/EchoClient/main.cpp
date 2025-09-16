@@ -1,13 +1,13 @@
-﻿#include <iostream>
-#include <string>
-#include "EchoClient.h"
-#include "../JunCommon/system/CrashDump.h"
+﻿#include "../JunCommon/system/CrashDump.h"
 #include "../JunCore/network/IOCPManager.h"
+#include "EchoClient.h"
+#include <iostream>
+#include <string>
 using namespace std;
 
 static CrashDump dump;
 
-int main()
+int main() 
 {
 	try
 	{
@@ -15,32 +15,29 @@ int main()
 		LOG_ERROR_RETURN(iocpManager->IsValid(), -1, "Failed to create IOCPManager for client");
 
 		EchoClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
-		
+
 		client.Initialize();
 		LOG_ERROR_RETURN(client.Connect("127.0.0.1", 7777), -1, "Failed to connect to server");
 
 		Sleep(1000);
-		cout << "=== 채팅을 시작합니다. 'exit' 입력시 종료 ===" << endl;
+		LOG_INFO("Starting chat. Type “exit” to quit.");
 
 		while (true)
 		{
 			string input;
 			cout << ">> ";
 
-			if (!getline(cin, input)) 
-			{
-				cout << "\n입력 오류 또는 EOF. 종료합니다..." << endl;
+			if (!getline(cin, input)) {
+				LOG_INFO("Input error or EOF. Exiting...");
 				break;
 			}
 
-			if (input.empty()) 
-			{
+			if (input.empty()) {
 				continue;
 			}
 
-			if (input == "exit") 
-			{
-				cout << "채팅을 종료합니다." << endl;
+			if (input == "exit") {
+				LOG_INFO("Ending chat.");
 				break;
 			}
 
@@ -48,18 +45,18 @@ int main()
 			client.SendEchoRequest(input);
 		}
 
-		cout << "클라이언트를 종료합니다..." << endl;
+		LOG_INFO("Shutting down client...");
 		client.Disconnect();
-		cout << "클라이언트가 종료되었습니다." << endl;
+		LOG_INFO("Client has been shut down.");
 	}
 	catch (const std::exception& e)
 	{
-		printf("Exception caught in client: %s\n", e.what());
+		LOG_ERROR("Exception caught in client: %s", e.what());
 		return -1;
 	}
 	catch (...)
 	{
-		printf("Unknown exception caught in client\n");
+		LOG_ERROR("Unknown exception caught in client");
 		return -1;
 	}
 
