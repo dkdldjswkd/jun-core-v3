@@ -3,36 +3,6 @@
 #include "../log.h"
 #include "../protocol/UnifiedPacketHeader.h"
 
-//------------------------------
-// SESSION ID
-//------------------------------
-
-SessionId::SessionId() {}
-SessionId::SessionId(DWORD64 value) 
-{
-  sessionId = value;
-}
-SessionId::SessionId(DWORD index, DWORD unique_no) 
-{
-  SESSION_INDEX = index;
-  SESSION_UNIQUE = unique_no;
-}
-SessionId::~SessionId() {}
-
-void SessionId::operator=(const SessionId& other) 
-{
-	sessionId = other.sessionId;
-}
-
-void SessionId::operator=(DWORD64 value) 
-{
-	sessionId = value;
-}
-
-SessionId::operator DWORD64() 
-{
-	return sessionId;
-}
 
 //------------------------------
 // Session
@@ -41,13 +11,12 @@ SessionId::operator DWORD64()
 Session::Session() {}
 Session::~Session() {}
 
-void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId session_id, NetBase* eng)
+void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
 {
 	release_flag_		= false;
 	sock_				= sock;
 	ip_					= ip;
 	port_				= port;
-	session_id_			= session_id;
 	send_flag_			= false;
 	disconnect_flag_	= false;
 	send_packet_count_	= 0;
@@ -64,7 +33,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, SessionId session_id, NetB
 
 void Session::Release()
 {
-	LOG_DEBUG("[Session Release] SessionId : %llu", (DWORD64)session_id_);
+	LOG_DEBUG("[Session Release] Session: 0x%llX", (uintptr_t)this);
 
 	// 소켓 정리
 	if (sock_ != INVALID_SOCKET) 
@@ -72,7 +41,7 @@ void Session::Release()
 		closesocket(sock_);
 	}
 	
-	Set(INVALID_SOCKET, {0}, 0, SessionId(0, 0), nullptr);
+	Set(INVALID_SOCKET, {0}, 0, nullptr);
 	
 	// 해제 상태로 설정
 	release_flag_ = true;

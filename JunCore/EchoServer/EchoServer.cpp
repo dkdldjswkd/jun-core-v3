@@ -36,12 +36,12 @@ bool EchoServer::OnConnectionRequest(in_addr clientIP, WORD clientPort)
 
 void EchoServer::OnClientJoin(Session* session) 
 {
-	LOG_INFO("[%04X][JOIN] Client connected", (session->session_id_.SESSION_UNIQUE & 0xFFFF));
+	LOG_INFO("[0x%llX][JOIN] Client connected", (uintptr_t)session);
 }
 
 void EchoServer::OnClientLeave(Session* session) 
 {
-	LOG_INFO("[%04X][LEAVE] Client disconnected", (session->session_id_.SESSION_UNIQUE & 0xFFFF));
+	LOG_INFO("[0x%llX][LEAVE] Client disconnected", (uintptr_t)session);
 }
 
 void EchoServer::OnServerStart()

@@ -20,10 +20,10 @@ void EchoClient::RegisterPacketHandlers()
 
 void EchoClient::OnConnect(Session* session)
 {
-	LOG_INFO("Connected to server successfully! Session ID: %lld", session->session_id_.sessionId);
+	LOG_INFO("Connected to server successfully! Session: 0x%llX", (uintptr_t)session);
 }
 
 void EchoClient::OnDisconnect(Session* session)
 {
-	LOG_INFO("Disconnected from server. Session ID: %lld", session->session_id_.sessionId);
+	LOG_INFO("Disconnected from server. Session: 0x%llX", (uintptr_t)session);
 }

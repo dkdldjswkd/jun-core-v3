@@ -151,13 +151,12 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
     // 세션 초기화
     in_addr clientIP = clientAddr->sin_addr;
     WORD clientPort = ntohs(clientAddr->sin_port);
-    SessionId sessionId(static_cast<WORD>(session - &sessions[0]), GetTickCount());
-    session->Set(clientSocket, clientIP, clientPort, sessionId, this);  // this로 변경
+    session->Set(clientSocket, clientIP, clientPort, this);  // SessionId 제거
     
 	// IOCP에 SOCKET 등록
 	if (!iocpManager->RegisterSocket(clientSocket, session))
 	{
-		LOG_ERROR("IOCP registration failed for session %lld", session->session_id_.sessionId);
+		LOG_ERROR("IOCP registration failed for session 0x%llX", (uintptr_t)session);
 		// Session은 IOCount가 0이 되면 자동으로 Pool에 반환됨
         session->DecrementIOCount();
 		return false;

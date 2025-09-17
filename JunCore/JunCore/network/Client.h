@@ -99,10 +99,9 @@ inline Session* Client::Connect()
         return nullptr;
     }
     
-    // 세션 초기화 (SessionId는 더미값 사용, 추후 완전 제거 예정)
+    // 세션 초기화
     in_addr clientIP = { 0 };
-    SessionId dummySessionId(0, (DWORD)GetTickCount64());
-    session->Set(session->sock_, clientIP, 0, dummySessionId, this);
+    session->Set(session->sock_, clientIP, 0, this);
     
     // 서버 연결
     SOCKADDR_IN serverAddr{};

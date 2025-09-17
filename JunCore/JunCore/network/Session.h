@@ -10,30 +10,6 @@
 #include "IOCPManager.h"
 
 constexpr int MAX_SEND_MSG = 100;
-constexpr int INVALID_SESSION_ID = -1;
-
-//------------------------------
-// SessionId
-//------------------------------
-union SessionId
-{
-public:
-	struct { DWORD index, unique; } s;
-	DWORD64	sessionId = 0;
-#define		SESSION_INDEX  s.index   
-#define		SESSION_UNIQUE s.unique
-
-public:
-	SessionId();
-	SessionId(DWORD64 value);
-	SessionId(DWORD index, DWORD unique_no);
-	~SessionId();
-
-public:
-	void operator=(const SessionId& other);
-	void operator=(DWORD64 value);
-	operator DWORD64();
-};
 
 //------------------------------
 // Session
@@ -53,7 +29,6 @@ public:
 	SOCKET sock_ = INVALID_SOCKET;
 	in_addr ip_;
 	WORD port_;
-	SessionId session_id_ = INVALID_SESSION_ID;
 
 	// flag
 	bool send_flag_ = false;
@@ -90,7 +65,7 @@ private:
 	LFStack<DWORD>* session_index_stack_ = nullptr; // 세션 인덱스 스택
 
 public:
-	void Set(SOCKET sock, in_addr ip, WORD port, SessionId session_id, NetBase* eng);
+	void Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng);
 	void Release();  // 세션 정리 + Pool 반환 통합
 	
 	// Session Pool 직접 설정 (간단하고 명확함)
