@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="protobuf">
+      <UniqueIdentifier>{BC8F7B9D-4E65-45C9-A8F2-1E7B8D4C6A3F}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="echo_message.pb.cc">
+      <Filter>protobuf</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="StressClient.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="echo_message.pb.h">
+      <Filter>protobuf</Filter>
+    </ClInclude>
+    <ClInclude Include="StressClient.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="echo_message.proto">
+      <Filter>protobuf</Filter>
+    </None>
+  </ItemGroup>
+</Project>
