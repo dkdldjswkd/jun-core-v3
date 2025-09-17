@@ -2,17 +2,18 @@
 #include "NetBase.h"
 #include "Session.h"
 #include <atomic>
-#include <vector>
-#include "../../JunCommon/container/LFStack.h"
+#include <unordered_set>
+#include <string>
+#include <memory>
 
 //------------------------------
 // Client - 클라이언트 네트워크 엔진
-// 사용자는 이 클래스를 상속받아 클라이언트를 구현
+// 하나의 서버 타입에 대해 다중 세션 지원
 //------------------------------
 class Client : public NetBase
 {
 public:
-    Client(std::shared_ptr<IOCPManager> manager);
+    Client(std::shared_ptr<IOCPManager> manager, const char* serverIP, WORD port);
     virtual ~Client();
 
     // 복사/이동 금지
@@ -21,45 +22,39 @@ public:
 
 public:
     //------------------------------
-    // 클라이언트 연결/해제 인터페이스
+    // 세션 연결/해제 인터페이스 (Session* 직접 반환)
     //------------------------------
-    bool Connect(const char* serverIP, WORD port);
-    void Disconnect();
+    Session* Connect();
+    void Disconnect(Session* session);
+    void DisconnectAll();
 
     //------------------------------
-    // 클라이언트 상태 확인
+    // 상태 확인
     //------------------------------
-    bool IsConnected() const;
-    Session* GetCurrentSession() const;
-    
-    //------------------------------
-    // 메시지 송신 (편의 함수)
-    //------------------------------
-    bool SendPacket(const char* message);
-    bool SendPacket(const void* data, int dataSize);
+    size_t GetActiveSessionCount() const;
+    bool HasActiveSessions() const;
 
 protected:
     //------------------------------
     // 클라이언트 전용 가상함수 - 사용자가 재정의
     //------------------------------
     virtual void OnConnect(Session* session) = 0;
-    virtual void OnDisconnect() = 0;
-
+    virtual void OnDisconnect(Session* session) = 0;
 
 private:
     //------------------------------
-    // 세션 풀 관리 (Server와 통일)
+    // 서버 연결 정보 (생성자에서 고정)
     //------------------------------
-    std::vector<Session> sessionPool;
-    LFStack<DWORD> sessionIndexStack;
-    Session* currentSession = nullptr; // 현재 세션을 하나로만 유지하기위해 사용
+    std::string serverIP;
+    WORD serverPort;
     
-    // 세션 풀 관리 함수 (Server와 동일한 패턴)
-    void InitializeSessionPool(DWORD maxSessions = 1);
-    void CleanupSessionPool();
-    Session* AllocateSession();
-
-    // 소켓 해제 관리
+    //------------------------------
+    // 동적 세션 관리 (세션 풀 대신 동적 할당)
+    //------------------------------
+    std::unordered_set<Session*> activeSessions;
+    
+    // 내부 헬퍼 함수들
+    void CleanupSession(Session* session);
     bool RegisterToIOCP(Session* session);
 };
 
@@ -67,161 +62,140 @@ private:
 // 인라인 구현
 //------------------------------
 
-inline Client::Client(std::shared_ptr<IOCPManager> manager) : NetBase(manager)
+inline Client::Client(std::shared_ptr<IOCPManager> manager, const char* serverIP, WORD port) 
+    : NetBase(manager), serverIP(serverIP), serverPort(port)
 {
-    InitializeSessionPool(1);  // 1개 세션으로 풀 초기화
 }
 
 inline Client::~Client()
 {
-    Disconnect();
-    CleanupSessionPool();
+    DisconnectAll();
 }
 
-inline bool Client::Connect(const char* serverIP, WORD port)
+inline Session* Client::Connect()
 {
     // 초기화 검사 (패킷 핸들러 등록 여부)
     if (!IsInitialized())
     {
         LOG_ERROR("Must call Initialize() before Connect()!");
-        return false;
+        return nullptr;
     }
     
-    LOG_WARN_RETURN(currentSession == nullptr, false, "Client is already connected!");
-
-	currentSession = AllocateSession();
-	{
-		if (!currentSession)
-		{
-			LOG_ERROR("Failed to allocate session from pool");
-			return false;
-		}
-
-		currentSession->IncrementIOCount();
-		currentSession->sock_ = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-		if (currentSession->sock_ == INVALID_SOCKET)
-		{
-			currentSession->DecrementIOCount();
-			currentSession = nullptr;
-			LOG_ERROR("Failed to create client socket (Error: %d)", WSAGetLastError());
-			return false;
-		}
-		in_addr clientIP = { 0 };
-		SessionId sessionId((WORD)(currentSession - &sessionPool[0]), (DWORD)GetTickCount64());
-		currentSession->Set(currentSession->sock_, clientIP, 0, sessionId, this);
-	}
-    
-	SOCKADDR_IN serverAddr{};
-	{
-		serverAddr.sin_family = AF_INET;
-		serverAddr.sin_port = htons(port);
-		if (inet_pton(AF_INET, serverIP, &serverAddr.sin_addr) != 1)
-		{
-			currentSession->DecrementIOCount();
-			LOG_ERROR("Invalid server IP address: %s", serverIP);
-			return false;
-		}
-    }
-
-    if (connect(currentSession->sock_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
+    // 새로운 세션 동적 생성
+    Session* session = new Session();
+    if (!session)
     {
-		currentSession->DecrementIOCount();
-        LOG_ERROR("Failed to connect to server %s:%d (Error: %d)", serverIP, port, WSAGetLastError());
-        return false;
-	}
-	else
-	{
-		LOG_INFO("Connected to server %s:%d", serverIP, port);
+        LOG_ERROR("Failed to create session");
+        return nullptr;
     }
+    
+    session->IncrementIOCount();
+    session->sock_ = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    if (session->sock_ == INVALID_SOCKET)
+    {
+        session->DecrementIOCount();
+        CleanupSession(session);
+        LOG_ERROR("Failed to create client socket (Error: %d)", WSAGetLastError());
+        return nullptr;
+    }
+    
+    // 세션 초기화 (SessionId는 더미값 사용, 추후 완전 제거 예정)
+    in_addr clientIP = { 0 };
+    SessionId dummySessionId(0, (DWORD)GetTickCount64());
+    session->Set(session->sock_, clientIP, 0, dummySessionId, this);
+    
+    // 서버 연결
+    SOCKADDR_IN serverAddr{};
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_port = htons(serverPort);
+    if (inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr) != 1)
+    {
+        session->DecrementIOCount();
+        CleanupSession(session);
+        LOG_ERROR("Invalid server IP address: %s", serverIP.c_str());
+        return nullptr;
+    }
+
+    if (connect(session->sock_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
+    {
+        session->DecrementIOCount();
+        CleanupSession(session);
+        LOG_ERROR("Failed to connect to server %s:%d (Error: %d)", serverIP.c_str(), serverPort, WSAGetLastError());
+        return nullptr;
+    }
+    
+    LOG_INFO("Connected to server %s:%d", serverIP.c_str(), serverPort);
 
     // IOCP에 SOCKET 등록
-	if (!iocpManager->RegisterSocket(currentSession->sock_, currentSession))
-	{
-		LOG_ERROR("Failed to register client socket to IOCP (Error: %d)", GetLastError());
-		currentSession->DecrementIOCount();
-        return false;
-	}
+    if (!RegisterToIOCP(session))
+    {
+        LOG_ERROR("Failed to register client socket to IOCP (Error: %d)", GetLastError());
+        session->DecrementIOCount();
+        CleanupSession(session);
+        return nullptr;
+    }
 
     // RECV 등록
-    if (!iocpManager->PostAsyncReceive(currentSession))
+    if (!iocpManager->PostAsyncReceive(session))
     {
-		currentSession->DecrementIOCount();
-        return false;
+        session->DecrementIOCount();
+        CleanupSession(session);
+        return nullptr;
     }
 
-    OnConnect(currentSession);
-	currentSession->DecrementIOCount();
-    return true;
+    // 활성 세션에 추가
+    activeSessions.insert(session);
+    
+    OnConnect(session);
+    session->DecrementIOCount();
+    return session;
 }
 
-inline void Client::Disconnect()
+inline void Client::Disconnect(Session* session)
 {
-    if (currentSession) 
-    {
-        // OnClientLeave는 IOCP에서 자동 호출됨 - 직접 호출하지 않음
-        OnDisconnect();
-        
-        // Session은 IOCount가 0이 되면 자동으로 Pool에 반환됨
-        // 수동 해제 불필요! DecrementIOCount()만 호출하면 됨
-        currentSession->DecrementIOCount();
-        currentSession = nullptr;
+    if (!session || activeSessions.find(session) == activeSessions.end()) {
+        return;
     }
+    
+    // 활성 세션에서 제거
+    activeSessions.erase(session);
+    
+    OnDisconnect(session);
+    
+    // Session은 IOCount가 0이 되면 자동으로 정리됨
+    session->DecrementIOCount();
 }
 
-inline bool Client::IsConnected() const
+inline void Client::DisconnectAll()
 {
-    return (currentSession != nullptr && currentSession->sock_ != INVALID_SOCKET);
+    // 복사본 만들어서 안전하게 반복
+    auto sessionsCopy = activeSessions;
+    for (Session* session : sessionsCopy) {
+        Disconnect(session);
+    }
 }
 
-inline Session* Client::GetCurrentSession() const
+inline size_t Client::GetActiveSessionCount() const
 {
-    return currentSession;
+    return activeSessions.size();
 }
 
-inline bool Client::SendPacket(const char* message)
+inline bool Client::HasActiveSessions() const
 {
-    if (!IsConnected() || !currentSession) 
-    {
-        LOG_ERROR("Not connected or no session (session=%p)", currentSession);
-        return false;
-    }
-    
-    int messageLen = (int)strlen(message);
-    std::vector<char>* packet_data = new std::vector<char>(message, message + messageLen);
-    
-    printf("[EchoClient][SEND] Sending message: '%s' (len=%d)\n", message, messageLen);
-    
-    // SendRawData 로직을 직접 구현 (SendPacket template과 동일한 방식)
-    currentSession->send_q_.Enqueue(packet_data);
-    
-    if (InterlockedExchange8((char*)&currentSession->send_flag_, true) == false) 
-    {
-        currentSession->PostAsyncSend();  // Session이 직접 처리
-    }
-    
-    printf("[EchoClient][SEND] SendPacket completed\n");
-    return true;
+    return !activeSessions.empty();
 }
 
-inline bool Client::SendPacket(const void* data, int dataSize)
+
+
+//------------------------------
+// 내부 헬퍼 함수들
+//------------------------------
+inline void Client::CleanupSession(Session* session)
 {
-    if (!IsConnected() || !currentSession) {
-        return false;
+    if (session) {
+        delete session;
     }
-    
-    std::vector<char>* packet_data = new std::vector<char>((const char*)data, (const char*)data + dataSize);
-    
-    // SendRawData 로직을 직접 구현 (SendPacket template과 동일한 방식)
-    currentSession->send_q_.Enqueue(packet_data);
-    
-    if (InterlockedExchange8((char*)&currentSession->send_flag_, true) == false) 
-    {
-        currentSession->PostAsyncSend();  // Session이 직접 처리
-    }
-    
-    return true;
 }
-
 
 inline bool Client::RegisterToIOCP(Session* session)
 {
@@ -231,42 +205,4 @@ inline bool Client::RegisterToIOCP(Session* session)
     }
     
     return iocpManager->RegisterSocket(session->sock_, session);
-}
-
-//------------------------------
-// 세션 풀 관리 함수들
-//------------------------------
-inline void Client::InitializeSessionPool(DWORD maxSessions)
-{
-    sessionPool.resize(maxSessions);
-    
-    for (int i = maxSessions - 1; i >= 0; i--) 
-    {
-        sessionIndexStack.Push(i);
-        sessionPool[i].SetSessionPool(&sessionPool, &sessionIndexStack);
-    }
-}
-
-inline void Client::CleanupSessionPool()
-{
-    if (currentSession) 
-    {
-        currentSession = nullptr;
-    }
-    
-    sessionPool.clear();
-}
-
-inline Session* Client::AllocateSession()
-{
-    DWORD index;
-    if (!sessionIndexStack.Pop(&index)) {
-        return nullptr; // 사용 가능한 세션 없음
-    }
-    
-    if (index >= sessionPool.size()) {
-        return nullptr; // 범위 초과
-    }
-    
-    return &sessionPool[index];
 }

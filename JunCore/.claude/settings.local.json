@@ -96,7 +96,8 @@
       "Bash(\"/mnt/c/Windows/System32/taskkill.exe\" /F /IM EchoClient.exe /T)",
       "Bash(vcpkg list:*)",
       "Bash(/mnt/c/vcpkg/vcpkg.exe install:*)",
-      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" JunCore.sln /p:Configuration=Debug /p:Platform=x64 /t:Clean)"
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" JunCore.sln /p:Configuration=Debug /p:Platform=x64 /t:Clean)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" /mnt/c/rpos/jun-core-v3/JunCore/EchoClient/EchoClient.vcxproj /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)"
     ],
     "deny": []
   }

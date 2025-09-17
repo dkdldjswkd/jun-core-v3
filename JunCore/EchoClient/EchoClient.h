@@ -9,13 +9,9 @@ public:
 	EchoClient(std::shared_ptr<IOCPManager> manager);
 	~EchoClient();
 
-public:
-	// Protobuf 메시지 송신 편의 함수
-	bool SendEchoRequest(const std::string& message);
-
 protected:
 	void OnConnect(Session* session) override;
-	void OnDisconnect() override;
+	void OnDisconnect(Session* session) override;
 	
 	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
 	void RegisterPacketHandlers() override;

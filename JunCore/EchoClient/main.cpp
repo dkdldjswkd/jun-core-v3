@@ -1,6 +1,7 @@
 ﻿#include "../JunCommon/system/CrashDump.h"
 #include "../JunCore/network/IOCPManager.h"
 #include "EchoClient.h"
+#include "echo_message.pb.h"
 #include <iostream>
 #include <string>
 using namespace std;
@@ -17,7 +18,8 @@ int main()
 		EchoClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 
 		client.Initialize();
-		LOG_ERROR_RETURN(client.Connect("127.0.0.1", 7777), -1, "Failed to connect to server");
+		Session* session = client.Connect();
+		LOG_ERROR_RETURN(session != nullptr, -1, "Failed to connect to server");
 
 		Sleep(1000);
 		LOG_INFO("Starting chat. Type “exit” to quit.");
@@ -42,11 +44,17 @@ int main()
 			}
 
 			// Protobuf 메시지로 서버에 전송
-			client.SendEchoRequest(input);
+			echo::EchoRequest request;
+			request.set_message(input);
+			cout << "[CLIENT] Sending EchoRequest: " << input << endl;
+			if (!session->SendPacket(request)) 
+			{
+				cout << "[CLIENT] Failed to send packet" << endl;
+			}
 		}
 
 		LOG_INFO("Shutting down client...");
-		client.Disconnect();
+		client.Disconnect(session);
 		LOG_INFO("Client has been shut down.");
 	}
 	catch (const std::exception& e)
