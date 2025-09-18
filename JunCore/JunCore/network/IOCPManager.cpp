@@ -57,7 +57,7 @@ void IOCPManager::RunWorkerThread()
 void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 {
 	int loopCount = 0;
-	const int MAX_LOOP_COUNT = 100;
+	const int MAX_LOOP_COUNT = 1000;
 
     // 수신 버퍼 업데이트
     session->recv_buf_.MoveRear(ioSize);
@@ -68,7 +68,8 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 		// 무한루프 방지
 		if (MAX_LOOP_COUNT < ++loopCount)
 		{
-			LOG_WARN("IOCPManager: MAX_LOOP_COUNT reached");
+            // 세션 잘라야하나?
+			LOG_ERROR("IOCPManager: MAX_LOOP_COUNT reached");
 			break;
 		}
 
@@ -113,7 +114,8 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         {
             engine->OnPacketReceived(session, header->packet_id, payload);
         }
-        else {
+        else 
+        {
             LOG_ERROR("Session has no engine assigned");
         }
 	}

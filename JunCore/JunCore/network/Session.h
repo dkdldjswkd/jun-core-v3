@@ -87,6 +87,7 @@ public:
 		if (0 == InterlockedDecrement(&io_count_))
 		{
 			// * release_flag_(0), IOCount(0) -> release_flag_(1), IOCount(0)
+
 			if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0))
 			{
 				Release();
@@ -101,10 +102,6 @@ public:
 		CancelIoEx((HANDLE)sock_, NULL);
 	}
 	
-	// 패킷 송신 (NetBase에서 이동)
-	bool SendPacket(std::vector<char>* packet_data);
-	
-	// 템플릿 패킷 송신 (Protobuf 메시지)
 	template<typename T>
 	bool SendPacket(const T& packet);
 	
@@ -117,7 +114,6 @@ typedef Session* PSession;
 template<typename T>
 inline bool Session::SendPacket(const T& packet)
 {
-    // 세션 유효성 검사
     if (sock_ == INVALID_SOCKET || disconnect_flag_) 
     {
         return false;
@@ -127,7 +123,7 @@ inline bool Session::SendPacket(const T& packet)
     size_t payload_size = packet.ByteSizeLong();
     size_t total_size   = UNIFIED_HEADER_SIZE + payload_size;
     
-    // 2. 패킷 ID 생성 (프로토버프 타입명 해시)
+    // 2. 패킷 ID 생성
     const std::string& type_name = packet.GetDescriptor()->full_name();
     uint32_t packet_id = fnv1a(type_name.c_str());
     
@@ -142,10 +138,18 @@ inline bool Session::SendPacket(const T& packet)
     // 5. 페이로드 직렬화
     if (!packet.SerializeToArray(packet_data->data() + sizeof(UnifiedPacketHeader), payload_size))
     {
-        delete packet_data;  // 실패 시 메모리 해제
+        delete packet_data;
         return false;
     }
-    
-    // 6. 기존 SendPacket(raw data)로 전달
-    return SendPacket(packet_data);
+
+	// 6. 송신 큐에 패킷 추가
+	send_q_.Enqueue(packet_data);
+
+	// 7. Send flag 체크 후 비동기 송신 시작
+	if (InterlockedExchange8((char*)&send_flag_, true) == false)
+	{
+		PostAsyncSend();
+	}
+
+	return true;
 }

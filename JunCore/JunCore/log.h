@@ -1,6 +1,8 @@
 #pragma once
 
-// ÃßÈÄ ÆÄÀÏ·Î±×µµ Áö¿øÇÏµµ·Ï °³¼± ¿¹Á¤
+#include <cassert>
+
+// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï·Î±×µï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -95,4 +97,30 @@ inline void EnableConsoleColors()
             LOG_DEBUG(format, ##__VA_ARGS__);            \
             return;                                      \
         }                                                \
+    } while(0)
+
+#define LOG_ASSERT(condition, format, ...)    \
+    do {                                      \
+        if (!(condition)) {                   \
+            LOG_ERROR(format, ##__VA_ARGS__); \
+            assert(condition);                \
+        }                                     \
+    } while(0)
+
+#define LOG_ASSERT_RETURN(condition, retval, format, ...)  \
+    do {                                                    \
+        if (!(condition)) {                                 \
+            LOG_ERROR(format, ##__VA_ARGS__);               \
+            assert(condition);                              \
+            return retval;                                  \
+        }                                                   \
+    } while(0)
+
+#define LOG_ASSERT_RETURN_VOID(condition, format, ...)  \
+    do {                                                \
+        if (!(condition)) {                             \
+            LOG_ERROR(format, ##__VA_ARGS__);           \
+            assert(condition);                          \
+            return;                                     \
+        }                                               \
     } while(0)

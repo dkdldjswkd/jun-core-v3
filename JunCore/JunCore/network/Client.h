@@ -74,7 +74,6 @@ inline Client::~Client()
 
 inline Session* Client::Connect()
 {
-    // 초기화 검사 (패킷 핸들러 등록 여부)
     if (!IsInitialized())
     {
         LOG_ERROR("Must call Initialize() before Connect()!");

@@ -118,7 +118,6 @@ inline void NetBase::Initialize()
     {
         RegisterPacketHandlers();
         initialized_ = true;
-        LOG_DEBUG("NetBase engine initialized successfully");
     }
 }
 
