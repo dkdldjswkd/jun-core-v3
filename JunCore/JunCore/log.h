@@ -124,3 +124,10 @@ inline void EnableConsoleColors()
             return;                                     \
         }                                               \
     } while(0)
+
+#define LOG_ASSERT_CONTINUE(condition, format, ...)  \
+    if (!(condition)) {                              \
+        LOG_ERROR(format, ##__VA_ARGS__);            \
+        assert(condition);                           \
+        continue;                                    \
+    }

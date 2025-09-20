@@ -2,7 +2,6 @@
 #include "NetBase.h"
 #include "Session.h"
 #include <atomic>
-#include <unordered_set>
 #include <string>
 #include <memory>
 
@@ -25,21 +24,12 @@ public:
     // 세션 연결/해제 인터페이스 (Session* 직접 반환)
     //------------------------------
     Session* Connect();
-    void Disconnect(Session* session);
-    void DisconnectAll();
-
-    //------------------------------
-    // 상태 확인
-    //------------------------------
-    size_t GetActiveSessionCount() const;
-    bool HasActiveSessions() const;
 
 protected:
     //------------------------------
     // 클라이언트 전용 가상함수 - 사용자가 재정의
     //------------------------------
     virtual void OnConnect(Session* session) = 0;
-    virtual void OnDisconnect(Session* session) = 0;
 
 private:
     //------------------------------
@@ -48,13 +38,8 @@ private:
     std::string serverIP;
     WORD serverPort;
     
-    //------------------------------
-    // 동적 세션 관리 (세션 풀 대신 동적 할당)
-    //------------------------------
-    std::unordered_set<Session*> activeSessions;
     
     // 내부 헬퍼 함수들
-    void CleanupSession(Session* session);
     bool RegisterToIOCP(Session* session);
 };
 
@@ -69,7 +54,7 @@ inline Client::Client(std::shared_ptr<IOCPManager> manager, const char* serverIP
 
 inline Client::~Client()
 {
-    DisconnectAll();
+    // 현재 Client는 동적 세션 관리이므로 자동 정리됨
 }
 
 inline Session* Client::Connect()
@@ -93,7 +78,6 @@ inline Session* Client::Connect()
     if (session->sock_ == INVALID_SOCKET)
     {
         session->DecrementIOCount();
-        CleanupSession(session);
         LOG_ERROR("Failed to create client socket (Error: %d)", WSAGetLastError());
         return nullptr;
     }
@@ -109,7 +93,6 @@ inline Session* Client::Connect()
     if (inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr) != 1)
     {
         session->DecrementIOCount();
-        CleanupSession(session);
         LOG_ERROR("Invalid server IP address: %s", serverIP.c_str());
         return nullptr;
     }
@@ -117,7 +100,6 @@ inline Session* Client::Connect()
     if (connect(session->sock_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
     {
         session->DecrementIOCount();
-        CleanupSession(session);
         LOG_ERROR("Failed to connect to server %s:%d (Error: %d)", serverIP.c_str(), serverPort, WSAGetLastError());
         return nullptr;
     }
@@ -129,7 +111,6 @@ inline Session* Client::Connect()
     {
         LOG_ERROR("Failed to register client socket to IOCP (Error: %d)", GetLastError());
         session->DecrementIOCount();
-        CleanupSession(session);
         return nullptr;
     }
 
@@ -137,64 +118,23 @@ inline Session* Client::Connect()
     if (!iocpManager->PostAsyncReceive(session))
     {
         session->DecrementIOCount();
-        CleanupSession(session);
         return nullptr;
     }
 
-    // 활성 세션에 추가
-    activeSessions.insert(session);
     
     OnConnect(session);
     session->DecrementIOCount();
     return session;
 }
 
-inline void Client::Disconnect(Session* session)
-{
-    if (!session || activeSessions.find(session) == activeSessions.end()) {
-        return;
-    }
-    
-    // 활성 세션에서 제거
-    activeSessions.erase(session);
-    
-    OnDisconnect(session);
-    
-    // Session은 IOCount가 0이 되면 자동으로 정리됨
-    session->DecrementIOCount();
-}
 
-inline void Client::DisconnectAll()
-{
-    // 복사본 만들어서 안전하게 반복
-    auto sessionsCopy = activeSessions;
-    for (Session* session : sessionsCopy) {
-        Disconnect(session);
-    }
-}
 
-inline size_t Client::GetActiveSessionCount() const
-{
-    return activeSessions.size();
-}
-
-inline bool Client::HasActiveSessions() const
-{
-    return !activeSessions.empty();
-}
 
 
 
 //------------------------------
 // 내부 헬퍼 함수들
 //------------------------------
-inline void Client::CleanupSession(Session* session)
-{
-    if (session) {
-        delete session;
-    }
-}
-
 inline bool Client::RegisterToIOCP(Session* session)
 {
     if (!iocpManager || !session) 

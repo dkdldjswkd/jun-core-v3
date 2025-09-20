@@ -18,8 +18,9 @@ protected:
 	void OnServerStart() override;
 	void OnServerStop() override;
 	
-	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
+	// NetBase 순수 가상함수 구현
 	void RegisterPacketHandlers() override;
+	void OnDisconnect(Session* session) override;
 
 private:
 	Session* currentHandlingSession_ = nullptr;

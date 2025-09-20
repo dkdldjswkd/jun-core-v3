@@ -188,8 +188,11 @@ void Server::InitializeSessions(DWORD maxSessions)
     for (int i = maxSessions - 1; i >= 0; i--) {
         sessionIndexStack.Push(i);
         
+        // 세션 동적 생성
+        sessions[i] = std::make_unique<Session>();
+        
         // 각 세션에 Pool 정보 직접 설정 (간단하고 명확함)
-        sessions[i].SetSessionPool(&sessions, &sessionIndexStack);
+        sessions[i]->SetSessionPool(&sessions, &sessionIndexStack);
     }
 }
 
@@ -207,5 +210,5 @@ Session* Server::AllocateSession()
         return nullptr;
     }
     
-    return &sessions[index];
+    return sessions[index].get();
 }

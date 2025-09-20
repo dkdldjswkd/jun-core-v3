@@ -52,8 +52,8 @@ private:
     std::thread acceptThread;
     std::atomic<bool> running{false};
     
-    // 세션 관리
-    std::vector<Session> sessions;
+    // 세션 관리 (포인터 기반으로 변경)
+    std::vector<std::unique_ptr<Session>> sessions;
     LFStack<DWORD> sessionIndexStack;
     std::atomic<DWORD> currentSessionCount = 0;
     

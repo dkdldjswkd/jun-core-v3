@@ -31,7 +31,7 @@ int main()
         LOG_INFO("Starting in 3 seconds…");
         Sleep(3000);
 
-		client.StartStressTest();
+		client.Start();
 
         for (;;)
         {

@@ -14,6 +14,8 @@
 
 class NetBase
 {
+    friend class Session;  // Session이 protected 멤버에 접근 가능하도록
+    
 public:
     NetBase(std::shared_ptr<IOCPManager> manager);
     virtual ~NetBase();
@@ -24,8 +26,9 @@ protected:
     
     bool initialized_ = false;
     
-    // 사용자 재정의 패킷 핸들러 등록 함수
+    // 사용자 재정의 함수들
     virtual void RegisterPacketHandlers() = 0;
+    virtual void OnDisconnect(Session* session) = 0;
 
 public:
     // 패킷 수신 처리 (IOCPManager에서 호출)

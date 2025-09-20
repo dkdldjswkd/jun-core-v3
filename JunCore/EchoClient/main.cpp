@@ -53,9 +53,7 @@ int main()
 			}
 		}
 
-		LOG_INFO("Shutting down client...");
-		client.Disconnect(session);
-		LOG_INFO("Client has been shut down.");
+		LOG_INFO("chat ended");
 	}
 	catch (const std::exception& e)
 	{

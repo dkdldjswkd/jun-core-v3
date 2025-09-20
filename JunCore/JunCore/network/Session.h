@@ -7,6 +7,7 @@
 #include "../protocol/UnifiedPacketHeader.h"
 #include <vector>
 #include <string>
+#include <atomic>
 #include "IOCPManager.h"
 
 constexpr int MAX_SEND_MSG = 100;
@@ -15,6 +16,7 @@ constexpr int MAX_SEND_MSG = 100;
 // Session
 //------------------------------
 class IOCPManager; // Forward declaration
+class NetBase;     // Forward declaration
 
 class Session
 {
@@ -23,6 +25,12 @@ class Session
 public:
 	Session();
 	~Session();
+	
+	// atomic 멤버 때문에 복사/이동 명시적 처리
+	Session(const Session&) = delete;
+	Session& operator=(const Session&) = delete;
+	Session(Session&&) = delete;
+	Session& operator=(Session&&) = delete;
 
 public:
 	// 소켓 정보
@@ -32,7 +40,7 @@ public:
 
 	// flag
 	bool send_flag_ = false;
-	bool disconnect_flag_ = false;
+	std::atomic<bool> disconnect_flag_ = false;
 
 	// Send
 	LFQueue<std::vector<char>*> send_q_;			// 송신 대기 큐 (raw 데이터)
@@ -60,8 +68,8 @@ private:
 	HANDLE h_iocp_ = INVALID_HANDLE_VALUE;  // IOCP 핸들 저장
 	class NetBase* engine_ = nullptr;       // 이 세션을 소유한 엔진
 	
-	// Session Pool 직접 관리
-	std::vector<Session>* session_pool_ = nullptr;  // 자신이 속한 세션 풀
+	// Session Pool 직접 관리 (포인터 기반)
+	std::vector<std::unique_ptr<Session>>* session_pool_ = nullptr;  // 자신이 속한 세션 풀
 	LFStack<DWORD>* session_index_stack_ = nullptr; // 세션 인덱스 스택
 
 public:
@@ -69,7 +77,7 @@ public:
 	void Release();  // 세션 정리 + Pool 반환 통합
 	
 	// Session Pool 직접 설정 (간단하고 명확함)
-	void SetSessionPool(std::vector<Session>* pool, LFStack<DWORD>* indexStack);
+	void SetSessionPool(std::vector<std::unique_ptr<Session>>* pool, LFStack<DWORD>* indexStack);
 	
 	inline void SetIOCP(HANDLE iocp_handle) { h_iocp_ = iocp_handle; }
 	inline HANDLE GetIOCP() { return h_iocp_; }
@@ -82,24 +90,17 @@ public:
 		InterlockedIncrement(&io_count_);
 	}
 	
-	__forceinline void DecrementIOCount() noexcept
-	{
-		if (0 == InterlockedDecrement(&io_count_))
-		{
-			// * release_flag_(0), IOCount(0) -> release_flag_(1), IOCount(0)
-
-			if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0))
-			{
-				Release();
-			}
-		}
-	}
+	void DecrementIOCount() noexcept;
 	
-	// 연결 해제
+	// 연결 해제 (atomic CAS로 중복 호출 방지)
 	inline void DisconnectSession() noexcept
 	{
-		disconnect_flag_ = true;
-		CancelIoEx((HANDLE)sock_, NULL);
+		bool expected = false;
+		if (disconnect_flag_.compare_exchange_strong(expected, true))
+		{
+			// 최초 호출시에만 CancelIoEx 실행
+			CancelIoEx((HANDLE)sock_, NULL);
+		}
 	}
 	
 	template<typename T>
