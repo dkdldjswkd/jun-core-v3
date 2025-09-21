@@ -40,12 +40,12 @@ public:
 
 	// flag
 	bool send_flag_ = false;
-	std::atomic<bool> disconnect_flag_ = false;
+	std::atomic<bool> pending_disconnect_ = false;
 
 	// Send
-	LFQueue<std::vector<char>*> send_q_;			// 송신 대기 큐 (raw 데이터)
+	LFQueue<std::vector<char>*> send_q_;				// 송신 대기 큐 (raw 데이터)
 	std::vector<char>* send_packet_arr_[MAX_SEND_MSG];	// 현재 전송중인 패킷 벡터들
-	LONG send_packet_count_ = 0;					// 현재 전송중인 패킷 개수
+	LONG send_packet_count_ = 0;						// 현재 전송중인 패킷 개수
 
 	// Recv
 	RingBuffer recv_buf_;
@@ -96,7 +96,7 @@ public:
 	inline void DisconnectSession() noexcept
 	{
 		bool expected = false;
-		if (disconnect_flag_.compare_exchange_strong(expected, true))
+		if (pending_disconnect_.compare_exchange_strong(expected, true))
 		{
 			// 최초 호출시에만 CancelIoEx 실행
 			CancelIoEx((HANDLE)sock_, NULL);
@@ -108,6 +108,9 @@ public:
 	
 	// 비동기 송신 등록 (IOCPManager에서 이동)
 	void PostAsyncSend();
+	
+	// 비동기 수신 등록 (IOCPManager에서 이동)
+	bool PostAsyncReceive();
 };
 typedef Session* PSession;
 
@@ -115,7 +118,7 @@ typedef Session* PSession;
 template<typename T>
 inline bool Session::SendPacket(const T& packet)
 {
-    if (sock_ == INVALID_SOCKET || disconnect_flag_) 
+    if (sock_ == INVALID_SOCKET || pending_disconnect_) 
     {
         return false;
     }

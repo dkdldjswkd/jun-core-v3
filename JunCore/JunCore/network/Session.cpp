@@ -19,7 +19,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
 	ip_					= ip;
 	port_				= port;
 	send_flag_			= false;
-	disconnect_flag_	= false;
+	pending_disconnect_	= false;
 	send_packet_count_	= 0;
 	last_recv_time_		= static_cast<DWORD>(GetTickCount64());
 	engine_				= eng;
@@ -77,7 +77,6 @@ void Session::DecrementIOCount() noexcept
 	if (0 == InterlockedDecrement(&io_count_))
 	{
 		// * release_flag_(0), IOCount(0) -> release_flag_(1), IOCount(0)
-
 		if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0))
 		{
 			// 실제 해제 직전에 OnDisconnect 호출
@@ -95,28 +94,24 @@ void Session::PostAsyncSend()
     WSABUF wsaBuf[MAX_SEND_MSG];
     int preparedCount = 0;
 
-    // 운영 정책: 한 번에 보낼 수 있는 한도를 넘어선 세션은 즉시 차단
-    if (send_q_.GetUseCount() > MAX_SEND_MSG)
+    if (MAX_SEND_MSG < send_q_.GetUseCount())
     {
         DisconnectSession();
         return;
     }
 
-    // 송신할 패킷들 준비 (vector<char> 직접 전송)
     for (int i = 0; i < MAX_SEND_MSG; i++)
     {
-        if (send_q_.GetUseCount() <= 0) {
+        if (send_q_.GetUseCount() <= 0) 
+		{
             break;
         }
 
         send_q_.Dequeue(&send_packet_arr_[i]);
         ++preparedCount;
 
-        // 직접 raw 데이터 전송 (PacketBuffer 없이)
         wsaBuf[i].buf = send_packet_arr_[i]->data();
         wsaBuf[i].len = static_cast<DWORD>(send_packet_arr_[i]->size());
-        
-        LOG_DEBUG("[SESSION_SEND] Packet %d size: %d bytes", i, wsaBuf[i].len);
     }
 
     // 보낼 것이 없으면 실패
@@ -140,4 +135,38 @@ void Session::PostAsyncSend()
 			PostQueuedCompletionStatus(h_iocp_, 1, (ULONG_PTR)this, (LPOVERLAPPED)1);  // PQCS::async_send_fail
         }
     }
+}
+
+bool Session::PostAsyncReceive()
+{
+	if (sock_ == INVALID_SOCKET || pending_disconnect_)
+	{
+		return false;
+	}
+
+    DWORD   flags = 0;
+    WSABUF  wsaBuf[2];
+
+    // 수신 쓰기 위치
+    wsaBuf[0].buf = recv_buf_.GetWritePos();
+    wsaBuf[0].len = recv_buf_.DirectEnqueueSize();
+    // 수신 잔여 위치
+    wsaBuf[1].buf = recv_buf_.GetBeginPos();
+    wsaBuf[1].len = recv_buf_.RemainEnqueueSize();
+
+	// IO 카운트 증가
+    IncrementIOCount();
+    ZeroMemory(&recv_overlapped_, sizeof(recv_overlapped_));
+    
+    if (SOCKET_ERROR == WSARecv(sock_, wsaBuf, 2, NULL, &flags, &recv_overlapped_, NULL))
+    {
+        if (ERROR_IO_PENDING != WSAGetLastError())
+        {
+            // Worker에서 IOCount를 감소 시키기 위함
+			PostQueuedCompletionStatus(h_iocp_, 1, (ULONG_PTR)this, (LPOVERLAPPED)2);  // PQCS::async_recv_fail
+            return false;
+        }
+    }
+
+    return true;
 }

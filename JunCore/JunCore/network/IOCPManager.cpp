@@ -39,13 +39,13 @@ void IOCPManager::RunWorkerThread()
 		// 수신 완료 처리
 		if (p_overlapped == &session->recv_overlapped_)
 		{
-            LOG_DEBUG("recv size : %d", ioSize);
+            //LOG_DEBUG("recv size : %d", ioSize);
 			HandleRecvComplete(session, ioSize);
 		}
 		// 송신 완료 처리  
 		else if (p_overlapped == &session->send_overlapped_)
 		{
-            LOG_DEBUG("send size : %d", ioSize);
+            //LOG_DEBUG("send size : %d", ioSize);
 			HandleSendComplete(session);
 		}
 
@@ -104,7 +104,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         const UnifiedPacketHeader* header = reinterpret_cast<const UnifiedPacketHeader*>(&packet[0]);
 
         const uint32_t _packet_id = header->packet_id;
-        LOG_DEBUG("recv packet id : %d", _packet_id);
+        //LOG_DEBUG("recv packet id : %d", _packet_id);
 
         // Payload 추출
         std::vector<char> payload(packet.begin() + UNIFIED_HEADER_SIZE, packet.end());
@@ -120,9 +120,9 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         }
 	}
 
-	if (!session->disconnect_flag_)
+	if (!session->pending_disconnect_)
 	{
-		PostAsyncReceive(session);
+		session->PostAsyncReceive();
 	}
 }
 
@@ -140,49 +140,8 @@ void IOCPManager::HandleSendComplete(Session* session)
     InterlockedExchange8((char*)&session->send_flag_, false);
 
     // 추가 송신이 필요한지 확인
-    if (!session->disconnect_flag_ && session->send_q_.GetUseCount() > 0) 
+    if (!session->pending_disconnect_ && session->send_q_.GetUseCount() > 0) 
     {
         session->PostAsyncSend();  // Session이 직접 처리
     }
 }
-
-void IOCPManager::HandleSessionDisconnect(Session* session)
-{
-	// NetBase에 공통 disconnect 콜백 인터페이스 추가하는 것이 좋겠지만
-	// 일단 기존 방식대로 처리 - 각 엔진에서 자체적으로 처리하도록
-	
-	session->DisconnectSession();
-}
-
-//------------------------------
-// 비동기 I/O 등록 함수들 (NetBase에서 이동)
-//------------------------------
-
-bool IOCPManager::PostAsyncReceive(Session* session)
-{
-    DWORD   flags = 0;
-    WSABUF  wsaBuf[2];
-
-    // 수신 쓰기 위치
-    wsaBuf[0].buf = session->recv_buf_.GetWritePos();
-    wsaBuf[0].len = session->recv_buf_.DirectEnqueueSize();
-    // 수신 잔여 위치
-    wsaBuf[1].buf = session->recv_buf_.GetBeginPos();
-    wsaBuf[1].len = session->recv_buf_.RemainEnqueueSize();
-
-    session->IncrementIOCount();
-    ZeroMemory(&session->recv_overlapped_, sizeof(session->recv_overlapped_));
-    
-    if (SOCKET_ERROR == WSARecv(session->sock_, wsaBuf, 2, NULL, &flags, &session->recv_overlapped_, NULL))
-    {
-        if (ERROR_IO_PENDING != WSAGetLastError())
-        {
-            // Worker에서 IOCount를 감소 시키기 위함
-			PostQueuedCompletionStatus(session->GetIOCP(), 1, (ULONG_PTR)this, (LPOVERLAPPED)PQCS::async_recv_fail);
-            return false;
-        }
-    }
-
-    return true;
-}
-

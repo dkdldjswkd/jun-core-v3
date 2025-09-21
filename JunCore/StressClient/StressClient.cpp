@@ -40,7 +40,6 @@ void StressClient::Start()
 	session_data_vec.resize(SESSION_COUNT);
 	workerThreads.reserve(SESSION_COUNT);
 
-	// 워커 스레드들만 실행 (세션은 각 워커에서 생성)
 	for (int i = 0; i < SESSION_COUNT; i++)
 	{
 		workerThreads.emplace_back(&StressClient::SessionWorker, this, i);
@@ -94,8 +93,8 @@ void StressClient::HandleEchoResponse(Session& session, const echo::EchoResponse
 
 	// Echo 받은 메시지가 내가 보낸 메시지와 다르면 에러
 	LOG_ASSERT_RETURN_VOID(response.message() == expectedMessage,
-		"[StressTest][Session %d] Message mismatch! Expected: '%s', Got: '%s'",
-		sessionData->sessionIndex, expectedMessage.c_str(), response.message().c_str());
+						   "[StressTest][Session %d] Message mismatch! Expected: '%s', Got: '%s'",
+						   sessionData->sessionIndex, expectedMessage.c_str(), response.message().c_str());
 
 	// 디버깅 로그
 	// LOG_DEBUG("[StressTest][Session %d] Message verified: '%s'", sessionData->sessionIndex, response.message().c_str());
@@ -124,14 +123,16 @@ void StressClient::SessionWorker(int sessionIndex)
             }
             else
             {
-			    LOG_ASSERT(false, "[StressTest][Worker %d] Failed to connect", sessionIndex);
+			    LOG_ASSERT("[StressTest][Worker %d] Failed to connect", sessionIndex);
+				DisconnectSession(sessionData.session);
+				return;
             }
 		}
 
-		// Session disconnect 요청했다면,
-		if (sessionData.disconnectRequested.load()) 
+		// 정리 대기 중인 세션이라면,
+		if (sessionData.session->pending_disconnect_.load()) 
 		{
-			// Session 정리 대기
+			// 정리 대기
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			continue;
 		}
@@ -153,8 +154,13 @@ void StressClient::SessionWorker(int sessionIndex)
 		request.set_message(message);
 
 		// 패킷 송신, 실패 시 어설트
-		LOG_ASSERT(sessionData.session->SendPacket(request), "[StressTest][Session %d] Failed to send message", sessionIndex);
-
+		if (!sessionData.session->SendPacket(request))
+		{
+			LOG_ASSERT("[StressTest][Session %d] Failed to send message", sessionIndex);
+			DisconnectSession(sessionData.session);
+			return;
+		}
+		
 		// 스트레스 테스트를 위한 최소 간격
 		if (0 < MESSAGE_INTERVAL_MS)
 		{

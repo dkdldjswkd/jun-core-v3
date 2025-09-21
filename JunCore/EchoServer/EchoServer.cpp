@@ -24,7 +24,7 @@ void EchoServer::OnDisconnect(Session* session)
 
 void EchoServer::HandleEchoRequest(Session& _session, const echo::EchoRequest& request)
 {
-	LOG_DEBUG("HandleEchoRequest : %s", request.message().c_str());
+	//LOG_DEBUG("HandleEchoRequest : %s", request.message().c_str());
 	
 	echo::EchoResponse response;
 	response.set_message(request.message());

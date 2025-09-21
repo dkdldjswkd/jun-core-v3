@@ -161,7 +161,7 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 	}
 
 	// RECV 등록
-	if (!iocpManager->PostAsyncReceive(session))
+	if (!session->PostAsyncReceive())
 	{
 		session->DecrementIOCount();
 		return false;

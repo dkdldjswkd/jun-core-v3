@@ -64,30 +64,21 @@ private:
 public:
     ~IOCPManager();
     
-    // 복사/이동 금지 (RAII 리소스)
+    // 복사/이동 금지
     IOCPManager(const IOCPManager&) = delete;
     IOCPManager& operator=(const IOCPManager&) = delete;
     IOCPManager(IOCPManager&&) = delete;
     IOCPManager& operator=(IOCPManager&&) = delete;
 
 public:
-    //------------------------------
-    // IOCP 인터페이스 - 깔끔한 추상화
-    //------------------------------
     HANDLE GetHandle() const noexcept { return iocpHandle; }
     bool IsValid() const noexcept { return iocpHandle != INVALID_HANDLE_VALUE; }
     
     // 소켓을 IOCP에 등록
     bool RegisterSocket(SOCKET socket, Session* session);
     
-    
     // 종료 신호 전송
     void Shutdown();
-
-    //------------------------------
-    // 비동기 I/O 등록 함수들 (NetBase에서 사용)
-    //------------------------------
-    bool PostAsyncReceive(Session* session);
 
 private:
     //------------------------------
@@ -105,7 +96,6 @@ private:
     //------------------------------
     void HandleRecvComplete(Session* session, DWORD ioSize);
     void HandleSendComplete(Session* session);
-    void HandleSessionDisconnect(Session* session);
 };
 
 //------------------------------

@@ -99,12 +99,10 @@ inline void EnableConsoleColors()
         }                                                \
     } while(0)
 
-#define LOG_ASSERT(condition, format, ...)    \
-    do {                                      \
-        if (!(condition)) {                   \
-            LOG_ERROR(format, ##__VA_ARGS__); \
-            assert(condition);                \
-        }                                     \
+#define LOG_ASSERT(format, ...)         \
+    do {                                \
+        LOG_ERROR(format, ##__VA_ARGS__); \
+        assert(false);                  \
     } while(0)
 
 #define LOG_ASSERT_RETURN(condition, retval, format, ...)  \

@@ -115,22 +115,16 @@ inline Session* Client::Connect()
     }
 
     // RECV 등록
-    if (!iocpManager->PostAsyncReceive(session))
+    if (!session->PostAsyncReceive())
     {
         session->DecrementIOCount();
         return nullptr;
     }
-
     
     OnConnect(session);
     session->DecrementIOCount();
     return session;
 }
-
-
-
-
-
 
 //------------------------------
 // 내부 헬퍼 함수들
