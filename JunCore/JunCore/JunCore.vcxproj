@@ -22,7 +22,6 @@
     <ClCompile Include="network\IOCPManager.cpp" />
     <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="network\Session.cpp" />
-    <ClCompile Include="protocol\handshake.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h" />
@@ -32,7 +31,6 @@
     <ClInclude Include="network\NetBase.h" />
     <ClInclude Include="network\Server.h" />
     <ClInclude Include="network\Client.h" />
-    <ClInclude Include="protocol\handshake.pb.h" />
     <ClInclude Include="protocol\message.h" />
     <ClInclude Include="protocol\UnifiedPacketHeader.h" />
     <ClInclude Include="network\Session.h" />
@@ -42,9 +40,6 @@
     <ProjectReference Include="..\JunCommon\JunCommon.vcxproj">
       <Project>{d6bec493-6610-417f-a90b-ef0cd4ac7411}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="protocol\handshake.proto" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -114,6 +109,11 @@
     <OutDir>$(SolutionDir)build\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)build\obj\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -123,6 +123,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -140,6 +142,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,6 +159,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -172,6 +178,8 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
       <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

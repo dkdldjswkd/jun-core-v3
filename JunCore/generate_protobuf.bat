@@ -5,7 +5,7 @@ echo     Protobuf Auto-Generator for JunCore
 echo ===============================================
 
 :: protoc 경로 설정
-set PROTOC_PATH=C:\vcpkg\installed\x64-windows\tools\protobuf\protoc.exe
+set PROTOC_PATH=C:\vcpkg\packages\protobuf_x64-windows-static\tools\protobuf\protoc.exe
 if not exist "%PROTOC_PATH%" (
     echo [ERROR] protoc not found at %PROTOC_PATH%
     echo Please check your vcpkg installation

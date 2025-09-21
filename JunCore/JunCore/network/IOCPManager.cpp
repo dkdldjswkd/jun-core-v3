@@ -92,7 +92,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 		}
 
 		// 충분한 패킷 데이터가 도착했는지 확인
-        if (_recv_byte < _packet_len)
+        if (static_cast<uint32_t>(_recv_byte) < _packet_len)
         {
             break;
         }

@@ -14,42 +14,41 @@
 
 class NetBase
 {
-    friend class Session;  // Session이 protected 멤버에 접근 가능하도록
-    
+private:
+    friend class Session;
+	friend class IOCPManager;
+
+protected:
+    using PacketHandler = std::function<void(Session&, const std::vector<char>&)>;
+
 public:
     NetBase(std::shared_ptr<IOCPManager> manager);
     virtual ~NetBase();
 
-protected:
-    std::shared_ptr<IOCPManager> iocpManager;
-    std::unordered_map<uint32_t, std::function<void(Session&, const std::vector<char>&)>> packet_handlers_;
-    
-    bool initialized_ = false;
-    
-    // 사용자 재정의 함수들
-    virtual void RegisterPacketHandlers() = 0;
-    virtual void OnDisconnect(Session* session) = 0;
-
 public:
-    // 패킷 수신 처리 (IOCPManager에서 호출)
-    void OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload);
-    
-    // 엔진 초기화
-    void Initialize();
-    bool IsInitialized() const noexcept;
+	// 엔진 초기화
+	void Initialize();
+	bool IsInitialized() const noexcept;
 
 protected:
-    // 패킷 핸들러 등록 템플릿 함수
+    // 패킷 핸들러 등록
     template<typename T>
     void RegisterPacketHandler(std::function<void(Session&, const T&)> handler);
-    void DisconnectSession(Session* session);
+    virtual void RegisterPacketHandlers() = 0;
+
+	// 세션 연결 종료
+    virtual void OnDisconnect(Session* session) = 0;
 
 private:
     // 세션 유효성 검사
-    bool IsSessionValid(Session* session) const 
-    {
-        return session != nullptr && session->sock_ != INVALID_SOCKET;
-    }
+    bool IsSessionValid(Session* session) const;
+	void OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload);
+
+protected:
+	std::shared_ptr<IOCPManager> iocpManager;
+	std::unordered_map<uint32_t, PacketHandler> packet_handlers_;
+
+	bool initialized_ = false;
 };
 
 inline NetBase::NetBase(std::shared_ptr<IOCPManager> manager) : iocpManager(manager)
@@ -69,15 +68,6 @@ inline NetBase::~NetBase()
 {
     iocpManager.reset();
     WSAInitializer::Cleanup();
-}
-
-
-inline void NetBase::DisconnectSession(Session* session)
-{
-    if (IsSessionValid(session)) 
-    {
-        session->DisconnectSession();
-    }
 }
 
 inline void NetBase::OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload)
@@ -127,4 +117,9 @@ inline void NetBase::Initialize()
 inline bool NetBase::IsInitialized() const noexcept
 {
     return initialized_;
+}
+
+inline bool NetBase::IsSessionValid(Session* session) const
+{
+	return session != nullptr && session->sock_ != INVALID_SOCKET;
 }

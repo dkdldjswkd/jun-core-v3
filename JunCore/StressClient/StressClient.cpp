@@ -1,4 +1,4 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
+﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include "StressClient.h"
 #include <iostream>
 #include <chrono>
@@ -71,7 +71,7 @@ void StressClient::StopStressTest()
     {
         if (sessionData.session) 
         {
-            DisconnectSession(sessionData.session);
+			sessionData.session->Disconnect();
         }
     }
     
@@ -124,7 +124,7 @@ void StressClient::SessionWorker(int sessionIndex)
             else
             {
 			    LOG_ASSERT("[StressTest][Worker %d] Failed to connect", sessionIndex);
-				DisconnectSession(sessionData.session);
+				sessionData.session->Disconnect();
 				return;
             }
 		}
@@ -142,7 +142,7 @@ void StressClient::SessionWorker(int sessionIndex)
 		if (dist(sessionData.randomGenerator) <= DISCONNECT_PROBABILITY_PER_THOUSAND)
 		{
 			sessionData.disconnectRequested = true;
-			DisconnectSession(sessionData.session);
+			sessionData.session->Disconnect();
 			// session 포인터는 OnDisconnect에서 무효화
 			continue;
 		}
@@ -157,7 +157,7 @@ void StressClient::SessionWorker(int sessionIndex)
 		if (!sessionData.session->SendPacket(request))
 		{
 			LOG_ASSERT("[StressTest][Session %d] Failed to send message", sessionIndex);
-			DisconnectSession(sessionData.session);
+			sessionData.session->Disconnect();
 			return;
 		}
 		
@@ -171,7 +171,7 @@ void StressClient::SessionWorker(int sessionIndex)
 	// 정리
 	if (sessionData.session)
 	{
-		DisconnectSession(sessionData.session);
+		sessionData.session->Disconnect();
 	}
 
 	LOG_INFO("[StressTest][Session %d] Worker thread ended", sessionIndex);

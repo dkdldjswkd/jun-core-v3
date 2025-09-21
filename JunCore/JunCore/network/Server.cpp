@@ -173,13 +173,6 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 	return true;
 }
 
-void Server::OnClientDisconnect(Session* session)
-{
-    currentSessionCount--;
-    OnClientLeave(session);
-    // Session은 IOCount가 0이 되면 자동으로 Pool에 반환되므로 수동 해제 불필요
-}
-
 void Server::InitializeSessions(DWORD maxSessions)
 {
     sessions.resize(maxSessions);

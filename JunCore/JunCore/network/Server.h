@@ -65,7 +65,6 @@ private:
     void InitializeSessions(DWORD maxSessions);
     void CleanupSessions();
     bool OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr);
-    void OnClientDisconnect(Session* session);
 };
 
 //------------------------------

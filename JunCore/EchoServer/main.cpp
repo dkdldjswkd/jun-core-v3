@@ -1,7 +1,6 @@
 ﻿#include <iostream>
 #include "EchoServer.h"
 #include "../JunCommon/system/CrashDump.h"
-#include "../JunCore/protocol/handshake.pb.h"
 #include "../JunCore/network/IOCPManager.h"
 using namespace std;
 

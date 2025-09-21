@@ -8,7 +8,6 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
-  
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>source</Filter>
@@ -17,7 +16,6 @@
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
-  
   <ItemGroup>
     <ClInclude Include="EchoServer.h">
       <Filter>header</Filter>

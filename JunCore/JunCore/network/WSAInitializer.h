@@ -15,16 +15,15 @@ private:
 public:
     static bool Initialize()
     {
-        return WSAOnceInit::Initialize([]() -> bool {
-            WSADATA wsaData;
-            int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-            if (result != 0) {
-                LOG_ERROR("[WSAInitializer] WSAStartup failed with error: %d", result);
-                return false;
-            }
-            LOG_INFO("[WSAInitializer] WSAStartup succeeded (first call)");
-            return true;
-        });
+		return WSAOnceInit::Initialize([]() {
+			WSADATA wsaData;
+			if (auto result = WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+            {
+				LOG_ERROR("[WSAInitializer] WSAStartup failed with error: %d", result);
+				return false;
+			}
+			return true;
+		});
     }
     
     static void Cleanup()

@@ -92,13 +92,11 @@ public:
 	
 	void DecrementIOCount() noexcept;
 	
-	// 연결 해제 (atomic CAS로 중복 호출 방지)
-	inline void DisconnectSession() noexcept
+	inline void Disconnect() noexcept
 	{
 		bool expected = false;
 		if (pending_disconnect_.compare_exchange_strong(expected, true))
 		{
-			// 최초 호출시에만 CancelIoEx 실행
 			CancelIoEx((HANDLE)sock_, NULL);
 		}
 	}

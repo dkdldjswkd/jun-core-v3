@@ -19,7 +19,7 @@ void EchoServer::RegisterPacketHandlers()
 
 void EchoServer::OnDisconnect(Session* session)
 {
-	LOG_DEBUG("Client disconnected: Session 0x%llX", (uintptr_t)session);
+	LOG_INFO("Client disconnected: Session 0x%llX", (uintptr_t)session);
 }
 
 void EchoServer::HandleEchoRequest(Session& _session, const echo::EchoRequest& request)

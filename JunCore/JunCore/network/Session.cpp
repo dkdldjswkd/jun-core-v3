@@ -34,8 +34,6 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
 
 void Session::Release()
 {
-	LOG_DEBUG("[Session Release] Session: 0x%llX", (uintptr_t)this);
-
 	// 소켓 정리
 	if (sock_ != INVALID_SOCKET) 
 	{
@@ -96,7 +94,7 @@ void Session::PostAsyncSend()
 
     if (MAX_SEND_MSG < send_q_.GetUseCount())
     {
-        DisconnectSession();
+        Disconnect();
         return;
     }
 
@@ -117,7 +115,7 @@ void Session::PostAsyncSend()
     // 보낼 것이 없으면 실패
     if (preparedCount == 0) 
     {
-        DisconnectSession();
+        Disconnect();
         return;
     }
 

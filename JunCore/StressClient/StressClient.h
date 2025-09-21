@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../JunCore/network/Client.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
 #include "echo_message.pb.h"
