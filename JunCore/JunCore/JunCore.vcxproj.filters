@@ -24,6 +24,9 @@
     <ClCompile Include="network\Session.cpp">
       <Filter>network</Filter>
     </ClCompile>
+    <ClCompile Include="log.cpp">
+      <Filter>util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network\NetBase.h">
