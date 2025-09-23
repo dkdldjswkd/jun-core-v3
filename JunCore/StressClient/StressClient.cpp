@@ -208,7 +208,7 @@ void StressClient::OnConnect(Session* session)
 	LOG_INFO("[StressTest] Session connected: 0x%llX", (uintptr_t)session);
 }
 
-void StressClient::OnDisconnect(Session* session)
+void StressClient::OnSessionDisconnect(Session* session)
 {
 	SessionData* sessionData = FindSessionData(session);
 	if (sessionData)

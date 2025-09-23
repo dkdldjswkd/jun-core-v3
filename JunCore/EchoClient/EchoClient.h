@@ -11,7 +11,7 @@ public:
 
 protected:
 	void OnConnect(Session* session) override;
-	void OnDisconnect(Session* session) override;
+	void OnSessionDisconnect(Session* session) override;
 	
 	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
 	void RegisterPacketHandlers() override;

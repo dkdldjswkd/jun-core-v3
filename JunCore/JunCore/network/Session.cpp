@@ -60,8 +60,6 @@ void Session::Release()
 			}
 		}
 	}
-
-	// 세션 안전하게 delete 하도록 정책 필요함
 }
 
 void Session::SetSessionPool(std::vector<std::unique_ptr<Session>>* pool, LFStack<DWORD>* indexStack)
@@ -80,7 +78,7 @@ void Session::DecrementIOCount() noexcept
 			// 실제 해제 직전에 OnDisconnect 호출
 			if (engine_) 
 			{
-				engine_->OnDisconnect(this);
+				engine_->OnSessionDisconnect(this);
 			}
 			Release();
 		}

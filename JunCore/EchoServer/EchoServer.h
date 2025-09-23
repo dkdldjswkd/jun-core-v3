@@ -2,6 +2,7 @@
 #include "../JunCore/network/Server.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
 #include "echo_message.pb.h"
+#include <atomic>
 
 class EchoServer : public Server 
 {
@@ -9,22 +10,30 @@ public:
 	EchoServer(std::shared_ptr<IOCPManager> manager);
 	~EchoServer();
 
-protected:
-	void OnClientJoin(Session* session) override;
-	void OnClientLeave(Session* session) override;
-
-	// Server 전용 가상함수 구현
-	bool OnConnectionRequest(in_addr clientIP, WORD clientPort) override;
-	void OnServerStart() override;
-	void OnServerStop() override;
-	
-	// NetBase 순수 가상함수 구현
-	void RegisterPacketHandlers() override;
-	void OnDisconnect(Session* session) override;
+public:
+	// 모니터링 함수
+	uint32_t GetCurrentSessions()	const { return currentSessions_.load();   };
+	uint32_t GetTotalConnected()	const { return totalConnected_.load();	  };
+	uint32_t GetTotalDisconnected() const { return totalDisconnected_.load(); };
 
 private:
-	Session* currentHandlingSession_ = nullptr;
-	
-	// 패킷별 핸들러 함수들 (PacketTest.cpp의 람다 대신 멤버 함수)
+	// 패킷 핸들
 	void HandleEchoRequest(Session& _session, const echo::EchoRequest& request);
+
+	// 사용자 재정의 함수
+	void OnSessionConnect(Session* session) override;
+	void OnSessionDisconnect(Session* session) override;
+	void OnServerStart() override;
+	void OnServerStop() override;
+	void RegisterPacketHandlers() override;
+
+private:
+	// 세션 모니터링 변수
+	std::atomic<uint32_t> currentSessions_{0};      // 현재 접속중인 세션 수
+	std::atomic<uint32_t> totalConnected_{0};       // 누적 연결된 세션 수  
+	std::atomic<uint32_t> totalDisconnected_{0};    // 누적 끊어진 세션 수
 };
+
+//uint32_t EchoServer::GetCurrentSessions()	const { return currentSessions_.load();   }
+//uint32_t EchoServer::GetTotalConnected()	const { return totalConnected_.load();	  }
+//uint32_t EchoServer::GetTotalDisconnected() const { return totalDisconnected_.load(); }

@@ -62,7 +62,6 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         running = true;
         acceptThread = std::thread(&Server::AcceptThreadFunc, this);
         
-        // 8. 사용자 콜백 호출
         OnServerStart();
         
         LOG_INFO("Server started on %s:%d (Max Sessions: %lu)", bindIP, port, maxSessions);
@@ -77,7 +76,8 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
 
 void Server::StopServer()
 {
-    if (!running.exchange(false)) {
+    if (!running.exchange(false)) 
+    {
         return; // 이미 정지됨
     }
     
@@ -167,8 +167,7 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 		return false;
 	}
 
-	OnClientJoin(session);
-	currentSessionCount++;
+	OnSessionConnect(session);
 	session->DecrementIOCount();
 	return true;
 }
@@ -177,14 +176,14 @@ void Server::InitializeSessions(DWORD maxSessions)
 {
     sessions.resize(maxSessions);
     
-    // 세션 인덱스 스택 초기화 (역순으로 푸시)
-    for (int i = maxSessions - 1; i >= 0; i--) {
+    // 세션 인덱스 스택 초기화
+    for (int i = maxSessions - 1; i >= 0; i--) 
+    {
         sessionIndexStack.Push(i);
         
-        // 세션 동적 생성
         sessions[i] = std::make_unique<Session>();
         
-        // 각 세션에 Pool 정보 직접 설정 (간단하고 명확함)
+        // 각 세션에 Pool 정보 직접 설정
         sessions[i]->SetSessionPool(&sessions, &sessionIndexStack);
     }
 }
@@ -192,7 +191,6 @@ void Server::InitializeSessions(DWORD maxSessions)
 void Server::CleanupSessions()
 {
     sessions.clear();
-    currentSessionCount = 0;
 }
 
 Session* Server::AllocateSession()

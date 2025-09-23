@@ -66,12 +66,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 	for (;;)
 	{
 		// 무한루프 방지
-		if (MAX_LOOP_COUNT < ++loopCount)
-		{
-            // 세션 잘라야하나?
-			LOG_ERROR("IOCPManager: MAX_LOOP_COUNT reached");
-			break;
-		}
+		LOG_ERROR_RETURN_VOID(++loopCount <= MAX_LOOP_COUNT, "IOCPManager: MAX_LOOP_COUNT reached");
 
 		const int _recv_byte = session->recv_buf_.GetUseSize();
 
@@ -85,11 +80,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 		session->recv_buf_.Peek(&_packet_len, sizeof(uint32_t));
 
 		// 패킷 크기 유효성 검사
-		if (!IsValidPacketSize(_packet_len))
-		{
-			LOG_ERROR("Invalid packet length: %d", _packet_len);
-			return;
-		}
+		LOG_ERROR_RETURN_VOID(IsValidPacketSize(_packet_len), "Invalid packet length: %d", _packet_len);
 
 		// 충분한 패킷 데이터가 도착했는지 확인
         if (static_cast<uint32_t>(_recv_byte) < _packet_len)
@@ -109,14 +100,14 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         // Payload 추출
         std::vector<char> payload(packet.begin() + UNIFIED_HEADER_SIZE, packet.end());
 
-        NetBase* engine = session->GetEngine();
-        if (engine) 
+        if (NetBase* engine = session->GetEngine())
         {
             engine->OnPacketReceived(session, header->packet_id, payload);
         }
         else 
         {
             LOG_ERROR("Session has no engine assigned");
+            return;
         }
 	}
 

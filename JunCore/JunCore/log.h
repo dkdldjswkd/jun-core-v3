@@ -94,6 +94,8 @@ inline void EnableConsoleColors()
     }
 }
 
+#define SET_LOG_LEVEL(level) AsyncLogger::GetInstance().SetLogLevel(level)
+
 #define LOG_ERROR(format, ...)   AsyncLogger::GetInstance().Log(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
 #define LOG_WARN(format, ...)    AsyncLogger::GetInstance().Log(LOG_LEVEL_WARN, format, ##__VA_ARGS__)
 #define LOG_INFO(format, ...)    AsyncLogger::GetInstance().Log(LOG_LEVEL_INFO, format, ##__VA_ARGS__)

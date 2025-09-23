@@ -38,7 +38,6 @@ private:
     std::string serverIP;
     WORD serverPort;
     
-    
     // 내부 헬퍼 함수들
     bool RegisterToIOCP(Session* session);
 };

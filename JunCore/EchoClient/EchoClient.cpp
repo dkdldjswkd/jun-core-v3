@@ -13,9 +13,9 @@ EchoClient::~EchoClient()
 void EchoClient::RegisterPacketHandlers()
 {
 	RegisterPacketHandler<echo::EchoResponse>([this](Session& session, const echo::EchoResponse& response)
-		{
-			LOG_DEBUG("Received EchoResponse : %s", response.message().c_str());
-		});
+	{
+		LOG_DEBUG("Received EchoResponse : %s", response.message().c_str());
+	});
 }
 
 void EchoClient::OnConnect(Session* session)
@@ -23,7 +23,7 @@ void EchoClient::OnConnect(Session* session)
 	LOG_INFO("Connected to server successfully! Session: 0x%llX", (uintptr_t)session);
 }
 
-void EchoClient::OnDisconnect(Session* session)
+void EchoClient::OnSessionDisconnect(Session* session)
 {
 	LOG_INFO("Disconnected from server. Session: 0x%llX", (uintptr_t)session);
 }

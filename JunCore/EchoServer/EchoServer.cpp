@@ -12,13 +12,15 @@ EchoServer::~EchoServer()
 void EchoServer::RegisterPacketHandlers()
 {
 	RegisterPacketHandler<echo::EchoRequest>([this](Session& _session, const echo::EchoRequest& request)
-		{
-			this->HandleEchoRequest(_session, request);
-		});
+	{
+		this->HandleEchoRequest(_session, request);
+	});
 }
 
-void EchoServer::OnDisconnect(Session* session)
+void EchoServer::OnSessionDisconnect(Session* session)
 {
+	currentSessions_--;
+	totalDisconnected_++;
 	LOG_INFO("Client disconnected: Session 0x%llX", (uintptr_t)session);
 }
 
@@ -33,20 +35,11 @@ void EchoServer::HandleEchoRequest(Session& _session, const echo::EchoRequest& r
 	return;
 }
 
-bool EchoServer::OnConnectionRequest(in_addr clientIP, WORD clientPort) 
+void EchoServer::OnSessionConnect(Session* session) 
 {
-	// 모든 클라이언트 허용
-	return true;
-}
-
-void EchoServer::OnClientJoin(Session* session) 
-{
+	currentSessions_++;
+	totalConnected_++;
 	LOG_INFO("[0x%llX][JOIN] Client connected", (uintptr_t)session);
-}
-
-void EchoServer::OnClientLeave(Session* session) 
-{
-	LOG_INFO("[0x%llX][LEAVE] Client disconnected", (uintptr_t)session);
 }
 
 void EchoServer::OnServerStart()

@@ -31,7 +31,7 @@ public:
 
 protected:
     void OnConnect(Session* session) override;
-    void OnDisconnect(Session* session) override;
+    void OnSessionDisconnect(Session* session) override;
     void RegisterPacketHandlers() override;
 
 private:

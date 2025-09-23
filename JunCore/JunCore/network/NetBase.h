@@ -31,17 +31,18 @@ public:
 	bool IsInitialized() const noexcept;
 
 protected:
-    // 패킷 핸들러 등록
+    // 패킷 핸들 등록
     template<typename T>
     void RegisterPacketHandler(std::function<void(Session&, const T&)> handler);
     virtual void RegisterPacketHandlers() = 0;
 
-	// 세션 연결 종료
-    virtual void OnDisconnect(Session* session) = 0;
+	//------------------------------
+    // 서버/클라 공용 가상함수 - 사용자가 재정의
+    //------------------------------
+    virtual void OnSessionDisconnect(Session* session) = 0;
 
 private:
-    // 세션 유효성 검사
-    bool IsSessionValid(Session* session) const;
+    // 패킷 핸들 caller
 	void OnPacketReceived(Session* session, uint32_t packet_id, const std::vector<char>& payload);
 
 protected:
@@ -117,9 +118,4 @@ inline void NetBase::Initialize()
 inline bool NetBase::IsInitialized() const noexcept
 {
     return initialized_;
-}
-
-inline bool NetBase::IsSessionValid(Session* session) const
-{
-	return session != nullptr && session->sock_ != INVALID_SOCKET;
 }
