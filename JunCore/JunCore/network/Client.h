@@ -65,25 +65,23 @@ inline Session* Client::Connect()
     }
     
     // 새로운 세션 동적 생성
-    Session* session = new Session();
-    if (!session)
+    std::shared_ptr<Session> p_session = std::make_shared<Session>();
+    if (!p_session)
     {
         LOG_ERROR("Failed to create session");
         return nullptr;
     }
     
-    session->IncrementIOCount();
-    session->sock_ = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
-    if (session->sock_ == INVALID_SOCKET)
+    p_session->sock_ = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+    if (p_session->sock_ == INVALID_SOCKET)
     {
-        session->DecrementIOCount();
         LOG_ERROR("Failed to create client socket (Error: %d)", WSAGetLastError());
         return nullptr;
     }
     
     // 세션 초기화
     in_addr clientIP = { 0 };
-    session->Set(session->sock_, clientIP, 0, this);
+    p_session->Set(p_session->sock_, clientIP, 0, this);
     
     // 서버 연결
     SOCKADDR_IN serverAddr{};
@@ -91,14 +89,12 @@ inline Session* Client::Connect()
     serverAddr.sin_port = htons(serverPort);
     if (inet_pton(AF_INET, serverIP.c_str(), &serverAddr.sin_addr) != 1)
     {
-        session->DecrementIOCount();
         LOG_ERROR("Invalid server IP address: %s", serverIP.c_str());
         return nullptr;
     }
 
-    if (connect(session->sock_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
+    if (connect(p_session->sock_, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
     {
-        session->DecrementIOCount();
         LOG_ERROR("Failed to connect to server %s:%d (Error: %d)", serverIP.c_str(), serverPort, WSAGetLastError());
         return nullptr;
     }
@@ -106,23 +102,20 @@ inline Session* Client::Connect()
     LOG_INFO("Connected to server %s:%d", serverIP.c_str(), serverPort);
 
     // IOCP에 SOCKET 등록
-    if (!RegisterToIOCP(session))
+    if (!RegisterToIOCP(p_session.get()))
     {
         LOG_ERROR("Failed to register client socket to IOCP (Error: %d)", GetLastError());
-        session->DecrementIOCount();
         return nullptr;
     }
 
     // RECV 등록
-    if (!session->PostAsyncReceive())
+    if (!p_session->PostAsyncReceive())
     {
-        session->DecrementIOCount();
         return nullptr;
     }
     
-    OnConnect(session);
-    session->DecrementIOCount();
-    return session;
+    OnConnect(p_session.get());
+    return p_session.get();
 }
 
 //------------------------------

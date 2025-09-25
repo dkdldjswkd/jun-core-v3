@@ -46,7 +46,7 @@ private:
     std::atomic<bool> running{false};
     
     // 세션 관리 (포인터 기반으로 변경)
-    std::vector<std::unique_ptr<Session>> sessions;
+    std::vector<std::unique_ptr<Session>> sessions; // 제거예정
     LFStack<DWORD> sessionIndexStack;
     
     //------------------------------

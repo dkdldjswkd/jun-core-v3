@@ -14,9 +14,9 @@ void IOCPManager::RunWorkerThread()
     {
         DWORD ioSize = 0;
         Session* session = nullptr;
-        LPOVERLAPPED p_overlapped = nullptr;
+        OverlappedEx* p_overlapped;
 
-        BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, (PULONG_PTR)&session, &p_overlapped, INFINITE);
+		BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, (PULONG_PTR)&session, (LPOVERLAPPED*)&p_overlapped, INFINITE);
 
         // IOCP 종료 메시지
         if (ioSize == 0 && session == nullptr && p_overlapped == nullptr)
@@ -37,20 +37,20 @@ void IOCPManager::RunWorkerThread()
 		}
 
 		// 수신 완료 처리
-		if (p_overlapped == &session->recv_overlapped_)
+		if (p_overlapped->operation_ == IOOperation::IO_RECV)
 		{
             //LOG_DEBUG("recv size : %d", ioSize);
 			HandleRecvComplete(session, ioSize);
 		}
 		// 송신 완료 처리  
-		else if (p_overlapped == &session->send_overlapped_)
+		if (p_overlapped->operation_ == IOOperation::IO_SEND)
 		{
             //LOG_DEBUG("send size : %d", ioSize);
 			HandleSendComplete(session);
 		}
 
 	DecrementIOCount:
-		session->DecrementIOCount();
+		delete p_overlapped;
 	}
 }
 

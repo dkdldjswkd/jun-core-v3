@@ -135,7 +135,7 @@ void Server::AcceptThreadFunc()
 bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 {
     // 세션 할당
-    Session* session = AllocateSession();
+	std::shared_ptr<Session> session = std::make_shared<Session>();
     if (!session) 
     {
         LOG_ERROR("Session allocation failed - closing connection");
@@ -143,32 +143,25 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
         return false;
     }
 
-    // 다른 스레드에서 정리되지 않도록 IOCount를 미리 선점한다.
-    session->IncrementIOCount();
-
     // 세션 초기화
     in_addr clientIP = clientAddr->sin_addr;
     WORD clientPort = ntohs(clientAddr->sin_port);
     session->Set(clientSocket, clientIP, clientPort, this);  // SessionId 제거
     
 	// IOCP에 SOCKET 등록
-	if (!iocpManager->RegisterSocket(clientSocket, session))
+	if (!iocpManager->RegisterSocket(clientSocket, session.get()))
 	{
-		LOG_ERROR("IOCP registration failed for session 0x%llX", (uintptr_t)session);
-		// Session은 IOCount가 0이 되면 자동으로 Pool에 반환됨
-        session->DecrementIOCount();
+		LOG_ERROR("IOCP registration failed for session 0x%llX", (uintptr_t)session.get());
 		return false;
 	}
 
 	// RECV 등록
 	if (!session->PostAsyncReceive())
 	{
-		session->DecrementIOCount();
 		return false;
 	}
 
-	OnSessionConnect(session);
-	session->DecrementIOCount();
+	OnSessionConnect(session.get());
 	return true;
 }
 

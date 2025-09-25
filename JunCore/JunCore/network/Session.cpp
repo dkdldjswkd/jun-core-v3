@@ -10,11 +10,17 @@
 //------------------------------
 
 Session::Session() {}
-Session::~Session() {}
+Session::~Session() 
+{
+	if (engine_)
+	{
+		engine_->OnSessionDisconnect(this);
+	}
+	Release();
+}
 
 void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
 {
-	release_flag_		= false;
 	sock_				= sock;
 	ip_					= ip;
 	port_				= port;
@@ -42,10 +48,6 @@ void Session::Release()
 	
 	Set(INVALID_SOCKET, {0}, 0, nullptr);
 	
-	// 해제 상태로 설정
-	release_flag_ = true;
-	io_count_ = 0;
-	
 	// Pool이 설정되어 있는 경우에만 반환
 	if (session_pool_ && session_index_stack_)
 	{
@@ -68,22 +70,6 @@ void Session::SetSessionPool(std::vector<std::unique_ptr<Session>>* pool, LFStac
 	session_index_stack_ = indexStack;
 }
 
-void Session::DecrementIOCount() noexcept
-{
-	if (0 == InterlockedDecrement(&io_count_))
-	{
-		// * release_flag_(0), IOCount(0) -> release_flag_(1), IOCount(0)
-		if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0))
-		{
-			// 실제 해제 직전에 OnDisconnect 호출
-			if (engine_) 
-			{
-				engine_->OnSessionDisconnect(this);
-			}
-			Release();
-		}
-	}
-}
 
 void Session::PostAsyncSend()
 {
@@ -120,14 +106,14 @@ void Session::PostAsyncSend()
     // 준비된 패킷 수 커밋
     send_packet_count_ = preparedCount;
 
-    IncrementIOCount();
-    ZeroMemory(&send_overlapped_, sizeof(send_overlapped_));
+	// 추후 Pool 할당으로 개선
+	auto send_overlapped_ = new OverlappedEx(shared_from_this(), IOOperation::IO_SEND);
     
-    if (SOCKET_ERROR == WSASend(sock_, wsaBuf, send_packet_count_, NULL, 0, &send_overlapped_, NULL))
+    if (SOCKET_ERROR == WSASend(sock_, wsaBuf, send_packet_count_, NULL, 0, &send_overlapped_->overlapped_, NULL))
     {
         if (ERROR_IO_PENDING != WSAGetLastError())
         {
-			// Worker에서 IOCount를 감소 시키기 위함 (자신의 IOCP 핸들 사용)
+			// Worker에서 IOCount를 감소 시키기 위함
 			PostQueuedCompletionStatus(h_iocp_, 1, (ULONG_PTR)this, (LPOVERLAPPED)1);  // PQCS::async_send_fail
         }
     }
@@ -150,11 +136,10 @@ bool Session::PostAsyncReceive()
     wsaBuf[1].buf = recv_buf_.GetBeginPos();
     wsaBuf[1].len = recv_buf_.RemainEnqueueSize();
 
-	// IO 카운트 증가
-    IncrementIOCount();
-    ZeroMemory(&recv_overlapped_, sizeof(recv_overlapped_));
+	// 추후 Pool 할당으로 개선
+	auto recv_overlapped = new OverlappedEx(shared_from_this(), IOOperation::IO_RECV);
     
-    if (SOCKET_ERROR == WSARecv(sock_, wsaBuf, 2, NULL, &flags, &recv_overlapped_, NULL))
+	if (SOCKET_ERROR == WSARecv(sock_, wsaBuf, 2, NULL, &flags, &recv_overlapped->overlapped_, NULL))
     {
         if (ERROR_IO_PENDING != WSAGetLastError())
         {

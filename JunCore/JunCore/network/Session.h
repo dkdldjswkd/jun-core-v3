@@ -8,9 +8,32 @@
 #include <vector>
 #include <string>
 #include <atomic>
+#include <memory>
 #include "IOCPManager.h"
 
 constexpr int MAX_SEND_MSG = 100;
+
+class Session;
+
+enum class IOOperation
+{
+	IO_RECV,
+	IO_SEND,
+	IO_ACCEPT,
+	IO_DISCONNECT
+};
+
+struct OverlappedEx
+{
+	OverlappedEx(std::shared_ptr<Session> session, IOOperation operation_)
+		: operation_(operation_), session_(session)
+	{}
+	~OverlappedEx(){}
+
+	OVERLAPPED overlapped_ = { 0, };
+	std::shared_ptr<Session> session_;
+	IOOperation operation_;
+};
 
 //------------------------------
 // Session
@@ -18,7 +41,7 @@ constexpr int MAX_SEND_MSG = 100;
 class IOCPManager; // Forward declaration
 class NetBase;     // Forward declaration
 
-class Session
+class Session : public std::enable_shared_from_this<Session>
 {
 	friend class IOCPManager;
 
@@ -53,16 +76,8 @@ public:
 	// TimeOut
 	DWORD last_recv_time_;
 
-	// Overlapped
-	OVERLAPPED recv_overlapped_ = { 0, };
-	OVERLAPPED send_overlapped_ = { 0, };
-
 	// 암호화
 	std::vector<char> aes_key_;
-
-	// 세션 해제여부와 카운트 관리 (release_flag_, io_count_를 8byte로 정렬, false 캐시라인과 분리되게 유도)
-	alignas(64) BOOL release_flag_ = true;
-	LONG io_count_ = 0;
 
 private:
 	HANDLE h_iocp_ = INVALID_HANDLE_VALUE;  // IOCP 핸들 저장
@@ -84,13 +99,6 @@ public:
 	
 	inline void SetEngine(class NetBase* eng) { engine_ = eng; }
 	inline class NetBase* GetEngine() const { return engine_; }
-	
-	__forceinline void IncrementIOCount() noexcept
-	{
-		InterlockedIncrement(&io_count_);
-	}
-	
-	void DecrementIOCount() noexcept;
 	
 	inline void Disconnect() noexcept
 	{
