@@ -10,6 +10,15 @@
 
 void IOCPManager::RunWorkerThread()
 {
+    thread_local TimeWindowCounter<uint64_t> tlsRecvCounter;
+    thread_local TimeWindowCounter<uint64_t> tlsSendCounter;
+    
+    static std::atomic<int> nextWorkerIndex{0};
+    const int workerIndex = nextWorkerIndex.fetch_add(1);
+    
+    recvCounters[workerIndex] = &tlsRecvCounter;
+    sendCounters[workerIndex] = &tlsSendCounter;
+    
     for (;;) 
     {
         DWORD ioSize = 0;
@@ -39,13 +48,19 @@ void IOCPManager::RunWorkerThread()
 		// 수신 완료 처리
 		if (p_overlapped->operation_ == IOOperation::IO_RECV)
 		{
-            //LOG_DEBUG("recv size : %d", ioSize);
+            if (enableMonitoring) 
+            {
+                tlsRecvCounter.Add(ioSize);
+            }
 			HandleRecvComplete(session, ioSize);
 		}
 		// 송신 완료 처리  
 		if (p_overlapped->operation_ == IOOperation::IO_SEND)
 		{
-            //LOG_DEBUG("send size : %d", ioSize);
+            if (enableMonitoring) 
+            {
+                tlsSendCounter.Add(ioSize);
+            }
 			HandleSendComplete(session);
 		}
 
@@ -135,4 +150,41 @@ void IOCPManager::HandleSendComplete(Session* session)
     {
         session->PostAsyncSend();  // Session이 직접 처리
     }
+}
+
+//------------------------------
+// 네트워크 통계 조회 함수들
+//------------------------------
+double IOCPManager::GetRecvBytesPerSecond(int seconds) const
+{
+    double total = 0.0;
+    for (auto* counter : recvCounters) 
+    {
+        if (counter != nullptr) 
+        {
+            total += counter->GetAverage(seconds);
+        }
+        else
+        {
+			LOG_ERROR("recvCounters contains a null pointer");
+        }
+    }
+    return total;
+}
+
+double IOCPManager::GetSendBytesPerSecond(int seconds) const
+{
+    double total = 0.0;
+    for (auto* counter : sendCounters) 
+    {
+        if (counter != nullptr) 
+        {
+            total += counter->GetAverage(seconds);
+        }
+		else
+		{
+			LOG_ERROR("sendCounters contains a null pointer");
+		}
+    }
+    return total;
 }

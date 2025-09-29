@@ -176,6 +176,7 @@
     <ClInclude Include="timer\PerformanceCounter.h" />
     <ClInclude Include="timer\ProcessCpuMonitor.h" />
     <ClInclude Include="timer\Profiler.h" />
+    <ClInclude Include="timer\SlidingWindowCounter.h" />
     <ClInclude Include="crypto\AES128.h" />
     <ClInclude Include="crypto\RSA2048.h" />
     <ClInclude Include="queue\JobQueue.h" />

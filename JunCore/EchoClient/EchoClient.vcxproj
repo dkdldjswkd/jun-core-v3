@@ -174,11 +174,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EchoClient.h" />
+    <ClInclude Include="echo_message.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JunCore\JunCore.vcxproj">
       <Project>{23033721-38db-4624-a7dc-891527669bbb}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="echo_message.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

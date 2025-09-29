@@ -29,6 +29,11 @@ public:
 	// 엔진 초기화
 	void Initialize();
 	bool IsInitialized() const noexcept;
+	
+    // 퍼포먼스 모니터링
+	double GetRecvBytesPerSecond(int seconds) const;
+	double GetSendBytesPerSecond(int seconds) const;
+	bool IsMonitoringEnabled() const;
 
 protected:
     // 패킷 핸들 등록
@@ -118,4 +123,19 @@ inline void NetBase::Initialize()
 inline bool NetBase::IsInitialized() const noexcept
 {
     return initialized_;
+}
+
+inline double NetBase::GetRecvBytesPerSecond(int seconds) const
+{
+    return iocpManager->GetRecvBytesPerSecond(seconds);
+}
+
+inline double NetBase::GetSendBytesPerSecond(int seconds) const
+{
+    return iocpManager->GetSendBytesPerSecond(seconds);
+}
+
+inline bool NetBase::IsMonitoringEnabled() const
+{
+    return iocpManager->IsMonitoringEnabled();
 }

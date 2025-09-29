@@ -32,7 +32,6 @@
     <ClInclude Include="network\NetBase.h" />
     <ClInclude Include="network\Server.h" />
     <ClInclude Include="network\Client.h" />
-    <ClInclude Include="protocol\message.h" />
     <ClInclude Include="protocol\UnifiedPacketHeader.h" />
     <ClInclude Include="network\Session.h" />
     <ClInclude Include="network\WSAInitializer.h" />

@@ -7,6 +7,9 @@
     <Filter Include="header">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="protocol">
+      <UniqueIdentifier>{fa4b5e4b-fba5-4c90-82c8-67b712f5bf49}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -15,10 +18,21 @@
     <ClCompile Include="EchoServer.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="echo_message.pb.cc">
+      <Filter>protocol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EchoServer.h">
       <Filter>header</Filter>
     </ClInclude>
+    <ClInclude Include="echo_message.pb.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="echo_message.proto">
+      <Filter>protocol</Filter>
+    </None>
   </ItemGroup>
 </Project>

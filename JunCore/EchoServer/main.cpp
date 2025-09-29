@@ -13,7 +13,7 @@ int main()
 {
 	try
 	{
-		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
+		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).WithMonitoring(true).Build();
 		
 		if (!iocpManager->IsValid()) 
 		{
@@ -63,8 +63,13 @@ void log(const EchoServer& server)
 		"현재 접속중인 세션 수: %u\n"
 		"누적 연결된 세션 수: %u\n"
 		"누적 끊어진 세션 수: %u\n"
+		"=== 네트워크 통계 (10초) ===\n"
+		"수신 속도: %.2f KB/s\n"
+		"송신 속도: %.2f KB/s\n"
 		"========================\n",
 		server.GetCurrentSessions(),
 		server.GetTotalConnected(),
-		server.GetTotalDisconnected());
+		server.GetTotalDisconnected(),
+		server.GetRecvBytesPerSecond(10) / 1024.0,
+		server.GetSendBytesPerSecond(10) / 1024.0);
 }

@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "../core/WindowsIncludes.h"
 #include "Session.h"
+#include "../../JunCommon/timer/SlidingWindowCounter.h"
 #include <vector>
 #include <thread>
 #include <functional>
@@ -27,20 +28,25 @@ class Session;
 
 class IOCPManager final
 {
-    // Builder와 NetBase를 friend로 선언
     friend class Builder;
     friend class NetBase;
     
 private:
-    // IOCP 리소스
     HANDLE iocpHandle;
     std::vector<std::thread> workerThreads;
     std::atomic<bool> shutdown{false};
+    
+private:
+    // 퍼포먼스 모니터링
+    bool enableMonitoring{false};
+    std::vector<TimeWindowCounter<uint64_t>*> recvCounters;
+    std::vector<TimeWindowCounter<uint64_t>*> sendCounters;
     
 public:
     class Builder {
     private:
         int workerCount = 5;
+        bool enableMonitoring = false;
         
     public:
         Builder& WithWorkerCount(int count) 
@@ -49,9 +55,15 @@ public:
             return *this; 
         }
         
+        Builder& WithMonitoring(bool enable = true)
+        {
+            enableMonitoring = enable;
+            return *this;
+        }
+        
         std::unique_ptr<IOCPManager> Build() 
         {
-            return std::unique_ptr<IOCPManager>(new IOCPManager(workerCount));
+            return std::unique_ptr<IOCPManager>(new IOCPManager(workerCount, enableMonitoring));
         }
     };
     
@@ -59,7 +71,7 @@ public:
 
 private:
     // Builder를 통해서만 생성될 수 있음
-    explicit IOCPManager(int workerCount);
+    explicit IOCPManager(int workerCount, bool enableMonitoring);
     
 public:
     ~IOCPManager();
@@ -79,17 +91,17 @@ public:
     
     // 종료 신호 전송
     void Shutdown();
+    
+    // 네트워크 통계 조회 (모니터링 활성화 시에만 유효)
+	double GetRecvBytesPerSecond(int seconds) const;
+	double GetSendBytesPerSecond(int seconds) const;
+    bool IsMonitoringEnabled() const noexcept { return enableMonitoring; }
 
 private:
     //------------------------------
     // IOCP Worker Thread - 패킷 조립 전담
     //------------------------------
     void RunWorkerThread();
-    
-    //------------------------------
-    // 패킷 조립 로직 - LAN 모드로 통일
-    //------------------------------
-    void AssembleLANPackets(Session* session);
     
     //------------------------------
     // IOCP 이벤트 처리
@@ -102,12 +114,18 @@ private:
 // 인라인 구현
 //------------------------------
 
-inline IOCPManager::IOCPManager(int workerCount) : iocpHandle(CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0))
+inline IOCPManager::IOCPManager(int workerCount, bool enableMonitoring) 
+    : iocpHandle(CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0))
+    , enableMonitoring(enableMonitoring)
 {
     if (iocpHandle == NULL) 
     {
         throw std::runtime_error("CreateIoCompletionPort failed");
     }
+    
+    // 통계 카운터 벡터 초기화
+    recvCounters.resize(workerCount, nullptr);
+    sendCounters.resize(workerCount, nullptr);
     
     // Worker threads 생성
     workerThreads.reserve(workerCount);

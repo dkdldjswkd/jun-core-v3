@@ -32,9 +32,6 @@
     <ClInclude Include="network\NetBase.h">
       <Filter>network</Filter>
     </ClInclude>
-    <ClInclude Include="protocol\message.h">
-      <Filter>protocol</Filter>
-    </ClInclude>
     <ClInclude Include="network\Session.h">
       <Filter>network</Filter>
     </ClInclude>

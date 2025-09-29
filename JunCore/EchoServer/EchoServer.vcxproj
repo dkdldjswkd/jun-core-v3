@@ -185,6 +185,9 @@
     <ClInclude Include="EchoServer.h" />
     <ClInclude Include="echo_message.pb.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="echo_message.proto" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

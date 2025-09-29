@@ -11,11 +11,11 @@ public:
 	~EchoServer();
 
 public:
-	// 모니터링 함수
+	// 세션 모니터링 함수
 	uint32_t GetCurrentSessions()	const { return currentSessions_.load();   };
 	uint32_t GetTotalConnected()	const { return totalConnected_.load();	  };
 	uint32_t GetTotalDisconnected() const { return totalDisconnected_.load(); };
-
+	
 private:
 	// 패킷 핸들
 	void HandleEchoRequest(Session& _session, const echo::EchoRequest& request);

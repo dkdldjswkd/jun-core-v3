@@ -72,6 +72,9 @@
     <ClInclude Include="timer\Profiler.h">
       <Filter>timer</Filter>
     </ClInclude>
+    <ClInclude Include="timer\SlidingWindowCounter.h">
+      <Filter>timer</Filter>
+    </ClInclude>
     <ClInclude Include="network\ProtocolBuffer.h">
       <Filter>network</Filter>
     </ClInclude>
