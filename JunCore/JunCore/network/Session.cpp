@@ -47,29 +47,7 @@ void Session::Release()
 	}
 	
 	Set(INVALID_SOCKET, {0}, 0, nullptr);
-	
-	// Pool이 설정되어 있는 경우에만 반환
-	if (session_pool_ && session_index_stack_)
-	{
-		// 자신의 인덱스 계산 (포인터 기반)
-		for (DWORD i = 0; i < session_pool_->size(); ++i)
-		{
-			if ((*session_pool_)[i].get() == this)
-			{
-				// Pool에 인덱스 반환
-				session_index_stack_->Push(i);
-				break;
-			}
-		}
-	}
 }
-
-void Session::SetSessionPool(std::vector<std::unique_ptr<Session>>* pool, LFStack<DWORD>* indexStack)
-{
-	session_pool_ = pool;
-	session_index_stack_ = indexStack;
-}
-
 
 void Session::PostAsyncSend()
 {

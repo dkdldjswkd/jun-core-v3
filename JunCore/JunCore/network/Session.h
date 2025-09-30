@@ -82,17 +82,10 @@ public:
 private:
 	HANDLE h_iocp_ = INVALID_HANDLE_VALUE;  // IOCP 핸들 저장
 	class NetBase* engine_ = nullptr;       // 이 세션을 소유한 엔진
-	
-	// Session Pool 직접 관리 (포인터 기반)
-	std::vector<std::unique_ptr<Session>>* session_pool_ = nullptr;  // 자신이 속한 세션 풀
-	LFStack<DWORD>* session_index_stack_ = nullptr; // 세션 인덱스 스택
 
 public:
 	void Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng);
 	void Release();  // 세션 정리 + Pool 반환 통합
-	
-	// Session Pool 직접 설정 (간단하고 명확함)
-	void SetSessionPool(std::vector<std::unique_ptr<Session>>* pool, LFStack<DWORD>* indexStack);
 	
 	inline void SetIOCP(HANDLE iocp_handle) { h_iocp_ = iocp_handle; }
 	inline HANDLE GetIOCP() { return h_iocp_; }

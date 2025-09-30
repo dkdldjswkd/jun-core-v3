@@ -45,17 +45,10 @@ private:
     std::thread acceptThread;
     std::atomic<bool> running{false};
     
-    // 세션 관리 (포인터 기반으로 변경)
-    std::vector<std::unique_ptr<Session>> sessions; // 제거예정
-    LFStack<DWORD> sessionIndexStack;
-    
     //------------------------------
     // 내부 메서드들
     //------------------------------
     void AcceptThreadFunc();
-    Session* AllocateSession();
-    void InitializeSessions(DWORD maxSessions);
-    void CleanupSessions();
     bool OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr);
 };
 
