@@ -162,8 +162,6 @@
     <ClInclude Include="container\LFStack.h" />
     <ClInclude Include="container\RingBuffer.h" />
     <ClInclude Include="core\base.h" />
-    <ClInclude Include="log\Logger.h" />
-    <ClInclude Include="log\MemoryLogger.h" />
     <ClInclude Include="network\ProtocolBuffer.h" />
     <ClInclude Include="pool\LFObjectPool.h" />
     <ClInclude Include="pool\LFObjectPoolTLS.h" />
@@ -186,8 +184,6 @@
     <ClCompile Include="algorithm\Parser.cpp" />
     <ClCompile Include="algorithm\StringUtils.cpp" />
     <ClCompile Include="container\RingBuffer.cpp" />
-    <ClCompile Include="log\Logger.cpp" />
-    <ClCompile Include="log\MemoryLogger.cpp" />
     <ClCompile Include="network\ProtocolBuffer.cpp" />
     <ClCompile Include="synchronization\RecursiveLock.cpp" />
     <ClCompile Include="system\CrashDump.cpp" />

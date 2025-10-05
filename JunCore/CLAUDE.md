@@ -117,7 +117,7 @@ This is a Windows C++ IOCP-based game server framework with the following compon
 │         순수 I/O 이벤트 처리 + 패킷 조립               │
 ├─────────────────────────────────────────────────────────┤
 │                    Session Layer                        │
-│              개별 연결 상태 + IOCount 관리              │
+│         개별 연결 상태 + shared_ptr 생명주기 관리       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -240,23 +240,22 @@ server.StartServer("127.0.0.1", 9090);  // 초기화 검사 통과 후 시작
 - 🔄 **I/O 버퍼 관리**: RingBuffer 기반 송수신 버퍼
 - 🏷️ **Engine 연결**: 자신이 속한 Engine 포인터 보유
 
-**🚨 절대 수정 금지 - 핵심 아키텍처**:
+**🚀 현재 세션 관리 - shared_ptr 기반**:
 ```cpp
-// Session::DecrementIOCount() - 세션 해제 트리거
-__forceinline void DecrementIOCount() noexcept {
-    if (0 == InterlockedDecrement(&io_count_)) {
-        if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0)) {
-            Release();  // 자동 세션 정리
-        }
+// Session 소멸자에서 자동 정리
+Session::~Session() {
+    if (engine_ && owner_user_) {
+        engine_->OnSessionDisconnect(owner_user_);
     }
+    Release();  // 소켓 정리 및 리소스 해제
 }
 ```
 
 **설계 원리**:
-- **IOCount**: 활성 비동기 작업 수 추적 (recv 대기 = IOCount ≥ 1)
-- **이중 보호**: `release_flag_` + `IOCount`로 더블 프리 방지
-- **자동 정리**: IOCount가 0이 되면 해당 스레드에서 세션 해제
-- **Thread-Safe**: 모든 조작이 원자적 연산 기반
+- **shared_ptr**: 참조 카운팅으로 자동 생명주기 관리
+- **OverlappedEx**: I/O 완료까지 세션 참조 보장
+- **RAII**: 소멸자에서 자동 리소스 정리
+- **Thread-Safe**: shared_ptr 내장 원자적 연산 활용
 
 ### **역할 분리 원칙**
 
@@ -303,29 +302,6 @@ engine.Start();  // "Must call Initialize() before Start()!" 에러
 - **컴파일 에러**: 구현하지 않으면 빌드 실패
 - **런타임 안전**: 초기화 없이 시작 시도하면 명확한 에러 메시지
 
-### 🔒 **핵심 세션 생명주기 관리 (절대 수정 금지)**
-
-#### 수정 금지 코드 영역
-```cpp
-// Session::DecrementIOCount() - JunCore 핵심 아키텍처
-__forceinline void DecrementIOCount() noexcept {
-    if (0 == InterlockedDecrement(&io_count_)) {
-        if (0 == InterlockedCompareExchange64((long long*)&release_flag_, 1, 0)) {
-            Release();  // 유일한 해제 지점
-        }
-    }
-}
-
-// IOCPManager::RunWorkerThread() - 필수 IOCount 감소
-// 모든 IOCP 완료 시 반드시 호출
-session->DecrementIOCount();
-```
-
-#### 수정 금지 이유
-- **Thread Safety**: 정교한 원자적 연산 기반 구현
-- **Memory Safety**: 댕글링 포인터 및 더블 프리 완전 방지  
-- **Performance**: Lock-free 아키텍처로 고성능 보장
-- **Architecture Core**: 전체 네트워크 시스템의 근간
 
 ### 🏗️ **신규 엔진 생성 시 필수 체크리스트**
 
@@ -704,62 +680,77 @@ When using JunCommon classes from JunCore, use the correct relative paths:
 - **단위별 검증** - 각 수정 사항마다 EchoServer/Client로 검증
 - **문서화** - 주요 아키텍처 변경 시 이 파일(CLAUDE.md)에도 변경사항 기록
 
-## 🚨 핵심 세션 생명주기 관리 (절대 수정 금지)
+## 🚀 현재 세션 생명주기 관리 (2025-01 최신)
 
-### 핵심 원칙
-**이 두 코드 블록은 JunCore의 핵심 아키텍처이므로 절대 수정하지 말 것. 수정이 필요하다면 반드시 사용자와 논의 후 진행.**
+### 🎯 **shared_ptr 기반 세션 관리 정책**
 
-#### 1. Session::DecrementIOCount() - 세션 해제 트리거
+#### 핵심 설계 원칙
+**Session의 생명주기는 shared_ptr 참조 카운팅과 OverlappedEx를 통해 자동으로 관리됩니다.**
+
+#### 1. 세션 생성 및 초기 참조 설정
 ```cpp
-__forceinline void DecrementIOCount() noexcept
-{
-    if (0 == InterlockedDecrement(&io_count_))
-    {
-        // * release_flag_(0), IOCount(0) -> release_flag_(1), IOCount(0)
-        if (0 == InterlockedCompareExchange64((long long*)release_flag_, 1, 0))
-        {
-            Release();
-        }
-    }
+// Accept 시 shared_ptr로 세션 생성
+auto session = std::make_shared<Session>();
+session->Set(clientSocket, clientAddr.sin_addr, clientAddr.sin_port, this);
+
+// 첫 번째 recv 등록으로 세션 활성화
+session->PostAsyncReceive();
+```
+
+#### 2. 비동기 I/O 완료까지 세션 보장
+```cpp
+// OverlappedEx가 세션 shared_ptr을 보유
+struct OverlappedEx {
+    std::shared_ptr<Session> session_;  // I/O 완료까지 세션 생존 보장
+    IOOperation operation_;
+};
+
+// 비동기 Send/Recv 등록 시
+auto send_overlapped = new OverlappedEx(shared_from_this(), IOOperation::IO_SEND);
+WSASend(sock_, wsaBuf, count, NULL, 0, &send_overlapped->overlapped_, NULL);
+```
+
+#### 3. I/O 완료 시 자동 참조 해제
+```cpp
+// IOCPManager::RunWorkerThread()에서 I/O 완료 처리
+void IOCPManager::RunWorkerThread() {
+    // ... IOCP 완료 처리 ...
+    
+    // overlapped 삭제 시 session shared_ptr 자동 해제
+    delete p_overlapped;  // session 참조 카운트 자동 감소
 }
 ```
 
-#### 2. IOCPManager::RunWorkerThread() - 필수 IOCount 감소
-```cpp
-DecrementIOCount:
-    session->DecrementIOCount();
+### 🔧 **세션 생명주기 보장 메커니즘**
+
+#### **I/O 진행 중 세션 보호**
+- **Send 중**: `send_overlapped->session_`이 세션 참조 유지
+- **Recv 중**: `recv_overlapped->session_`이 세션 참조 유지  
+- **정상 세션**: 항상 recv가 걸려있어 최소 1개 참조 보장
+
+#### **세션 해제 트리거**
+1. **클라이언트 연결 해제** → recv 완료 (ioSize=0) → recv overlapped 삭제
+2. **마지막 I/O 완료** → 모든 overlapped 삭제 → 참조 카운트 0
+3. **shared_ptr 자동 소멸** → `Session::~Session()` 호출
+4. **자동 정리** → `OnSessionDisconnect()` 호출 → 리소스 해제
+
+#### **세션 상태 전이**
+```
+활성 세션: recv overlapped 상시 대기 (참조 카운트 ≥ 1)
+연결 해제: recv 완료 → overlapped 삭제 → 참조 카운트 감소  
+세션 소멸: 참조 카운트 0 → Session::~Session() → 자동 정리
 ```
 
-### 아키텍처 설계 원리
+### 🛡️ **메모리 안전성 보장**
 
-#### IOCount 기반 세션 생명주기
-1. **비동기 I/O 등록 시**: `IncrementIOCount()` 호출
-2. **IOCP 완료 통지 시**: 반드시 `DecrementIOCount()` 호출
-3. **IOCount가 0 도달 시**: 해당 스레드에서 세션 정리 수행
+#### **자동 생명주기 관리**
+- **더블 프리 방지**: shared_ptr 자동 관리로 중복 해제 불가능
+- **댕글링 포인터 방지**: 참조 카운팅으로 사용 중 소멸 방지
+- **메모리 누수 방지**: RAII 패턴으로 자동 리소스 정리
 
-#### 이중 보호 메커니즘
-- **release_flag_**: 세션 해제 중복 방지
-- **IOCount**: 활성 비동기 작업 수 추적
-- **InterlockedCompareExchange64**: 원자적 해제 상태 전환
-
-#### 세션 상태 전이
-```
-정상 세션: IOCount ≥ 1 (상시 recv 대기)
-비정상 세션: IOCount → 0 (연결 끊김/에러)
-해제 트리거: IOCount == 0 && release_flag_ == 0
-```
-
-### 핵심 보장 사항
-1. **세션 정리 단일 책임**: IOCount를 0으로 만든 스레드가 정리 담당
-2. **중복 해제 방지**: `release_flag_` CAS 연산으로 한 번만 해제
-3. **상시 활성 상태**: 정상 세션은 recv 대기로 IOCount ≥ 1 유지
-4. **자동 정리**: 비정상 종료 시 IOCount 수렴을 통한 자동 세션 해제
-
-### 수정 금지 이유
-- **스레드 안전성**: 정교한 원자적 연산 기반 구현
-- **메모리 안전성**: 댕글링 포인터 및 더블 프리 방지
-- **성능 최적화**: Lock-free 아키텍처로 고성능 보장
-- **아키텍처 핵심**: 전체 네트워크 시스템의 근간
+#### **스레드 안전성**
+- **원자적 참조 카운팅**: shared_ptr 내부 원자적 연산 사용
+- **경쟁 상태 방지**: overlapped 삭제와 세션 접근 간 동기화 자동 처리
 
 ## Coding Standards
 
@@ -837,18 +828,19 @@ DecrementIOCount:
 ##### 2. Session 클래스 IO Count 관리 통합  
 **위치**: `JunCore/network/Session.h`
 ```cpp
-// 추가된 함수들
-inline void IncrementIOCount();
-inline bool DecrementIOCount();
-inline bool DecrementIOCountPQCS();
-inline void DisconnectSession();
+// 현재 구현된 함수들
 inline void SetIOCP(HANDLE iocp_handle);
+inline HANDLE GetIOCP();
+inline void Disconnect() noexcept;
+template<typename T> bool SendPacket(const T& packet);
+void PostAsyncSend();
+bool PostAsyncReceive();
 ```
 
 **개선점**:
-- IO Count 관리 로직을 Session에 캡슐화
-- NetServer/NetClient에서 중복된 IO 관리 코드 제거
-- IOCP 핸들 관리 중앙집중화
+- shared_ptr 기반 자동 생명주기 관리로 명시적 IO Count 관리 불필요
+- OverlappedEx를 통한 I/O 완료까지 세션 보장
+- RAII 패턴으로 자동 리소스 정리
 
 ##### 3. 어댑터 패턴을 통한 WorkerFunc 통합
 **NetServer 어댑터**: `ServerSessionManager` 클래스

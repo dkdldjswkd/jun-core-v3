@@ -10,9 +10,6 @@
     <Filter Include="pool">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
     </Filter>
-    <Filter Include="log">
-      <UniqueIdentifier>{C1F6E2B7-F9DB-4c29-8F8B-5E9F9E1E2E3E}</UniqueIdentifier>
-    </Filter>
     <Filter Include="timer">
       <UniqueIdentifier>{D4A5E7F8-F4A8-4c2d-9A8B-6F2F3F4F5F6F}</UniqueIdentifier>
     </Filter>
@@ -54,12 +51,6 @@
     <ClInclude Include="pool\ObjectPool.h">
       <Filter>pool</Filter>
     </ClInclude>
-    <ClInclude Include="log\Logger.h">
-      <Filter>log</Filter>
-    </ClInclude>
-    <ClInclude Include="log\MemoryLogger.h">
-      <Filter>log</Filter>
-    </ClInclude>
     <ClInclude Include="timer\MachineCpuMonitor.h">
       <Filter>timer</Filter>
     </ClInclude>
@@ -100,12 +91,6 @@
   <ItemGroup>
     <ClCompile Include="container\RingBuffer.cpp">
       <Filter>container</Filter>
-    </ClCompile>
-    <ClCompile Include="log\Logger.cpp">
-      <Filter>log</Filter>
-    </ClCompile>
-    <ClCompile Include="log\MemoryLogger.cpp">
-      <Filter>log</Filter>
     </ClCompile>
     <ClCompile Include="timer\MachineCpuMonitor.cpp">
       <Filter>timer</Filter>

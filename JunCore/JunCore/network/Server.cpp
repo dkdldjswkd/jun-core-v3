@@ -128,37 +128,26 @@ void Server::AcceptThreadFunc()
 
 bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 {
-    // 세션 할당
-	std::shared_ptr<Session> session = std::make_shared<Session>();
-    if (!session) 
+    if (!iocpManager->RegisterSocket(clientSocket))
+    {
+        LOG_WARN("IOCP registration failed for socket 0x%llX", clientSocket);
+        return false;
+    }
+
+    if (std::shared_ptr<Session> session = std::make_shared<Session>())
+    {
+        User* user = new User(session);
+        session->SetOwnerUser(user);
+        session->Set(clientSocket, clientAddr->sin_addr, ntohs(clientAddr->sin_port), this/*NetEngine*/);
+        OnSessionConnect(user);
+        session->PostAsyncReceive();
+    }
+    else
     {
         LOG_ERROR("Session allocation failed - closing connection");
         closesocket(clientSocket);
         return false;
     }
 
-    // 세션 초기화
-    in_addr clientIP = clientAddr->sin_addr;
-    WORD clientPort  = ntohs(clientAddr->sin_port);
-    session->Set(clientSocket, clientIP, clientPort, this);  // SessionId 제거
-    
-	// IOCP에 SOCKET 등록
-	if (!iocpManager->RegisterSocket(clientSocket))
-	{
-		LOG_ERROR("IOCP registration failed for session 0x%llX", (uintptr_t)session.get());
-		return false;
-	}
-
-	// RECV 등록
-	if (!session->PostAsyncReceive())
-	{
-		return false;
-	}
-
-	User* user = new User(session);
-	session->SetOwnerUser(user);
-	
-	// OnSessionConnect 호출
-	OnSessionConnect(user);
 	return true;
 }
