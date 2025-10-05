@@ -73,10 +73,6 @@ inline User* Client::Connect()
         return nullptr;
     }
     
-    // 세션 초기화
-    in_addr clientIP = { 0 };
-    p_session->Set(p_session->sock_, clientIP, 0, this);
-    
     // 서버 연결
     SOCKADDR_IN serverAddr{};
     serverAddr.sin_family = AF_INET;
@@ -102,15 +98,17 @@ inline User* Client::Connect()
         return nullptr;
     }
 
+    // User 생성 및 세션 초기화
+    User* user = new User(p_session);
+    in_addr clientIP = { 0 };
+    p_session->Set(p_session->sock_, clientIP, 0, this, user);
+
     // RECV 등록
     if (!p_session->PostAsyncReceive())
     {
         return nullptr;
     }
     
-    // User 생성 및 Session에 보관
-    User* user = new User(p_session);
-    p_session->SetOwnerUser(user);
     return user;
 }
 

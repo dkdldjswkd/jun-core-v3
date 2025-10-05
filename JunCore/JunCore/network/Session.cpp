@@ -26,7 +26,7 @@ Session::~Session()
 	Release();
 }
 
-void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
+void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng, class User* user)
 {
 	sock_				= sock;
 	ip_					= ip;
@@ -36,7 +36,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
 	send_packet_count_	= 0;
 	last_recv_time_		= static_cast<DWORD>(GetTickCount64());
 	engine_				= eng;
-	owner_user_			= nullptr;  // 초기화
+	owner_user_			= user;
 
 	recv_buf_.Clear();
 	std::vector<char>* packet_data;
@@ -54,7 +54,7 @@ void Session::Release()
 		closesocket(sock_);
 	}
 	
-	Set(INVALID_SOCKET, {0}, 0, nullptr);
+	Set(INVALID_SOCKET, {0}, 0, nullptr, nullptr);
 }
 
 void Session::PostAsyncSend()

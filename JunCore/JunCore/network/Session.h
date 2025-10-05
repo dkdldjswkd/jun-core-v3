@@ -85,7 +85,7 @@ private:
 	class User* owner_user_ = nullptr;      // 이 세션을 소유한 User
 
 public:
-	void Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng);
+	void Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng, class User* user = nullptr);
 	void Release();  // 세션 정리 + Pool 반환 통합
 	
 	inline void SetIOCP(HANDLE iocp_handle) { h_iocp_ = iocp_handle; }

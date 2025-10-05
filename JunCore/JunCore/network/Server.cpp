@@ -137,8 +137,7 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
     if (std::shared_ptr<Session> session = std::make_shared<Session>())
     {
         User* user = new User(session);
-        session->SetOwnerUser(user);
-        session->Set(clientSocket, clientAddr->sin_addr, ntohs(clientAddr->sin_port), this/*NetEngine*/);
+        session->Set(clientSocket, clientAddr->sin_addr, ntohs(clientAddr->sin_port), this/*NetEngine*/, user);
         OnSessionConnect(user);
         session->PostAsyncReceive();
     }

@@ -9,7 +9,7 @@
 #include <atomic>
 #include <cassert>
 
-constexpr int SESSION_COUNT			= 10;
+constexpr int SESSION_COUNT			= 200;
 constexpr int MESSAGE_INTERVAL_MS	= 1;
 constexpr int MESSAGE_MIN_SIZE		= 10;
 constexpr int MESSAGE_MAX_SIZE		= 100;
