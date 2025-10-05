@@ -99,8 +99,8 @@ void Session::PostAsyncSend()
     {
         if (ERROR_IO_PENDING != WSAGetLastError())
         {
-			// Worker에서 IOCount를 감소 시키기 위함
-			PostQueuedCompletionStatus(h_iocp_, 1, (ULONG_PTR)this, (LPOVERLAPPED)1);  // PQCS::async_send_fail
+			// Session이 Worker Thread에서 Release 되도록 Worker로 던진다. (Session의 refCount가 Worker에서 감소되도록)
+			PostQueuedCompletionStatus(h_iocp_, 0/*Transfer*/, 0/*CompletionKey*/, &send_overlapped_->overlapped_);
         }
     }
 }
@@ -129,8 +129,8 @@ bool Session::PostAsyncReceive()
     {
         if (ERROR_IO_PENDING != WSAGetLastError())
         {
-            // Worker에서 IOCount를 감소 시키기 위함
-			PostQueuedCompletionStatus(h_iocp_, 1, (ULONG_PTR)this, (LPOVERLAPPED)2);  // PQCS::async_recv_fail
+            // Session이 Worker Thread에서 Release 되도록 Worker로 던진다. (Session의 refCount가 Worker에서 감소되도록)
+            PostQueuedCompletionStatus(h_iocp_, 0/*Transfer*/, 0/*CompletionKey*/, &recv_overlapped->overlapped_);
             return false;
         }
     }
