@@ -124,5 +124,5 @@ inline bool Client::RegisterToIOCP(Session* session)
         return false;
     }
     
-    return iocpManager->RegisterSocket(session->sock_, session);
+    return iocpManager->RegisterSocket(session->sock_);
 }

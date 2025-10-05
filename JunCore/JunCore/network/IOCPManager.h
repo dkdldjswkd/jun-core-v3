@@ -87,7 +87,7 @@ public:
     bool IsValid() const noexcept { return iocpHandle != INVALID_HANDLE_VALUE; }
     
     // 소켓을 IOCP에 등록
-    bool RegisterSocket(SOCKET socket, Session* session);
+    bool RegisterSocket(SOCKET socket);
     
     // 종료 신호 전송
     void Shutdown();
@@ -140,9 +140,9 @@ inline IOCPManager::~IOCPManager()
     Shutdown();
 }
 
-inline bool IOCPManager::RegisterSocket(SOCKET socket, Session* session)
+inline bool IOCPManager::RegisterSocket(SOCKET socket)
 {
-    return CreateIoCompletionPort((HANDLE)socket, iocpHandle, (ULONG_PTR)session, 0) != NULL;
+    return CreateIoCompletionPort((HANDLE)socket, iocpHandle, 0, 0) != NULL;
 }
 
 inline void IOCPManager::Shutdown()

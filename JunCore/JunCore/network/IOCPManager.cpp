@@ -22,13 +22,13 @@ void IOCPManager::RunWorkerThread()
     for (;;) 
     {
         DWORD ioSize = 0;
-        Session* session = nullptr;
+        ULONG_PTR completionKey = 0;
         OverlappedEx* p_overlapped;
 
-		BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, (PULONG_PTR)&session, (LPOVERLAPPED*)&p_overlapped, INFINITE);
+		BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, &completionKey, (LPOVERLAPPED*)&p_overlapped, INFINITE);
 
         // IOCP 종료 메시지
-        if (ioSize == 0 && session == nullptr && p_overlapped == nullptr)
+        if (ioSize == 0 && completionKey == 0 && p_overlapped == nullptr)
         {
             // 다른 Worker에게도 종료를 알린다.
 			PostQueuedCompletionStatus(iocpHandle, 0, 0, 0);
@@ -52,7 +52,7 @@ void IOCPManager::RunWorkerThread()
             {
                 tlsRecvCounter.record(ioSize);
             }
-			HandleRecvComplete(session, ioSize);
+			HandleRecvComplete(p_overlapped->session_.get(), ioSize);
 		}
 		// 송신 완료 처리  
 		if (p_overlapped->operation_ == IOOperation::IO_SEND)
@@ -61,7 +61,7 @@ void IOCPManager::RunWorkerThread()
             {
                 tlsSendCounter.record(ioSize);
             }
-			HandleSendComplete(session);
+			HandleSendComplete(p_overlapped->session_.get());
 		}
 
 	DecrementIOCount:

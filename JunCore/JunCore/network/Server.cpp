@@ -143,7 +143,7 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
     session->Set(clientSocket, clientIP, clientPort, this);  // SessionId 제거
     
 	// IOCP에 SOCKET 등록
-	if (!iocpManager->RegisterSocket(clientSocket, session.get()))
+	if (!iocpManager->RegisterSocket(clientSocket))
 	{
 		LOG_ERROR("IOCP registration failed for session 0x%llX", (uintptr_t)session.get());
 		return false;
