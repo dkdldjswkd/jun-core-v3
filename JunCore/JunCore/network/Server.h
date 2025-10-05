@@ -30,7 +30,7 @@ protected:
     //------------------------------
     // 서버 전용 가상함수 - 사용자가 재정의
     //------------------------------
-	virtual void OnSessionConnect(Session* session) = 0;
+	virtual void OnSessionConnect(User* user) = 0;
     virtual void OnServerStart() {}
     virtual void OnServerStop() {}
 

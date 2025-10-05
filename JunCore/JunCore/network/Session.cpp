@@ -1,5 +1,6 @@
 ﻿#include "Session.h"
 #include "NetBase.h"
+#include "User.h"
 #include <timeapi.h>
 #include "../log.h"
 #include "../protocol/UnifiedPacketHeader.h"
@@ -10,12 +11,18 @@
 //------------------------------
 
 Session::Session() {}
-Session::~Session() 
+Session::~Session()
 {
-	if (engine_)
+	if (engine_ && owner_user_)
 	{
-		engine_->OnSessionDisconnect(this);
+		engine_->OnSessionDisconnect(owner_user_);
 	}
+	
+	if (owner_user_)
+	{
+		owner_user_ = nullptr;
+	}
+	
 	Release();
 }
 
@@ -29,6 +36,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng)
 	send_packet_count_	= 0;
 	last_recv_time_		= static_cast<DWORD>(GetTickCount64());
 	engine_				= eng;
+	owner_user_			= nullptr;  // 초기화
 
 	recv_buf_.Clear();
 	std::vector<char>* packet_data;

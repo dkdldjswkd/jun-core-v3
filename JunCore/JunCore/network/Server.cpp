@@ -139,7 +139,7 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 
     // 세션 초기화
     in_addr clientIP = clientAddr->sin_addr;
-    WORD clientPort = ntohs(clientAddr->sin_port);
+    WORD clientPort  = ntohs(clientAddr->sin_port);
     session->Set(clientSocket, clientIP, clientPort, this);  // SessionId 제거
     
 	// IOCP에 SOCKET 등록
@@ -155,6 +155,10 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
 		return false;
 	}
 
-	OnSessionConnect(session.get());
+	User* user = new User(session);
+	session->SetOwnerUser(user);
+	
+	// OnSessionConnect 호출
+	OnSessionConnect(user);
 	return true;
 }

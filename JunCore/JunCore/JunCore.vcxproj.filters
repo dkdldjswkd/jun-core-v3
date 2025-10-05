@@ -56,6 +56,11 @@
     <ClInclude Include="log.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="network\WSAInitializer.h" />
+    <ClInclude Include="network\WSAInitializer.h">
+      <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="network\User.h">
+      <Filter>network</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

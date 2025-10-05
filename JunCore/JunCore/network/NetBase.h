@@ -2,6 +2,7 @@
 #include "../core/WindowsIncludes.h"
 #include "../core/base.h"
 #include "Session.h"
+#include "User.h"
 #include "IOCPManager.h"
 #include "WSAInitializer.h"
 #include <memory>
@@ -19,7 +20,7 @@ private:
 	friend class IOCPManager;
 
 protected:
-    using PacketHandler = std::function<void(Session&, const std::vector<char>&)>;
+    using PacketHandler = std::function<void(User&, const std::vector<char>&)>;
 
 public:
     NetBase(std::shared_ptr<IOCPManager> manager);
@@ -38,13 +39,13 @@ public:
 protected:
     // 패킷 핸들 등록
     template<typename T>
-    void RegisterPacketHandler(std::function<void(Session&, const T&)> handler);
+    void RegisterPacketHandler(std::function<void(User&, const T&)> handler);
     virtual void RegisterPacketHandlers() = 0;
 
 	//------------------------------
     // 서버/클라 공용 가상함수 - 사용자가 재정의
     //------------------------------
-    virtual void OnSessionDisconnect(Session* session) = 0;
+    virtual void OnSessionDisconnect(User* user) = 0;
 
 private:
     // 패킷 핸들 caller
@@ -81,7 +82,14 @@ inline void NetBase::OnPacketReceived(Session* session, uint32_t packet_id, cons
     auto it = packet_handlers_.find(packet_id);
     if (it != packet_handlers_.end()) 
     {
-        it->second(*session, payload);  // 등록된 핸들러 실행
+        if (User* user = session->GetOwnerUser())
+        {
+            it->second(*user, payload);
+        }
+        else 
+        {
+            LOG_ERROR("Session has no owner user for packet ID: %d", packet_id);
+        }
     }
     else 
     {
@@ -90,19 +98,19 @@ inline void NetBase::OnPacketReceived(Session* session, uint32_t packet_id, cons
 }
 
 template<typename T>
-void NetBase::RegisterPacketHandler(std::function<void(Session&, const T&)> handler)
+void NetBase::RegisterPacketHandler(std::function<void(User&, const T&)> handler)
 {
     const std::string type_name = T::descriptor()->full_name();
     const uint32_t packet_id = fnv1a(type_name.c_str());
     
     LOG_DEBUG("Registering packet handler for %s (ID: %d)", type_name.c_str(), packet_id);
     
-    packet_handlers_[packet_id] = [handler](Session& session, const std::vector<char>& payload)
+    packet_handlers_[packet_id] = [handler](User& user, const std::vector<char>& payload)
     {
         T message;
         if (message.ParseFromArray(payload.data(), payload.size()))
         {
-            handler(session, message);
+            handler(user, message);
         }
         else
         {

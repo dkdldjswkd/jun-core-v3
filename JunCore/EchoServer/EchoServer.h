@@ -18,11 +18,11 @@ public:
 	
 private:
 	// 패킷 핸들
-	void HandleEchoRequest(Session& _session, const echo::EchoRequest& request);
+	void HandleEchoRequest(User& user, const echo::EchoRequest& request);
 
 	// 사용자 재정의 함수
-	void OnSessionConnect(Session* session) override;
-	void OnSessionDisconnect(Session* session) override;
+	void OnSessionConnect(User* user) override;
+	void OnSessionDisconnect(User* user) override;
 	void OnServerStart() override;
 	void OnServerStop() override;
 	void RegisterPacketHandlers() override;

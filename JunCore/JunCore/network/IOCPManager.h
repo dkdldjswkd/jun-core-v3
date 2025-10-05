@@ -38,7 +38,7 @@ private:
     
 private:
     // 퍼포먼스 모니터링
-    bool enableMonitoring{false};
+    bool enableMonitoring = false;
     std::vector<TimeWindowCounter<uint64_t>*> recvCounters;
     std::vector<TimeWindowCounter<uint64_t>*> sendCounters;
     

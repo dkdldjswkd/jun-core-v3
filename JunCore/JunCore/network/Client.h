@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "NetBase.h"
 #include "Session.h"
+#include "User.h"
 #include <atomic>
 #include <string>
 #include <memory>
@@ -21,19 +22,13 @@ public:
 
 public:
     //------------------------------
-    // 세션 연결/해제 인터페이스 (Session* 직접 반환)
+    // 세션 연결/해제 인터페이스
     //------------------------------
-    Session* Connect();
-
-protected:
-    //------------------------------
-    // 클라이언트 전용 가상함수 - 사용자가 재정의
-    //------------------------------
-    virtual void OnConnect(Session* session) = 0;
+    User* Connect();
 
 private:
     //------------------------------
-    // 서버 연결 정보 (생성자에서 고정)
+    // 서버 연결 정보
     //------------------------------
     std::string serverIP;
     WORD serverPort;
@@ -53,10 +48,9 @@ inline Client::Client(std::shared_ptr<IOCPManager> manager, const char* serverIP
 
 inline Client::~Client()
 {
-    // 현재 Client는 동적 세션 관리이므로 자동 정리됨
 }
 
-inline Session* Client::Connect()
+inline User* Client::Connect()
 {
     if (!IsInitialized())
     {
@@ -114,8 +108,10 @@ inline Session* Client::Connect()
         return nullptr;
     }
     
-    OnConnect(p_session.get());
-    return p_session.get();
+    // User 생성 및 Session에 보관
+    User* user = new User(p_session);
+    p_session->SetOwnerUser(user);
+    return user;
 }
 
 //------------------------------

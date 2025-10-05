@@ -18,8 +18,8 @@ int main()
 		EchoClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
 
 		client.Initialize();
-		Session* session = client.Connect();
-		LOG_ERROR_RETURN(session != nullptr, -1, "Failed to connect to server");
+		User* user = client.Connect();
+		LOG_ERROR_RETURN(user != nullptr, -1, "Failed to connect to server");
 
 		Sleep(1000);
 		LOG_INFO("Starting chat. Type “exit” to quit.");
@@ -47,7 +47,7 @@ int main()
 			echo::EchoRequest request;
 			request.set_message(input);
 			cout << "[CLIENT] Sending EchoRequest: " << input << endl;
-			if (!session->SendPacket(request)) 
+			if (!user->SendPacket(request)) 
 			{
 				cout << "[CLIENT] Failed to send packet" << endl;
 			}

@@ -21,9 +21,9 @@ StressClient::~StressClient()
 
 void StressClient::RegisterPacketHandlers()
 {
-    RegisterPacketHandler<echo::EchoResponse>([this](Session& session, const echo::EchoResponse& response) 
+    RegisterPacketHandler<echo::EchoResponse>([this](User& user, const echo::EchoResponse& response) 
     {
-        HandleEchoResponse(session, response);
+        HandleEchoResponse(user, response);
     });
 }
 
@@ -69,9 +69,9 @@ void StressClient::StopStressTest()
     // 리소스 정리
     for (auto& sessionData : session_data_vec) 
     {
-        if (sessionData.session) 
+        if (sessionData.user) 
         {
-			sessionData.session->Disconnect();
+			sessionData.user->Disconnect();
         }
     }
     
@@ -80,10 +80,10 @@ void StressClient::StopStressTest()
     LOG_INFO("[StressTest] Stress test stopped.");
 }
 
-void StressClient::HandleEchoResponse(Session& session, const echo::EchoResponse& response)
+void StressClient::HandleEchoResponse(User& user, const echo::EchoResponse& response)
 {
-	SessionData* sessionData = FindSessionData(&session);
-	LOG_ASSERT_RETURN_VOID(sessionData, "[StressTest] Cannot find session data for 0x%llX", (uintptr_t)&session);
+	SessionData* sessionData = FindSessionData(&user);
+	LOG_ASSERT_RETURN_VOID(sessionData, "[StressTest] Cannot find session data for 0x%llX", (uintptr_t)&user);
 
 	// sentMessages 비어있다면 에러
 	LOG_ASSERT_RETURN_VOID(!sessionData->sentMessages.empty(), "[StressTest][Session %d] Received response but no sent messages!", sessionData->sessionIndex);
@@ -111,9 +111,9 @@ void StressClient::SessionWorker(int sessionIndex)
 
 	while (testRunning.load())
 	{
-		if (sessionData.session == nullptr)
+		if (sessionData.user == nullptr)
 		{
-            if (sessionData.session = Connect())
+            if (sessionData.user = Connect())
             {
 				sessionData.disconnectRequested = false;
 				while (!sessionData.sentMessages.empty())
@@ -124,13 +124,12 @@ void StressClient::SessionWorker(int sessionIndex)
             else
             {
 			    LOG_ASSERT("[StressTest][Worker %d] Failed to connect", sessionIndex);
-				sessionData.session->Disconnect();
 				return;
             }
 		}
 
 		// 정리 대기 중인 세션이라면,
-		if (sessionData.session->pending_disconnect_.load()) 
+		if (!sessionData.user->IsConnected()) 
 		{
 			// 정리 대기
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -142,8 +141,8 @@ void StressClient::SessionWorker(int sessionIndex)
 		if (dist(sessionData.randomGenerator) <= DISCONNECT_PROBABILITY_PER_THOUSAND)
 		{
 			sessionData.disconnectRequested = true;
-			sessionData.session->Disconnect();
-			// session 포인터는 OnDisconnect에서 무효화
+			sessionData.user->Disconnect();
+			// user 포인터는 OnDisconnect에서 무효화
 			continue;
 		}
 
@@ -154,10 +153,10 @@ void StressClient::SessionWorker(int sessionIndex)
 		request.set_message(message);
 
 		// 패킷 송신, 실패 시 어설트
-		if (!sessionData.session->SendPacket(request))
+		if (!sessionData.user->SendPacket(request))
 		{
 			LOG_ASSERT("[StressTest][Session %d] Failed to send message", sessionIndex);
-			sessionData.session->Disconnect();
+			sessionData.user->Disconnect();
 			return;
 		}
 		
@@ -169,9 +168,9 @@ void StressClient::SessionWorker(int sessionIndex)
 	}
 
 	// 정리
-	if (sessionData.session)
+	if (sessionData.user)
 	{
-		sessionData.session->Disconnect();
+		sessionData.user->Disconnect();
 	}
 
 	LOG_INFO("[StressTest][Session %d] Worker thread ended", sessionIndex);
@@ -191,11 +190,11 @@ std::string StressClient::GenerateRandomMessage()
     return message;
 }
 
-SessionData* StressClient::FindSessionData(Session* session)
+SessionData* StressClient::FindSessionData(User* user)
 {
     for (auto& sessionData : session_data_vec) 
     {
-        if (sessionData.session == session) 
+        if (sessionData.user == user) 
         {
             return &sessionData;
         }
@@ -203,34 +202,30 @@ SessionData* StressClient::FindSessionData(Session* session)
     return nullptr;
 }
 
-void StressClient::OnConnect(Session* session)
-{
-	LOG_INFO("[StressTest] Session connected: 0x%llX", (uintptr_t)session);
-}
 
-void StressClient::OnSessionDisconnect(Session* session)
+void StressClient::OnSessionDisconnect(User* user)
 {
-	SessionData* sessionData = FindSessionData(session);
+	SessionData* sessionData = FindSessionData(user);
 	if (sessionData)
 	{
 		if (sessionData->disconnectRequested)
 		{
 			// 능동적 disconnect의 경우
-			LOG_INFO("[StressTest] Expected disconnect for session %d: 0x%llX", sessionData->sessionIndex, (uintptr_t)session);
+			LOG_INFO("[StressTest] Expected disconnect for session %d: 0x%llX", sessionData->sessionIndex, (uintptr_t)user);
 		}
 		else
 		{
 			// 서버에 의해 끊킨것이므로 에러
-			LOG_ERROR("[StressTest] Unexpected server disconnect for session %d: 0x%llX", sessionData->sessionIndex, (uintptr_t)session);
+			LOG_ERROR("[StressTest] Unexpected server disconnect for session %d: 0x%llX", sessionData->sessionIndex, (uintptr_t)user);
 		}
 		
-		// Session* 무효화
-		sessionData->session = nullptr;
+		// User* 무효화
+		sessionData->user = nullptr;
 	}
 	else
 	{
 		// 에러
-		LOG_WARN("[StressTest] Disconnect for unknown session: 0x%llX", (uintptr_t)session);
+		LOG_WARN("[StressTest] Disconnect for unknown user: 0x%llX", (uintptr_t)user);
 	}
 }
 

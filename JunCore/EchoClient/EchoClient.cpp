@@ -12,18 +12,13 @@ EchoClient::~EchoClient()
 
 void EchoClient::RegisterPacketHandlers()
 {
-	RegisterPacketHandler<echo::EchoResponse>([this](Session& session, const echo::EchoResponse& response)
+	RegisterPacketHandler<echo::EchoResponse>([this](User& user, const echo::EchoResponse& response)
 	{
 		LOG_DEBUG("Received EchoResponse : %s", response.message().c_str());
 	});
 }
 
-void EchoClient::OnConnect(Session* session)
+void EchoClient::OnSessionDisconnect(User* user)
 {
-	LOG_INFO("Connected to server successfully! Session: 0x%llX", (uintptr_t)session);
-}
-
-void EchoClient::OnSessionDisconnect(Session* session)
-{
-	LOG_INFO("Disconnected from server. Session: 0x%llX", (uintptr_t)session);
+	LOG_INFO("Disconnected from server. User: 0x%llX", (uintptr_t)user);
 }

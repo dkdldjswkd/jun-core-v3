@@ -82,6 +82,7 @@ public:
 private:
 	HANDLE h_iocp_ = INVALID_HANDLE_VALUE;  // IOCP 핸들 저장
 	class NetBase* engine_ = nullptr;       // 이 세션을 소유한 엔진
+	class User* owner_user_ = nullptr;      // 이 세션을 소유한 User
 
 public:
 	void Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng);
@@ -92,6 +93,9 @@ public:
 	
 	inline void SetEngine(class NetBase* eng) { engine_ = eng; }
 	inline class NetBase* GetEngine() const { return engine_; }
+	
+	inline void SetOwnerUser(class User* user) { owner_user_ = user; }
+	inline class User* GetOwnerUser() const { return owner_user_; }
 	
 	inline void Disconnect() noexcept
 	{

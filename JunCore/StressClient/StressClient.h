@@ -30,12 +30,11 @@ public:
     bool IsRunning() const { return testRunning.load(); }
 
 protected:
-    void OnConnect(Session* session) override;
-    void OnSessionDisconnect(Session* session) override;
+    void OnSessionDisconnect(User* user) override;
     void RegisterPacketHandlers() override;
 
 private:
-    void HandleEchoResponse(Session& session, const echo::EchoResponse& response);
+    void HandleEchoResponse(User& user, const echo::EchoResponse& response);
 
 private:
     std::vector<SessionData> session_data_vec;
@@ -44,7 +43,7 @@ private:
     
     void SessionWorker(int sessionIndex);
     std::string GenerateRandomMessage();
-    SessionData* FindSessionData(Session* session);
+    SessionData* FindSessionData(User* user);
     
     thread_local static std::random_device rd;
     thread_local static std::mt19937 gen;
@@ -54,7 +53,7 @@ private:
 
 struct SessionData
 {
-	Session* session = nullptr;
+	User* user = nullptr;
 	std::thread workerThread;
 	std::queue<std::string> sentMessages;
 	int sessionIndex = 0;
@@ -62,8 +61,8 @@ struct SessionData
 	std::atomic<bool> disconnectRequested{false};  // 능동 끊기 플래그
 
 	SessionData() = default;
-	SessionData(Session* _session, int _sessionIndex)
-		: session(_session), sessionIndex(_sessionIndex)
+	SessionData(User* _user, int _sessionIndex)
+		: user(_user), sessionIndex(_sessionIndex)
 	{
 	}
 	// 복사 생성자와 대입 연산자 삭제 (atomic 멤버 때문)
@@ -71,26 +70,26 @@ struct SessionData
 	SessionData& operator=(const SessionData&) = delete;
 	
 	SessionData(SessionData&& other) noexcept
-		: session(other.session)
+		: user(other.user)
 		, workerThread(std::move(other.workerThread))
 		, sentMessages(std::move(other.sentMessages))
 		, sessionIndex(other.sessionIndex)
 		, randomGenerator(std::move(other.randomGenerator))
 		, disconnectRequested(other.disconnectRequested.load())
 	{
-		other.session = nullptr;
+		other.user = nullptr;
 	}
 	
 	SessionData& operator=(SessionData&& other) noexcept
 	{
 		if (this != &other) {
-			session = other.session;
+			user = other.user;
 			workerThread = std::move(other.workerThread);
 			sentMessages = std::move(other.sentMessages);
 			sessionIndex = other.sessionIndex;
 			randomGenerator = std::move(other.randomGenerator);
 			disconnectRequested.store(other.disconnectRequested.load());
-			other.session = nullptr;
+			other.user = nullptr;
 		}
 		return *this;
 	}

@@ -11,35 +11,35 @@ EchoServer::~EchoServer()
 
 void EchoServer::RegisterPacketHandlers()
 {
-	RegisterPacketHandler<echo::EchoRequest>([this](Session& _session, const echo::EchoRequest& request)
+	RegisterPacketHandler<echo::EchoRequest>([this](User& user, const echo::EchoRequest& request)
 	{
-		this->HandleEchoRequest(_session, request);
+		this->HandleEchoRequest(user, request);
 	});
 }
 
-void EchoServer::OnSessionDisconnect(Session* session)
+void EchoServer::OnSessionDisconnect(User* user)
 {
 	currentSessions_--;
 	totalDisconnected_++;
-	LOG_INFO("Client disconnected: Session 0x%llX", (uintptr_t)session);
+	LOG_INFO("Client disconnected: User 0x%llX", (uintptr_t)user);
 }
 
-void EchoServer::HandleEchoRequest(Session& _session, const echo::EchoRequest& request)
+void EchoServer::HandleEchoRequest(User& user, const echo::EchoRequest& request)
 {
 	//LOG_DEBUG("HandleEchoRequest : %s", request.message().c_str());
 	
 	echo::EchoResponse response;
 	response.set_message(request.message());
-	_session.SendPacket(response);
+	user.SendPacket(response);
 
 	return;
 }
 
-void EchoServer::OnSessionConnect(Session* session) 
+void EchoServer::OnSessionConnect(User* user) 
 {
 	currentSessions_++;
 	totalConnected_++;
-	LOG_INFO("[0x%llX][JOIN] Client connected", (uintptr_t)session);
+	LOG_INFO("[0x%llX][JOIN] Client connected", (uintptr_t)user);
 }
 
 void EchoServer::OnServerStart()

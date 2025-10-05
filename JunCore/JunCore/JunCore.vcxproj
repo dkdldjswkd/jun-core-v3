@@ -34,6 +34,7 @@
     <ClInclude Include="network\Client.h" />
     <ClInclude Include="protocol\UnifiedPacketHeader.h" />
     <ClInclude Include="network\Session.h" />
+    <ClInclude Include="network\User.h" />
     <ClInclude Include="network\WSAInitializer.h" />
   </ItemGroup>
   <ItemGroup>
