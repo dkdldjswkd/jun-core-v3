@@ -50,7 +50,7 @@ void IOCPManager::RunWorkerThread()
 		{
             if (enableMonitoring) 
             {
-                tlsRecvCounter.Add(ioSize);
+                tlsRecvCounter.record(ioSize);
             }
 			HandleRecvComplete(session, ioSize);
 		}
@@ -59,7 +59,7 @@ void IOCPManager::RunWorkerThread()
 		{
             if (enableMonitoring) 
             {
-                tlsSendCounter.Add(ioSize);
+                tlsSendCounter.record(ioSize);
             }
 			HandleSendComplete(session);
 		}
@@ -162,7 +162,7 @@ double IOCPManager::GetRecvBytesPerSecond(int seconds) const
     {
         if (counter != nullptr) 
         {
-            total += counter->GetAverage(seconds);
+            total += counter->get_average(seconds);
         }
         else
         {
@@ -179,7 +179,7 @@ double IOCPManager::GetSendBytesPerSecond(int seconds) const
     {
         if (counter != nullptr) 
         {
-            total += counter->GetAverage(seconds);
+            total += counter->get_average(seconds);
         }
 		else
 		{

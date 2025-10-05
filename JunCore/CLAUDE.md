@@ -777,6 +777,18 @@ DecrementIOCount:
       // function body
   }
   ```
+- **If Statement Braces**: Always use braces for if statements, even for single-line statements
+  ```cpp
+  // ✅ 올바른 방식
+  if (condition)
+  {
+      DoSomething();
+  }
+  
+  // ❌ 잘못된 방식 - 한 줄이라도 반드시 중괄호 사용
+  if (condition)
+      DoSomething();
+  ```
 - Use consistent indentation (4 spaces or tabs)
 
 ### File Encoding
