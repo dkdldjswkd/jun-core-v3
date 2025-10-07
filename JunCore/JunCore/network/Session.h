@@ -45,6 +45,11 @@ class Session : public std::enable_shared_from_this<Session>
 {
 	friend class IOCPManager;
 
+#ifdef _DEBUG
+public:
+	std::atomic<int> send_complete_handling_count_ = 0; // Send 완료 후처리 중인 개수
+#endif
+
 public:
 	Session();
 	~Session();
@@ -62,7 +67,7 @@ public:
 	WORD port_;
 
 	// flag
-	bool send_flag_ = false;
+	std::atomic<bool> send_flag_ = false;
 	std::atomic<bool> pending_disconnect_ = false;
 
 	// Send
@@ -106,18 +111,17 @@ public:
 		}
 	}
 	
+public:
+	// Send
 	template<typename T>
 	bool SendPacket(const T& packet);
-	
-	// 비동기 송신 등록 (IOCPManager에서 이동)
-	void PostAsyncSend();
-	
-	// 비동기 수신 등록 (IOCPManager에서 이동)
-	bool PostAsyncReceive();
+	void SendAsync();
+	void SendAsyncImpl();
+	// Recv
+	bool RecvAsync();
 };
 typedef Session* PSession;
 
-// 템플릿 구현부
 template<typename T>
 inline bool Session::SendPacket(const T& packet)
 {
@@ -153,10 +157,26 @@ inline bool Session::SendPacket(const T& packet)
 	send_q_.Enqueue(packet_data);
 
 	// 7. Send flag 체크 후 비동기 송신 시작
-	if (InterlockedExchange8((char*)&send_flag_, true) == false)
-	{
-		PostAsyncSend();
-	}
-
+	SendAsync();
 	return true;
+}
+
+inline void Session::SendAsync()
+{
+	bool expected = false;
+	if (send_flag_.compare_exchange_strong(expected, true))
+	{
+		if (0 < send_q_.GetUseCount())
+		{
+			SendAsyncImpl();
+		}
+		else
+		{
+			send_flag_.store(false);
+			if (0 < send_q_.GetUseCount())
+			{
+				SendAsync();
+			}
+		}
+	}
 }

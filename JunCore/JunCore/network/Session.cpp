@@ -57,7 +57,7 @@ void Session::Release()
 	Set(INVALID_SOCKET, {0}, 0, nullptr, nullptr);
 }
 
-void Session::PostAsyncSend()
+void Session::SendAsyncImpl()
 {
     WSABUF wsaBuf[MAX_SEND_MSG];
     int preparedCount = 0;
@@ -105,7 +105,7 @@ void Session::PostAsyncSend()
     }
 }
 
-bool Session::PostAsyncReceive()
+bool Session::RecvAsync()
 {
 	if (sock_ == INVALID_SOCKET || pending_disconnect_)
 	{

@@ -139,7 +139,7 @@ bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
         User* user = new User(session);
         session->Set(clientSocket, clientAddr->sin_addr, ntohs(clientAddr->sin_port), this/*NetEngine*/, user);
         OnSessionConnect(user);
-        session->PostAsyncReceive();
+        session->RecvAsync();
     }
     else
     {

@@ -128,27 +128,39 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 
 	if (!session->pending_disconnect_)
 	{
-		session->PostAsyncReceive();
+		session->RecvAsync();
 	}
 }
 
 void IOCPManager::HandleSendComplete(Session* session)
 {
-    // 송신 완료 처리 (vector<char> 해제)
-    for (int i = 0; i < session->send_packet_count_; i++) 
+#ifdef _DEBUG
+    auto handling_count_ = session->send_complete_handling_count_.fetch_add(1);
+    if (0 < handling_count_)
     {
-        delete session->send_packet_arr_[i];  // vector<char> 메모리 해제
-        session->send_packet_arr_[i] = nullptr;
+        CRASH();
     }
-    session->send_packet_count_ = 0;
+#endif
 
-    // Send Flag OFF
-    InterlockedExchange8((char*)&session->send_flag_, false);
+    // 송신 완료 후처리
+	{
+		for (int i = 0; i < session->send_packet_count_; i++)
+		{
+			delete session->send_packet_arr_[i];
+			session->send_packet_arr_[i] = nullptr;
+		}
+		session->send_packet_count_ = 0;
+		session->send_flag_.store(false);
+	}
 
-    // 추가 송신이 필요한지 확인
-    if (!session->pending_disconnect_ && session->send_q_.GetUseCount() > 0) 
+#ifdef _DEBUG
+    session->send_complete_handling_count_--;
+#endif
+
+    // 추가 송신 필요 여부 확인 및 추가 송신
+    if (!session->pending_disconnect_ && session->send_q_.GetUseCount() > 0)
     {
-        session->PostAsyncSend();  // Session이 직접 처리
+        session->SendAsync();
     }
 }
 

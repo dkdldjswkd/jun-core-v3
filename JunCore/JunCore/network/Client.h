@@ -104,7 +104,7 @@ inline User* Client::Connect()
     p_session->Set(p_session->sock_, clientIP, 0, this, user);
 
     // RECV 등록
-    if (!p_session->PostAsyncReceive())
+    if (!p_session->RecvAsync())
     {
         return nullptr;
     }
