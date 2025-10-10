@@ -12,6 +12,9 @@ int main()
 {
 	try
 	{
+		// Logger 초기화 (비동기 모드)  
+		LOGGER_INITIALIZE_ASYNC(LOG_LEVEL_INFO);
+		
 		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
 		LOG_ERROR_RETURN(iocpManager->IsValid(), -1, "Failed to create IOCPManager for client");
 

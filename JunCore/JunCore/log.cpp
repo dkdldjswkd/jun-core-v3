@@ -6,34 +6,28 @@
 #include <iomanip>
 
 
-AsyncLogger::AsyncLogger()
+Logger::Logger()
     : writeIndex(0)
     , readIndex(0)
     , shouldStop(false)
     , currentLogLevel(LOG_LEVEL_INFO)
+    , policy_(LoggingPolicy::SYNC)
+    , initialized_(false)
     , logFile(nullptr)
     , currentFileSize(0)
 {
-    // 링 버퍼 초기화
-    for (int i = 0; i < RING_BUFFER_SIZE; ++i)
-    {
-        ringBuffer[i].valid = false;
-        ringBuffer[i].text[0] = '\0';
-    }
-    
-    // 로그 파일 생성
-    OpenNewLogFile();
-    
-    // 로거 스레드 시작
-    loggerThread = std::thread(&AsyncLogger::LoggerThreadFunc, this);
+    // 기본 초기화만 수행 - 리소스 할당은 Initialize()에서
 }
 
-AsyncLogger::~AsyncLogger()
+Logger::~Logger()
 {
-    shouldStop = true;
-    if (loggerThread.joinable())
+    if (initialized_ && policy_ == LoggingPolicy::ASYNC)
     {
-        loggerThread.join();
+        shouldStop = true;
+        if (loggerThread.joinable())
+        {
+            loggerThread.join();
+        }
     }
     
     if (logFile)
@@ -43,28 +37,45 @@ AsyncLogger::~AsyncLogger()
     }
 }
 
-AsyncLogger& AsyncLogger::GetInstance()
+Logger& Logger::GetInstance()
 {
-    static AsyncLogger* instance = new AsyncLogger();
+    static Logger* instance = new Logger();
     return *instance;
 }
 
-void AsyncLogger::Initialize(LogLevel level)
+void Logger::Initialize(LogLevel level, LoggingPolicy policy)
 {
-    GetInstance().SetLogLevel(level);
+    Logger& instance = GetInstance();
+    instance.policy_ = policy;
+    instance.currentLogLevel = level;
+    
+    // 로그 파일 생성 (공통)
+    instance.OpenNewLogFile();
+    
+    // 비동기 정책인 경우에만 추가 리소스 할당
+    if (policy == LoggingPolicy::ASYNC)
+    {
+        instance.InitializeAsyncResources();
+    }
+    
+    instance.initialized_ = true;
 }
 
-void AsyncLogger::Shutdown()
+void Logger::Shutdown()
 {
     static bool shutdown_called = false;
     if (shutdown_called) return;
     shutdown_called = true;
     
-    AsyncLogger& logger = GetInstance();
-    logger.shouldStop = true;
-    if (logger.loggerThread.joinable())
+    Logger& logger = GetInstance();
+    
+    if (logger.initialized_ && logger.policy_ == LoggingPolicy::ASYNC)
     {
-        logger.loggerThread.join();
+        logger.shouldStop = true;
+        if (logger.loggerThread.joinable())
+        {
+            logger.loggerThread.join();
+        }
     }
     
     if (logger.logFile)
@@ -74,7 +85,51 @@ void AsyncLogger::Shutdown()
     }
 }
 
-void AsyncLogger::Log(int level, const char* format, ...)
+void Logger::InitializeAsyncResources()
+{
+    // 링 버퍼 초기화
+    for (int i = 0; i < RING_BUFFER_SIZE; ++i)
+    {
+        ringBuffer[i].valid = false;
+        ringBuffer[i].text[0] = '\0';
+    }
+    
+    // 원자 변수 초기화
+    writeIndex.store(0);
+    readIndex.store(0);
+    shouldStop.store(false);
+    
+    // 로거 스레드 시작
+    loggerThread = std::thread(&Logger::LoggerThreadFunc, this);
+}
+
+void Logger::Log(int level, const char* format, ...)
+{
+    if (!initialized_)
+        return;
+        
+    // 로그 레벨 체크
+    if (level > currentLogLevel)
+        return;
+    
+    va_list args;
+    va_start(args, format);
+    
+    if (policy_ == LoggingPolicy::SYNC)
+    {
+        // 동기 로깅
+        LogSync(level, format, args);
+    }
+    else
+    {
+        // 비동기 로깅 (기존 로직)
+        LogAsync(level, format, args);
+    }
+    
+    va_end(args);
+}
+
+void Logger::LogAsync(int level, const char* format, va_list args)
 {
     while (true)
     {
@@ -95,10 +150,6 @@ void AsyncLogger::Log(int level, const char* format, ...)
         {
             // 성공적으로 슬롯 할당받음
             uint32_t ringIdx = currentWrite % RING_BUFFER_SIZE;
-            
-            // 로그 메시지 포맷팅
-            va_list args;
-            va_start(args, format);
             
             LogMessage& msg = ringBuffer[ringIdx];
             msg.level = level;
@@ -129,7 +180,6 @@ void AsyncLogger::Log(int level, const char* format, ...)
             
             // 실제 로그 메시지 포맷팅
             vsnprintf(msg.text + prefixLen, MAX_LOG_LENGTH - prefixLen - 1, format, args);
-            va_end(args);
             
             // 개행 문자 추가
             size_t len = strlen(msg.text);
@@ -146,7 +196,51 @@ void AsyncLogger::Log(int level, const char* format, ...)
     }
 }
 
-void AsyncLogger::LoggerThreadFunc()
+void Logger::LogSync(int level, const char* format, va_list args)
+{
+    char logText[MAX_LOG_LENGTH];
+    
+    // 타임스탬프, 로그레벨, 스레드ID 추가
+    auto now = std::time(nullptr);
+    struct tm tm;
+    localtime_s(&tm, &now);
+    
+    // 로그 레벨 문자열 변환
+    const char* levelStr = "";
+    switch (level)
+    {
+    case LOG_LEVEL_ERROR: levelStr = "ERROR"; break;
+    case LOG_LEVEL_WARN:  levelStr = "WARN";  break;
+    case LOG_LEVEL_INFO:  levelStr = "INFO";  break;
+    case LOG_LEVEL_DEBUG: levelStr = "DEBUG"; break;
+    default:              levelStr = "UNKNOWN"; break;
+    }
+    
+    // 스레드 ID 가져오기
+    DWORD threadId = GetCurrentThreadId();
+    
+    int prefixLen = snprintf(logText, MAX_LOG_LENGTH, "[%04d-%02d-%02d %02d:%02d:%02d][%s][%lu] ", 
+                            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                            tm.tm_hour, tm.tm_min, tm.tm_sec,
+                            levelStr, threadId);
+    
+    // 실제 로그 메시지 포맷팅
+    vsnprintf(logText + prefixLen, MAX_LOG_LENGTH - prefixLen - 1, format, args);
+    
+    // 개행 문자 추가
+    size_t len = strlen(logText);
+    if (len < MAX_LOG_LENGTH - 2)
+    {
+        logText[len] = '\n';
+        logText[len + 1] = '\0';
+    }
+    
+    // 직접 콘솔과 파일에 쓰기 (동기)
+    WriteToConsole(level, logText);
+    WriteToFile(logText);
+}
+
+void Logger::LoggerThreadFunc()
 {
     while (!shouldStop)
     {
@@ -177,7 +271,7 @@ void AsyncLogger::LoggerThreadFunc()
     }
 }
 
-void AsyncLogger::ProcessLogMessage(const LogMessage& msg)
+void Logger::ProcessLogMessage(const LogMessage& msg)
 {
     // 파일에는 모든 레벨 로그 기록
     WriteToFile(msg.text);
@@ -189,7 +283,7 @@ void AsyncLogger::ProcessLogMessage(const LogMessage& msg)
     }
 }
 
-void AsyncLogger::WriteToConsole(int level, const char* text)
+void Logger::WriteToConsole(int level, const char* text)
 {
     EnableConsoleColors();
     
@@ -214,7 +308,7 @@ void AsyncLogger::WriteToConsole(int level, const char* text)
     printf("%s%s%s", color, text, ANSI_COLOR_RESET);
 }
 
-void AsyncLogger::WriteToFile(const char* text)
+void Logger::WriteToFile(const char* text)
 {
     if (!logFile)
         return;
@@ -237,7 +331,7 @@ void AsyncLogger::WriteToFile(const char* text)
     }
 }
 
-bool AsyncLogger::OpenNewLogFile()
+bool Logger::OpenNewLogFile()
 {
     std::string baseFileName = GenerateLogFileName(0);
     std::string fileName = baseFileName;
@@ -299,7 +393,7 @@ bool AsyncLogger::OpenNewLogFile()
     return false;
 }
 
-std::string AsyncLogger::GenerateLogFileName(int sequence)
+std::string Logger::GenerateLogFileName(int sequence)
 {
     std::string processName = GetProcessName();
     std::string timeString = GetCurrentTimeString();
@@ -314,7 +408,7 @@ std::string AsyncLogger::GenerateLogFileName(int sequence)
     }
 }
 
-std::string AsyncLogger::GetProcessName()
+std::string Logger::GetProcessName()
 {
     char buffer[MAX_PATH];
     GetModuleFileNameA(nullptr, buffer, MAX_PATH);
@@ -335,7 +429,7 @@ std::string AsyncLogger::GetProcessName()
     return fullPath;
 }
 
-std::string AsyncLogger::GetCurrentTimeString()
+std::string Logger::GetCurrentTimeString()
 {
     auto now = std::time(nullptr);
     struct tm tm;
@@ -353,7 +447,7 @@ std::string AsyncLogger::GetCurrentTimeString()
     return oss.str();
 }
 
-void AsyncLogger::EnableConsoleColors()
+void Logger::EnableConsoleColors()
 {
     static bool initialized = false;
     if (!initialized)

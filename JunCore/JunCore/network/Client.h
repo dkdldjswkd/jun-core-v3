@@ -101,8 +101,7 @@ inline User* Client::Connect()
     // User 생성 및 세션 초기화
     User* user = new User(p_session);
     in_addr clientIP = { 0 };
-    p_session->SetIOCP(iocpManager->GetHandle());
-    p_session->Set(p_session->sock_, clientIP, 0, this, user);
+    p_session->Set(p_session->sock_, clientIP, 0, this, iocpManager->GetHandle(), user);
 
     // RECV 등록
     if (!p_session->RecvAsync())

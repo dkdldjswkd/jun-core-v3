@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cassert>
 #include <windows.h>
@@ -23,7 +23,13 @@ enum LogLevel
     LOG_LEVEL_DEBUG = 3
 };
 
-class AsyncLogger
+enum class LoggingPolicy
+{
+    SYNC,   // 동기 로깅 (직접 쓰기)
+    ASYNC   // 비동기 로깅 (링버퍼 + 스레드)
+};
+
+class Logger
 {
 private:
     static constexpr int RING_BUFFER_SIZE = 4096;
@@ -48,6 +54,8 @@ private:
     std::atomic<bool> shouldStop;
     
     LogLevel currentLogLevel;
+    LoggingPolicy policy_;
+    bool initialized_;
     std::thread loggerThread;
     
     FILE* logFile;
@@ -56,8 +64,8 @@ private:
     
 
 private:
-    AsyncLogger();
-    ~AsyncLogger();
+    Logger();
+    ~Logger();
     
     void LoggerThreadFunc();
     void ProcessLogMessage(const LogMessage& msg);
@@ -68,10 +76,13 @@ private:
     std::string GetProcessName();
     std::string GetCurrentTimeString();
     void EnableConsoleColors();
+    void LogSync(int level, const char* format, va_list args);
+    void LogAsync(int level, const char* format, va_list args);
+    void InitializeAsyncResources();
 
 public:
-    static AsyncLogger& GetInstance();
-    static void Initialize(LogLevel level = LOG_LEVEL_INFO);
+    static Logger& GetInstance();
+    static void Initialize(LogLevel level = LOG_LEVEL_INFO, LoggingPolicy policy = LoggingPolicy::SYNC);
     static void Shutdown();
     
     void SetLogLevel(LogLevel level) { currentLogLevel = level; }
@@ -94,12 +105,17 @@ inline void EnableConsoleColors()
     }
 }
 
-#define SET_LOG_LEVEL(level) AsyncLogger::GetInstance().SetLogLevel(level)
+#define LOGGER_INITIALIZE(level, policy) Logger::Initialize(level, policy)
+#define LOGGER_INITIALIZE_SYNC(level) Logger::Initialize(level, LoggingPolicy::SYNC)
+#define LOGGER_INITIALIZE_ASYNC(level) Logger::Initialize(level, LoggingPolicy::ASYNC)
+#define LOGGER_SHUTDOWN() Logger::Shutdown()
 
-#define LOG_ERROR(format, ...)   AsyncLogger::GetInstance().Log(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
-#define LOG_WARN(format, ...)    AsyncLogger::GetInstance().Log(LOG_LEVEL_WARN, format, ##__VA_ARGS__)
-#define LOG_INFO(format, ...)    AsyncLogger::GetInstance().Log(LOG_LEVEL_INFO, format, ##__VA_ARGS__)
-#define LOG_DEBUG(format, ...)   AsyncLogger::GetInstance().Log(LOG_LEVEL_DEBUG, format, ##__VA_ARGS__)
+#define SET_LOG_LEVEL(level) Logger::GetInstance().SetLogLevel(level)
+
+#define LOG_ERROR(format, ...)   Logger::GetInstance().Log(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...)    Logger::GetInstance().Log(LOG_LEVEL_WARN, format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...)    Logger::GetInstance().Log(LOG_LEVEL_INFO, format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...)   Logger::GetInstance().Log(LOG_LEVEL_DEBUG, format, ##__VA_ARGS__)
 
 #define LOG_ERROR_RETURN(condition, retval, format, ...)    \
     do {                                                    \

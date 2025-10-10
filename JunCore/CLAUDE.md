@@ -784,8 +784,10 @@ void IOCPManager::RunWorkerThread() {
 
 ### File Encoding
 - **All new .cpp/.h files must be created with UTF-8 BOM encoding**
+- **Claude가 편집하거나 새로 생성하는 모든 파일은 UTF-8 BOM 인코딩 사용**
 - This ensures consistent encoding across the Visual Studio project
 - Use UTF-8 BOM when creating any C++ source or header files
+- **UTF-8 BOM prevents Korean text corruption and Visual Studio build warnings**
 
 ### Build Requirements
 - **Zero Warnings Policy**: All code must compile without warnings

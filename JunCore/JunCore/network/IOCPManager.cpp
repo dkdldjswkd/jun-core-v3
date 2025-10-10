@@ -256,8 +256,7 @@ void IOCPManager::HandleAcceptComplete(Session* session, DWORD ioSize)
     
     // Session 완전 설정
     user = new User(session->shared_from_this());
-    session->SetIOCP(iocpHandle);  // IOCP 핸들 설정 (필수!)
-    session->Set(acceptSocket, clientAddr.sin_addr, ntohs(clientAddr.sin_port), server, user);
+    session->Set(acceptSocket, clientAddr.sin_addr, ntohs(clientAddr.sin_port), server, iocpHandle, user);
     server->OnSessionConnect(user);
     session->RecvAsync();
 

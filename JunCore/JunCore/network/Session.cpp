@@ -26,7 +26,7 @@ Session::~Session()
 	Release();
 }
 
-void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng, class User* user)
+void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng, HANDLE iocp_handle, class User* user)
 {
 	sock_				= sock;
 	ip_					= ip;
@@ -36,6 +36,7 @@ void Session::Set(SOCKET sock, in_addr ip, WORD port, NetBase* eng, class User* 
 	send_packet_count_	= 0;
 	last_recv_time_		= static_cast<DWORD>(GetTickCount64());
 	engine_				= eng;
+	h_iocp_				= iocp_handle;
 	owner_user_			= user;
 
 	recv_buf_.Clear();
