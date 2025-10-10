@@ -21,21 +21,21 @@ void IOCPManager::RunWorkerThread()
     
     for (;;) 
     {
-        DWORD ioSize = 0;
-        ULONG_PTR completionKey = 0;
-        OverlappedEx* p_overlapped;
+        DWORD ioSize                = 0;
+        ULONG_PTR completionKey     = 0; // 사용하지 않음
+        OverlappedEx* p_overlapped  = nullptr;
 
 		BOOL retGQCS = GetQueuedCompletionStatus(iocpHandle, &ioSize, &completionKey, (LPOVERLAPPED*)&p_overlapped, INFINITE);
 
         // IOCP 종료 메시지
-        if (ioSize == 0 && completionKey == 0 && p_overlapped == nullptr)
+        if (ioSize == 0 && p_overlapped == nullptr)
         {
             // 다른 Worker에게도 종료를 알린다.
 			PostQueuedCompletionStatus(iocpHandle, 0, 0, 0);
             break;
         }
 
-        if (ioSize == 0)
+		if (ioSize == 0 && p_overlapped->operation_ != IOOperation::IO_ACCEPT)
         {
             goto DecrementIOCount;
         }
@@ -46,23 +46,35 @@ void IOCPManager::RunWorkerThread()
 		}
 
 		// 수신 완료 처리
-		if (p_overlapped->operation_ == IOOperation::IO_RECV)
+        switch (p_overlapped->operation_)
+        {
+		case IOOperation::IO_RECV:
 		{
-            if (enableMonitoring) 
-            {
-                tlsRecvCounter.record(ioSize);
-            }
+			if (enableMonitoring)
+			{
+				tlsRecvCounter.record(ioSize);
+			}
 			HandleRecvComplete(p_overlapped->session_.get(), ioSize);
-		}
-		// 송신 완료 처리  
-		if (p_overlapped->operation_ == IOOperation::IO_SEND)
+		} break;
+
+		case IOOperation::IO_SEND:
 		{
-            if (enableMonitoring) 
-            {
-                tlsSendCounter.record(ioSize);
-            }
+			if (enableMonitoring)
+			{
+				tlsSendCounter.record(ioSize);
+			}
 			HandleSendComplete(p_overlapped->session_.get());
-		}
+		} break;
+
+		case IOOperation::IO_ACCEPT:
+		{
+			HandleAcceptComplete(p_overlapped->session_.get(), ioSize);
+		} break;
+
+		default:
+			LOG_ERROR("invalid io operation : %d", p_overlapped->operation_);
+			break;
+        }
 
 	DecrementIOCount:
 		delete p_overlapped;
@@ -110,7 +122,7 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
         const UnifiedPacketHeader* header = reinterpret_cast<const UnifiedPacketHeader*>(&packet[0]);
 
         const uint32_t _packet_id = header->packet_id;
-        //LOG_DEBUG("recv packet id : %d", _packet_id);
+        LOG_DEBUG("Received packet: id=%u, size=%u", _packet_id, _packet_len);
 
         // Payload 추출
         std::vector<char> payload(packet.begin() + UNIFIED_HEADER_SIZE, packet.end());
@@ -199,4 +211,59 @@ double IOCPManager::GetSendBytesPerSecond(int seconds) const
 		}
     }
     return total;
+}
+
+void IOCPManager::HandleAcceptComplete(Session* session, DWORD ioSize)
+{
+    SOCKET acceptSocket;
+    class NetBase* engine;
+    class Server* server = nullptr;
+    SOCKET listenSocket;
+    SOCKADDR_IN clientAddr;
+    int clientAddrLen;
+    User* user = nullptr;
+    
+    // Session에서 필요한 정보 추출
+    acceptSocket = session->sock_;
+    engine = session->GetEngine();
+    server = dynamic_cast<class Server*>(engine);
+    
+    if (!server)
+    {
+        LOG_ERROR("Session engine is not a Server instance");
+        closesocket(acceptSocket);
+        goto PostNewAccept;
+    }
+    
+    // AcceptEx 완료 후 필수 setsockopt 호출
+    listenSocket = server->listenSocket;
+    if (setsockopt(acceptSocket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, 
+                   (char*)&listenSocket, sizeof(listenSocket)) == SOCKET_ERROR)
+    {
+        LOG_ERROR("setsockopt SO_UPDATE_ACCEPT_CONTEXT failed: %d", WSAGetLastError());
+        closesocket(acceptSocket);
+        goto PostNewAccept;
+    }
+    
+    // 클라이언트 주소 정보 추출
+    clientAddrLen = sizeof(clientAddr);
+    if (getpeername(acceptSocket, (SOCKADDR*)&clientAddr, &clientAddrLen) == SOCKET_ERROR)
+    {
+        LOG_ERROR("getpeername failed: %d", WSAGetLastError());
+        closesocket(acceptSocket);
+        goto PostNewAccept;
+    }
+    
+    // Session 완전 설정
+    user = new User(session->shared_from_this());
+    session->SetIOCP(iocpHandle);  // IOCP 핸들 설정 (필수!)
+    session->Set(acceptSocket, clientAddr.sin_addr, ntohs(clientAddr.sin_port), server, user);
+    server->OnSessionConnect(user);
+    session->RecvAsync();
+
+PostNewAccept:
+    if (server && !server->PostAcceptEx())
+    {
+        LOG_ERROR("Failed to post new AcceptEx - server may stop accepting connections");
+    }
 }

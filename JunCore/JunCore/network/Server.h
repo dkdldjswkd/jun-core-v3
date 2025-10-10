@@ -8,9 +8,36 @@
 #include <atomic>
 #include <memory>
 #include <vector>
+#include <mswsock.h>
+
+// AcceptEx 함수 포인터 타입 정의
+typedef BOOL(WINAPI* LPFN_ACCEPTEX)(
+    SOCKET sListenSocket,
+    SOCKET sAcceptSocket,
+    PVOID lpOutputBuffer,
+    DWORD dwReceiveDataLength,
+    DWORD dwLocalAddressLength,
+    DWORD dwRemoteAddressLength,
+    LPDWORD lpdwBytesReceived,
+    LPOVERLAPPED lpOverlapped
+);
+
+// GetAcceptExSockaddrs 함수 포인터 타입 정의
+typedef VOID(WINAPI* LPFN_GETACCEPTEXSOCKADDRS)(
+    PVOID lpOutputBuffer,
+    DWORD dwReceiveDataLength,
+    DWORD dwLocalAddressLength,
+    DWORD dwRemoteAddressLength,
+    LPSOCKADDR* LocalSockaddr,
+    LPINT LocalSockaddrLength,
+    LPSOCKADDR* RemoteSockaddr,
+    LPINT RemoteSockaddrLength
+);
 
 class Server : public NetBase
 {
+    friend class IOCPManager; // IOCPManager가 private 멤버에 접근할 수 있도록
+    
 public:
     Server(std::shared_ptr<IOCPManager> manager);
     virtual ~Server();
@@ -42,13 +69,17 @@ private:
     SOCKADDR_IN serverAddr{};
     
     // Accept 관리
-    std::thread acceptThread;
     std::atomic<bool> running{false};
+    
+    // AcceptEx 함수 포인터들
+    LPFN_ACCEPTEX fnAcceptEx = nullptr;
+    LPFN_GETACCEPTEXSOCKADDRS fnGetAcceptExSockaddrs = nullptr;
     
     //------------------------------
     // 내부 메서드들
     //------------------------------
-    void AcceptThreadFunc();
+    bool LoadAcceptExFunctions();
+    bool PostAcceptEx();
     bool OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr);
 };
 

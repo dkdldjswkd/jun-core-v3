@@ -1,0 +1,1 @@
+1. Connect 함수에서 User* 반환 전 Recv 이벤트가 발생 가능하므로, Connect 함수에 User*를 파라미터로하는 함수를 인자로 받아 호출시키도록 (해당 함수에서 User*를 사용자의 User 컨테이너에 emplace 하는 등 Connect로 생성된 User를 핸들링 가능하게 하기위함)

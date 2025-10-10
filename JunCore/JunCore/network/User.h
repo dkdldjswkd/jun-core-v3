@@ -9,7 +9,7 @@
 class User
 {
 public:
-    explicit User(std::shared_ptr<Session> session);
+    explicit User(std::weak_ptr<Session> session);
     ~User() = default;
 
     // 복사/이동 허용 (weak_ptr은 안전)
@@ -45,7 +45,7 @@ private:
 // 인라인 구현
 //------------------------------
 
-inline User::User(std::shared_ptr<Session> session) 
+inline User::User(std::weak_ptr<Session> session) 
     : session_(session)
 {
 }

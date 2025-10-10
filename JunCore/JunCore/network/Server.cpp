@@ -21,7 +21,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
 
     try 
     {
-        // 1. 소켓 생성
+        // 소켓 생성
         listenSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (listenSocket == INVALID_SOCKET) 
         {
@@ -55,9 +55,31 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
             return false;
         }
         
-        // 6. Accept 스레드 시작
+        // AcceptEx 함수 포인터 로딩
+        if (!LoadAcceptExFunctions())
+        {
+            LOG_ERROR("Failed to load AcceptEx functions");
+            closesocket(listenSocket);
+            return false;
+        }
+        
+        // 리슨 소켓을 IOCP에 등록
+        if (!iocpManager->RegisterSocket(listenSocket))
+        {
+            LOG_ERROR("Failed to register listen socket to IOCP");
+            closesocket(listenSocket);
+            return false;
+        }
+        
+        // 초기 AcceptEx 등록
         running = true;
-        acceptThread = std::thread(&Server::AcceptThreadFunc, this);
+        if (!PostAcceptEx())
+        {
+            LOG_ERROR("Failed to post initial AcceptEx");
+            running = false;
+            closesocket(listenSocket);
+            return false;
+        }
         
         OnServerStart();
         
@@ -78,52 +100,107 @@ void Server::StopServer()
         return; // 이미 정지됨
     }
     
-    LOG_INFO("Server stopping...");
-    
-    // Accept 스레드 종료
+    // 리슨 소켓 정리
     if (listenSocket != INVALID_SOCKET) 
     {
         closesocket(listenSocket);
         listenSocket = INVALID_SOCKET;
     }
     
-    if (acceptThread.joinable()) 
-    {
-        acceptThread.join();
-    }
-    
     // 사용자 콜백 호출
     OnServerStop();
-    
-    LOG_INFO("Server stopped successfully");
 }
 
-void Server::AcceptThreadFunc()
+
+bool Server::LoadAcceptExFunctions()
 {
-    LOG_INFO("Accept thread started");
+    // AcceptEx 함수 포인터 로딩
+    GUID guidAcceptEx = WSAID_ACCEPTEX;
+    DWORD dwBytes = 0;
     
-    while (running.load()) 
+    int result = WSAIoctl(listenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+                         &guidAcceptEx, sizeof(guidAcceptEx),
+                         &fnAcceptEx, sizeof(fnAcceptEx),
+                         &dwBytes, NULL, NULL);
+    
+    if (result == SOCKET_ERROR)
     {
-        SOCKADDR_IN clientAddr;
-        int clientAddrLen = sizeof(clientAddr);
-        
-        // Accept 대기
-        SOCKET clientSocket = accept(listenSocket, (SOCKADDR*)&clientAddr, &clientAddrLen);
-        
-        if (clientSocket == INVALID_SOCKET) 
-        {
-            if (running.load()) 
-            {
-                LOG_ERROR("Accept failed: %d", WSAGetLastError());
-            }
-            continue;
-        }
-        
-        // 클라이언트 연결 처리
-        OnClientConnect(clientSocket, &clientAddr);
+        LOG_ERROR("Failed to load AcceptEx function pointer: %d", WSAGetLastError());
+        return false;
     }
     
-	LOG_INFO("Accept thread ended");
+    // GetAcceptExSockaddrs 함수 포인터 로딩
+    GUID guidGetAcceptExSockaddrs = WSAID_GETACCEPTEXSOCKADDRS;
+    
+    result = WSAIoctl(listenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+                     &guidGetAcceptExSockaddrs, sizeof(guidGetAcceptExSockaddrs),
+                     &fnGetAcceptExSockaddrs, sizeof(fnGetAcceptExSockaddrs),
+                     &dwBytes, NULL, NULL);
+    
+    if (result == SOCKET_ERROR)
+    {
+        LOG_ERROR("Failed to load GetAcceptExSockaddrs function pointer: %d", WSAGetLastError());
+        return false;
+    }
+    
+    return true;
+}
+
+bool Server::PostAcceptEx()
+{
+    if (!fnAcceptEx)
+    {
+        LOG_ERROR("AcceptEx function pointer not loaded");
+        return false;
+    }
+    
+    // 새 클라이언트 소켓 생성 (WSA_FLAG_OVERLAPPED 플래그 추가)
+    SOCKET acceptSocket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+    if (acceptSocket == INVALID_SOCKET)
+    {
+        LOG_ERROR("Failed to create accept socket: %d", WSAGetLastError());
+        return false;
+    }
+    
+    // Accept 소켓을 IOCP에 등록
+    if (!iocpManager->RegisterSocket(acceptSocket))
+    {
+        LOG_ERROR("Failed to register accept socket to IOCP: %d", GetLastError());
+        closesocket(acceptSocket);
+        return false;
+    }
+    
+    // Session 사전 생성 및 설정
+    auto session = std::make_shared<Session>();
+    session->sock_ = acceptSocket;
+    session->SetEngine(this);
+    
+    // OverlappedEx 생성
+    auto acceptOverlapped = new OverlappedEx(session, IOOperation::IO_ACCEPT);
+    
+    // AcceptEx 호출 (OverlappedEx 내장 버퍼 사용)
+    DWORD bytesReceived = 0;
+    BOOL result = fnAcceptEx(
+        listenSocket,           // 리슨 소켓
+        acceptSocket,           // Accept할 소켓
+        acceptOverlapped->acceptAddressBuffer, // OverlappedEx 내장 주소 버퍼
+        0,                      // 수신 데이터 길이 (0으로 설정)
+        sizeof(SOCKADDR_IN) + 16, // 로컬 주소 길이
+        sizeof(SOCKADDR_IN) + 16, // 원격 주소 길이
+        &bytesReceived,         // 수신된 바이트 수
+        &acceptOverlapped->overlapped_ // OVERLAPPED 구조체
+    );
+    
+    DWORD lastError = WSAGetLastError();
+    if (!result && lastError != ERROR_IO_PENDING)
+    {
+        LOG_ERROR("AcceptEx failed: result=%d, error=%d", result, lastError);
+        closesocket(acceptSocket);
+        delete acceptOverlapped;
+        return false;
+    }
+    
+    return true;
 }
 
 bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)

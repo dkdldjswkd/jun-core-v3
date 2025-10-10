@@ -15,7 +15,7 @@ constexpr int MAX_SEND_MSG = 100;
 
 class Session;
 
-enum class IOOperation
+enum class IOOperation : uint8_t
 {
 	IO_RECV,
 	IO_SEND,
@@ -33,6 +33,9 @@ struct OverlappedEx
 	OVERLAPPED overlapped_ = { 0, };
 	std::shared_ptr<Session> session_;
 	IOOperation operation_;
+	
+	// AcceptEx용 주소 버퍼 (Accept 시에만 사용)
+	char acceptAddressBuffer[64];
 };
 
 //------------------------------
