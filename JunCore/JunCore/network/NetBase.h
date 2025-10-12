@@ -45,7 +45,7 @@ protected:
 	//------------------------------
     // 서버/클라 공용 가상함수 - 사용자가 재정의
     //------------------------------
-    virtual void OnSessionDisconnect(User* user) = 0;
+    virtual void OnUserDisconnect(User* user) = 0;
 
 private:
     // 패킷 핸들 caller

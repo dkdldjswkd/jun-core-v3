@@ -103,7 +103,43 @@ void Logger::InitializeAsyncResources()
     loggerThread = std::thread(&Logger::LoggerThreadFunc, this);
 }
 
-void Logger::Log(int level, const char* format, ...)
+
+int Logger::FormatLogPrefix(char* buffer, int level, const char* file, int line)
+{
+    // 타임스탬프, 로그레벨, 스레드ID 추가
+    auto now = std::time(nullptr);
+    struct tm tm;
+    localtime_s(&tm, &now);
+    
+    // 로그 레벨 문자열 변환
+    const char* levelStr = "";
+    switch (level)
+    {
+    case LOG_LEVEL_ERROR: levelStr = "ERROR"; break;
+    case LOG_LEVEL_WARN:  levelStr = "WARN";  break;
+    case LOG_LEVEL_INFO:  levelStr = "INFO";  break;
+    case LOG_LEVEL_DEBUG: levelStr = "DEBUG"; break;
+    default:              levelStr = "UNKNOWN"; break;
+    }
+    
+    // 스레드 ID 가져오기
+    DWORD threadId = GetCurrentThreadId();
+    
+    // 파일명에서 경로 제거
+    const char* filename = "";
+    if (file && strlen(file) > 0)
+    {
+        const char* lastSlash = strrchr(file, '\\');
+        filename = lastSlash ? lastSlash + 1 : file;
+    }
+    
+    return snprintf(buffer, MAX_LOG_LENGTH, "[%04d-%02d-%02d %02d:%02d:%02d][%s][%lu][%s:%d] ", 
+                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                    tm.tm_hour, tm.tm_min, tm.tm_sec,
+                    levelStr, threadId, filename, line);
+}
+
+void Logger::Log(int level, const char* file, int line, const char* format, ...)
 {
     if (!initialized_)
         return;
@@ -118,18 +154,18 @@ void Logger::Log(int level, const char* format, ...)
     if (policy_ == LoggingPolicy::SYNC)
     {
         // 동기 로깅
-        LogSync(level, format, args);
+        LogSync(level, file, line, format, args);
     }
     else
     {
-        // 비동기 로깅 (기존 로직)
-        LogAsync(level, format, args);
+        // 비동기 로깅
+        LogAsync(level, file, line, format, args);
     }
     
     va_end(args);
 }
 
-void Logger::LogAsync(int level, const char* format, va_list args)
+void Logger::LogAsync(int level, const char* file, int line, const char* format, va_list args)
 {
     while (true)
     {
@@ -154,29 +190,8 @@ void Logger::LogAsync(int level, const char* format, va_list args)
             LogMessage& msg = ringBuffer[ringIdx];
             msg.level = level;
             
-            // 타임스탬프, 로그레벨, 스레드ID 추가
-            auto now = std::time(nullptr);
-            struct tm tm;
-            localtime_s(&tm, &now);
-            
-            // 로그 레벨 문자열 변환
-            const char* levelStr = "";
-            switch (level)
-            {
-            case LOG_LEVEL_ERROR: levelStr = "ERROR"; break;
-            case LOG_LEVEL_WARN:  levelStr = "WARN";  break;
-            case LOG_LEVEL_INFO:  levelStr = "INFO";  break;
-            case LOG_LEVEL_DEBUG: levelStr = "DEBUG"; break;
-            default:              levelStr = "UNKNOWN"; break;
-            }
-            
-            // 스레드 ID 가져오기
-            DWORD threadId = GetCurrentThreadId();
-            
-            int prefixLen = snprintf(msg.text, MAX_LOG_LENGTH, "[%04d-%02d-%02d %02d:%02d:%02d][%s][%lu] ", 
-                                    tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-                                    tm.tm_hour, tm.tm_min, tm.tm_sec,
-                                    levelStr, threadId);
+            // 로그 프리픽스 포맷팅
+            int prefixLen = FormatLogPrefix(msg.text, level, file, line);
             
             // 실제 로그 메시지 포맷팅
             vsnprintf(msg.text + prefixLen, MAX_LOG_LENGTH - prefixLen - 1, format, args);
@@ -196,33 +211,12 @@ void Logger::LogAsync(int level, const char* format, va_list args)
     }
 }
 
-void Logger::LogSync(int level, const char* format, va_list args)
+void Logger::LogSync(int level, const char* file, int line, const char* format, va_list args)
 {
     char logText[MAX_LOG_LENGTH];
     
-    // 타임스탬프, 로그레벨, 스레드ID 추가
-    auto now = std::time(nullptr);
-    struct tm tm;
-    localtime_s(&tm, &now);
-    
-    // 로그 레벨 문자열 변환
-    const char* levelStr = "";
-    switch (level)
-    {
-    case LOG_LEVEL_ERROR: levelStr = "ERROR"; break;
-    case LOG_LEVEL_WARN:  levelStr = "WARN";  break;
-    case LOG_LEVEL_INFO:  levelStr = "INFO";  break;
-    case LOG_LEVEL_DEBUG: levelStr = "DEBUG"; break;
-    default:              levelStr = "UNKNOWN"; break;
-    }
-    
-    // 스레드 ID 가져오기
-    DWORD threadId = GetCurrentThreadId();
-    
-    int prefixLen = snprintf(logText, MAX_LOG_LENGTH, "[%04d-%02d-%02d %02d:%02d:%02d][%s][%lu] ", 
-                            tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-                            tm.tm_hour, tm.tm_min, tm.tm_sec,
-                            levelStr, threadId);
+    // 로그 프리픽스 포맷팅
+    int prefixLen = FormatLogPrefix(logText, level, file, line);
     
     // 실제 로그 메시지 포맷팅
     vsnprintf(logText + prefixLen, MAX_LOG_LENGTH - prefixLen - 1, format, args);
@@ -398,14 +392,39 @@ std::string Logger::GenerateLogFileName(int sequence)
     std::string processName = GetProcessName();
     std::string timeString = GetCurrentTimeString();
     
-    if (sequence == 0)
+    // Log/프로세스명/ 디렉토리 구조 생성
+    std::string logDir = "Log/" + processName;
+    
+    // Windows API로 디렉토리 생성
+    if (CreateDirectoryA("Log", NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
     {
-        return processName + "_" + timeString + ".log";
+        if (CreateDirectoryA(logDir.c_str(), NULL) || GetLastError() == ERROR_ALREADY_EXISTS)
+        {
+            // 디렉토리 생성 성공
+        }
+        else
+        {
+            // 프로세스별 디렉토리 생성 실패 시 Log 디렉토리 사용
+            logDir = "Log";
+        }
     }
     else
     {
-        return processName + "_" + timeString + "_" + std::to_string(sequence) + ".log";
+        // Log 디렉토리 생성 실패 시 현재 디렉토리 사용
+        logDir = ".";
     }
+    
+    std::string fileName;
+    if (sequence == 0)
+    {
+        fileName = processName + "_" + timeString + ".log";
+    }
+    else
+    {
+        fileName = processName + "_" + timeString + "_" + std::to_string(sequence) + ".log";
+    }
+    
+    return logDir + "/" + fileName;
 }
 
 std::string Logger::GetProcessName()

@@ -17,7 +17,7 @@ void EchoServer::RegisterPacketHandlers()
 	});
 }
 
-void EchoServer::OnSessionDisconnect(User* user)
+void EchoServer::OnUserDisconnect(User* user)
 {
 	currentSessions_--;
 	totalDisconnected_++;

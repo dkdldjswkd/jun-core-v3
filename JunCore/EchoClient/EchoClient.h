@@ -10,7 +10,7 @@ public:
 	~EchoClient();
 
 protected:
-	void OnSessionDisconnect(User* user) override;
+	void OnUserDisconnect(User* user) override;
 	
 	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
 	void RegisterPacketHandlers() override;

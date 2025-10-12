@@ -15,7 +15,7 @@ Session::~Session()
 {
 	if (engine_ && owner_user_)
 	{
-		engine_->OnSessionDisconnect(owner_user_);
+		engine_->OnUserDisconnect(owner_user_);
 	}
 	
 	if (owner_user_)
@@ -63,8 +63,10 @@ void Session::SendAsyncImpl()
     WSABUF wsaBuf[MAX_SEND_MSG];
     int preparedCount = 0;
 
-    if (MAX_SEND_MSG < send_q_.GetUseCount())
+    const auto size = send_q_.GetUseCount();
+    if (MAX_SEND_MSG < size)
     {
+		LOG_ERROR("send_q_ overflow. count : %d", size);
         Disconnect();
         return;
     }
@@ -86,6 +88,7 @@ void Session::SendAsyncImpl()
     // 보낼 것이 없으면 실패
     if (preparedCount == 0) 
     {
+		LOG_ERROR("SendAsyncImpl: no packet to send.");
         Disconnect();
         return;
     }

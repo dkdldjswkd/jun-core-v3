@@ -1,16 +1,16 @@
 ﻿#pragma once
 #include "../JunCore/network/Client.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
+#include "../JunCommon/container/LFQueue.h"
 #include "echo_message.pb.h"
 #include <vector>
-#include <queue>
 #include <thread>
 #include <random>
 #include <atomic>
 #include <cassert>
 
 constexpr int SESSION_COUNT			= 200;
-constexpr int MESSAGE_INTERVAL_MS	= 0;
+constexpr int MESSAGE_INTERVAL_MS	= 1; // 최소 1 이상 권장, 0은 SendQ 터지는 현상 발생함
 constexpr int MESSAGE_MIN_SIZE		= 10;
 constexpr int MESSAGE_MAX_SIZE		= 100;
 constexpr int DISCONNECT_PROBABILITY_PER_THOUSAND = 1;
@@ -30,7 +30,7 @@ public:
     bool IsRunning() const { return testRunning.load(); }
 
 protected:
-    void OnSessionDisconnect(User* user) override;
+    void OnUserDisconnect(User* user) override;
     void RegisterPacketHandlers() override;
 
 private:
@@ -55,10 +55,11 @@ struct SessionData
 {
 	User* user = nullptr;
 	std::thread workerThread;
-	std::queue<std::string> sentMessages;
+	LFQueue<std::string> sentMessages;
 	int sessionIndex = 0;
 	std::mt19937 randomGenerator{ std::random_device{}() };
 	std::atomic<bool> disconnectRequested{false};  // 능동 끊기 플래그
+	int totalSendCount = 0;  // 누적 send 회수
 
 	SessionData() = default;
 	SessionData(User* _user, int _sessionIndex)
@@ -72,12 +73,14 @@ struct SessionData
 	SessionData(SessionData&& other) noexcept
 		: user(other.user)
 		, workerThread(std::move(other.workerThread))
-		, sentMessages(std::move(other.sentMessages))
 		, sessionIndex(other.sessionIndex)
 		, randomGenerator(std::move(other.randomGenerator))
 		, disconnectRequested(other.disconnectRequested.load())
+		, totalSendCount(other.totalSendCount)
 	{
 		other.user = nullptr;
+		other.totalSendCount = 0;
+		// LFQueue는 이동 생성자가 없으므로 빈 큐로 초기화됨
 	}
 	
 	SessionData& operator=(SessionData&& other) noexcept
@@ -85,11 +88,13 @@ struct SessionData
 		if (this != &other) {
 			user = other.user;
 			workerThread = std::move(other.workerThread);
-			sentMessages = std::move(other.sentMessages);
 			sessionIndex = other.sessionIndex;
 			randomGenerator = std::move(other.randomGenerator);
 			disconnectRequested.store(other.disconnectRequested.load());
+			totalSendCount = other.totalSendCount;
 			other.user = nullptr;
+			other.totalSendCount = 0;
+			// LFQueue는 이동 대입 연산자가 없으므로 기존 큐 유지
 		}
 		return *this;
 	}

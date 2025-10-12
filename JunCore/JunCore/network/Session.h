@@ -11,7 +11,7 @@
 #include <memory>
 #include "IOCPManager.h"
 
-constexpr int MAX_SEND_MSG = 100;
+constexpr int MAX_SEND_MSG = 200;
 
 class Session;
 

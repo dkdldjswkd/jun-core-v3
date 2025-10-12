@@ -22,7 +22,7 @@ private:
 
 	// 사용자 재정의 함수
 	void OnSessionConnect(User* user) override;
-	void OnSessionDisconnect(User* user) override;
+	void OnUserDisconnect(User* user) override;
 	void OnServerStart() override;
 	void OnServerStop() override;
 	void RegisterPacketHandlers() override;

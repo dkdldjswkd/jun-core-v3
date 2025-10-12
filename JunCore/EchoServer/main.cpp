@@ -14,7 +14,7 @@ int main()
 	try
 	{
 		// Logger 초기화 (비동기 모드)
-		LOGGER_INITIALIZE_ASYNC(LOG_LEVEL_INFO);
+		LOGGER_INITIALIZE_SYNC(LOG_LEVEL_WARN);
 		
 		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).WithMonitoring(true).Build();
 		

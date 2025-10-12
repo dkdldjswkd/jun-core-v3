@@ -8,6 +8,7 @@
 #include <ctime>
 #include <filesystem>
 #include <atomic>
+#include <cstring>
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_YELLOW  "\x1b[33m"
@@ -76,9 +77,10 @@ private:
     std::string GetProcessName();
     std::string GetCurrentTimeString();
     void EnableConsoleColors();
-    void LogSync(int level, const char* format, va_list args);
-    void LogAsync(int level, const char* format, va_list args);
+    void LogSync(int level, const char* file, int line, const char* format, va_list args);
+    void LogAsync(int level, const char* file, int line, const char* format, va_list args);
     void InitializeAsyncResources();
+    int FormatLogPrefix(char* buffer, int level, const char* file, int line);
 
 public:
     static Logger& GetInstance();
@@ -88,7 +90,7 @@ public:
     void SetLogLevel(LogLevel level) { currentLogLevel = level; }
     LogLevel GetLogLevel() const { return currentLogLevel; }
     
-    void Log(int level, const char* format, ...);
+    void Log(int level, const char* file, int line, const char* format, ...);
 };
 
 inline void EnableConsoleColors()
@@ -105,17 +107,17 @@ inline void EnableConsoleColors()
     }
 }
 
-#define LOGGER_INITIALIZE(level, policy) Logger::Initialize(level, policy)
-#define LOGGER_INITIALIZE_SYNC(level) Logger::Initialize(level, LoggingPolicy::SYNC)
-#define LOGGER_INITIALIZE_ASYNC(level) Logger::Initialize(level, LoggingPolicy::ASYNC)
-#define LOGGER_SHUTDOWN() Logger::Shutdown()
+#define LOGGER_INITIALIZE(level, policy)    Logger::Initialize(level, policy)
+#define LOGGER_INITIALIZE_SYNC(level)       Logger::Initialize(level, LoggingPolicy::SYNC)
+#define LOGGER_INITIALIZE_ASYNC(level)      Logger::Initialize(level, LoggingPolicy::ASYNC)
+#define LOGGER_SHUTDOWN()                   Logger::Shutdown()
 
 #define SET_LOG_LEVEL(level) Logger::GetInstance().SetLogLevel(level)
 
-#define LOG_ERROR(format, ...)   Logger::GetInstance().Log(LOG_LEVEL_ERROR, format, ##__VA_ARGS__)
-#define LOG_WARN(format, ...)    Logger::GetInstance().Log(LOG_LEVEL_WARN, format, ##__VA_ARGS__)
-#define LOG_INFO(format, ...)    Logger::GetInstance().Log(LOG_LEVEL_INFO, format, ##__VA_ARGS__)
-#define LOG_DEBUG(format, ...)   Logger::GetInstance().Log(LOG_LEVEL_DEBUG, format, ##__VA_ARGS__)
+#define LOG_ERROR(format, ...)   Logger::GetInstance().Log(LOG_LEVEL_ERROR, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define LOG_WARN(format, ...)    Logger::GetInstance().Log(LOG_LEVEL_WARN, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define LOG_INFO(format, ...)    Logger::GetInstance().Log(LOG_LEVEL_INFO, __FILE__, __LINE__, format, ##__VA_ARGS__)
+#define LOG_DEBUG(format, ...)   Logger::GetInstance().Log(LOG_LEVEL_DEBUG, __FILE__, __LINE__, format, ##__VA_ARGS__)
 
 #define LOG_ERROR_RETURN(condition, retval, format, ...)    \
     do {                                                    \

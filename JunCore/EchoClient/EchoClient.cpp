@@ -18,7 +18,7 @@ void EchoClient::RegisterPacketHandlers()
 	});
 }
 
-void EchoClient::OnSessionDisconnect(User* user)
+void EchoClient::OnUserDisconnect(User* user)
 {
 	LOG_INFO("Disconnected from server. User: 0x%llX", (uintptr_t)user);
 }
