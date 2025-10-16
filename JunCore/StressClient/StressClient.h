@@ -19,7 +19,7 @@ constexpr WORD SERVER_PORT			= 7777;
 
 struct SessionData;
 
-class StressClient : public Client 
+class StressClient : public Client
 {
 public:
     StressClient(std::shared_ptr<IOCPManager> manager);
@@ -29,8 +29,12 @@ public:
     void StopStressTest();
     bool IsRunning() const { return testRunning.load(); }
 
+    // TODO: 임시 - StartClient 방식으로 리팩토링 필요
+    User* Connect() { return nullptr; }
+
 protected:
     void OnUserDisconnect(User* user) override;
+    void OnConnectComplete(User* user, bool success) override;
     void RegisterPacketHandlers() override;
 
 private:

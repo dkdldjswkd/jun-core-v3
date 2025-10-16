@@ -35,7 +35,7 @@ void IOCPManager::RunWorkerThread()
             break;
         }
 
-		if (ioSize == 0 && p_overlapped->operation_ != IOOperation::IO_ACCEPT)
+		if (ioSize == 0 && p_overlapped->operation_ != IOOperation::IO_ACCEPT && p_overlapped->operation_ != IOOperation::IO_CONNECT)
         {
             goto DecrementIOCount;
         }
@@ -69,6 +69,11 @@ void IOCPManager::RunWorkerThread()
 		case IOOperation::IO_ACCEPT:
 		{
 			HandleAcceptComplete(p_overlapped->session_.get(), ioSize);
+		} break;
+
+		case IOOperation::IO_CONNECT:
+		{
+			HandleConnectComplete(p_overlapped->session_.get(), ioSize);
 		} break;
 
 		default:
@@ -264,5 +269,63 @@ PostNewAccept:
     if (server && !server->PostAcceptEx())
     {
         LOG_ERROR("Failed to post new AcceptEx - server may stop accepting connections");
+    }
+}
+
+void IOCPManager::HandleConnectComplete(Session* session, DWORD ioSize)
+{
+    SOCKET connectSocket;
+    class NetBase* engine;
+    class Client* client = nullptr;
+    User* user = nullptr;
+    bool connectSuccess = true;
+    
+    // Session에서 필요한 정보 추출
+    connectSocket = session->sock_;
+    engine = session->GetEngine();
+    client = dynamic_cast<class Client*>(engine);
+    
+    if (!client)
+    {
+        LOG_ERROR("Session engine is not a Client instance");
+        closesocket(connectSocket);
+        return;
+    }
+    
+    // ConnectEx 완료 후 필수 setsockopt 호출
+    if (setsockopt(connectSocket, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, 
+                   NULL, 0) == SOCKET_ERROR)
+    {
+        LOG_ERROR("setsockopt SO_UPDATE_CONNECT_CONTEXT failed: %d", WSAGetLastError());
+        connectSuccess = false;
+    }
+    
+    if (connectSuccess)
+    {
+        // 연결 성공 - User 생성 및 세션 완전 설정
+        user = new User(session->shared_from_this());
+
+        // 클라이언트의 로컬 주소 정보 추출
+        SOCKADDR_IN localAddr;
+        int localAddrLen = sizeof(localAddr);
+        if (getsockname(connectSocket, (SOCKADDR*)&localAddr, &localAddrLen) == SOCKET_ERROR)
+        {
+            LOG_WARN("getsockname failed: %d", WSAGetLastError());
+            ZeroMemory(&localAddr, sizeof(localAddr));
+        }
+
+        session->Set(connectSocket, localAddr.sin_addr, ntohs(localAddr.sin_port), client, iocpHandle, user);
+        session->RecvAsync();
+
+        LOG_INFO("Connection established successfully");
+        client->OnConnectComplete(user, true);
+    }
+    else
+    {
+        // 연결 실패 - 재연결 트리거
+        LOG_ERROR("Connection failed, triggering reconnect");
+        closesocket(connectSocket);
+        client->TriggerReconnect();
+        client->OnConnectComplete(nullptr, false);
     }
 }

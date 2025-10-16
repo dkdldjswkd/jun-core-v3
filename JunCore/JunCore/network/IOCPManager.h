@@ -109,6 +109,7 @@ private:
     void HandleRecvComplete(Session* session, DWORD ioSize);
     void HandleSendComplete(Session* session);
     void HandleAcceptComplete(Session* session, DWORD ioSize);
+    void HandleConnectComplete(Session* session, DWORD ioSize);
 };
 
 //------------------------------

@@ -27,6 +27,9 @@
     <ClCompile Include="log.cpp">
       <Filter>util</Filter>
     </ClCompile>
+    <ClCompile Include="network\Client.cpp">
+      <Filter>network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network\NetBase.h">

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="log.cpp" />
+    <ClCompile Include="network\Client.cpp" />
     <ClCompile Include="network\IOCPManager.cpp" />
     <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="network\Session.cpp" />

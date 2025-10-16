@@ -20,6 +20,7 @@ enum class IOOperation : uint8_t
 	IO_RECV,
 	IO_SEND,
 	IO_ACCEPT,
+	IO_CONNECT,
 	IO_DISCONNECT
 };
 

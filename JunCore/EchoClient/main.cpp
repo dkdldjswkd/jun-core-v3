@@ -12,20 +12,19 @@ int main()
 {
 	try
 	{
-		// Logger 초기화 (비동기 모드)  
+		// Logger 초기화 (비동기 모드)
 		LOGGER_INITIALIZE_ASYNC(LOG_LEVEL_INFO);
-		
+
 		auto iocpManager = IOCPManager::Create().WithWorkerCount(2).Build();
 		LOG_ERROR_RETURN(iocpManager->IsValid(), -1, "Failed to create IOCPManager for client");
 
-		EchoClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
+		EchoClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)), "127.0.0.1", 7777, 1);
 
 		client.Initialize();
-		User* user = client.Connect();
-		LOG_ERROR_RETURN(user != nullptr, -1, "Failed to connect to server");
+		client.StartClient();
 
-		Sleep(1000);
-		LOG_INFO("Starting chat. Type “exit” to quit.");
+		Sleep(2000);
+		LOG_INFO("Starting chat. Type 'exit' to quit.");
 
 		while (true)
 		{
@@ -46,17 +45,24 @@ int main()
 				break;
 			}
 
+			User* user = client.GetUser();
+			if (!user) {
+				cout << "[CLIENT] Not connected to server" << endl;
+				continue;
+			}
+
 			// Protobuf 메시지로 서버에 전송
 			echo::EchoRequest request;
 			request.set_message(input);
 			cout << "[CLIENT] Sending EchoRequest: " << input << endl;
-			if (!user->SendPacket(request)) 
+			if (!user->SendPacket(request))
 			{
 				cout << "[CLIENT] Failed to send packet" << endl;
 			}
 		}
 
 		LOG_INFO("chat ended");
+		client.StopClient();
 	}
 	catch (const std::exception& e)
 	{

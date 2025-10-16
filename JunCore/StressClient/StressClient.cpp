@@ -8,8 +8,8 @@ thread_local std::mt19937 StressClient::gen(rd());
 thread_local std::uniform_int_distribution<> StressClient::sizeDist(MESSAGE_MIN_SIZE, MESSAGE_MAX_SIZE);
 thread_local std::uniform_int_distribution<> StressClient::charDist('A', 'Z');
 
-StressClient::StressClient(std::shared_ptr<IOCPManager> manager) 
-    : Client(manager, SERVER_IP.c_str(), SERVER_PORT)
+StressClient::StressClient(std::shared_ptr<IOCPManager> manager)
+    : Client(manager, SERVER_IP.c_str(), SERVER_PORT, 1)
 {
     session_data_vec.reserve(SESSION_COUNT);
 }
@@ -231,6 +231,18 @@ void StressClient::OnUserDisconnect(User* user)
 	{
 		// 에러
 		LOG_ASSERT("[StressTest] Disconnect for unknown user: 0x%llX", (uintptr_t)user);
+	}
+}
+
+void StressClient::OnConnectComplete(User* user, bool success)
+{
+	if (success)
+	{
+		LOG_INFO("[StressTest] Successfully connected to server! User: 0x%llX", (uintptr_t)user);
+	}
+	else
+	{
+		LOG_ERROR("[StressTest] Failed to connect to server");
 	}
 }
 
