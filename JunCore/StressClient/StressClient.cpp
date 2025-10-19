@@ -48,6 +48,9 @@ void StressClient::OnClientStart()
 
 	LOG_INFO("[StressTest] All %d worker threads started!", SESSION_COUNT);
 
+	// 모니터링 스레드 시작
+	monitorThread_ = std::thread(&StressClient::MonitorThreadFunc, this);
+
 	// NOTE: 비동기 연결은 Client 클래스의 자동 재연결 메커니즘이 처리
 	// targetConnectionCount만큼 자동으로 PostConnectEx() 호출됨
 }
@@ -60,13 +63,19 @@ void StressClient::OnClientStop()
 
 void StressClient::StopStressTest()
 {
-    if (!testRunning.exchange(false)) 
+    if (!testRunning.exchange(false))
     {
         return;
     }
-    
+
     LOG_INFO("[StressTest] Stopping stress test...");
-    
+
+    // 모니터링 스레드 종료 대기
+    if (monitorThread_.joinable())
+    {
+        monitorThread_.join();
+    }
+
     // 모든 워커 스레드 종료 대기
     for (auto& t : workerThreads)
     {
@@ -110,6 +119,31 @@ void StressClient::HandleEchoResponse(User& user, const echo::EchoResponse& resp
 	LOG_ASSERT_RETURN_VOID(expectedMessage == responseMessage,
 						   "[StressTest][Session %d] Message mismatch! Expected: '%s', Got: '%s'",
 						   sessionData->sessionIndex, expectedMessage.c_str(), responseMessage.c_str());
+}
+
+void StressClient::MonitorThreadFunc()
+{
+	LOG_INFO("[StressTest] Monitor thread started");
+
+	while (testRunning.load())
+	{
+		// 5초마다 설정 정보 출력
+		std::this_thread::sleep_for(std::chrono::seconds(5));
+
+		if (!testRunning.load()) break;
+
+		system("cls");
+		printf("=== Stress Test Configuration ===\n"
+		       "Session Count: %d\n"
+		       "Message Interval: %dms\n"
+		       "Message Size Range: %d-%d chars\n"
+		       "Server: %s:%d\n"
+		       "=================================",
+		       SESSION_COUNT, MESSAGE_INTERVAL_MS, MESSAGE_MIN_SIZE, MESSAGE_MAX_SIZE,
+		       SERVER_IP.c_str(), SERVER_PORT);
+	}
+
+	LOG_INFO("[StressTest] Monitor thread stopped");
 }
 
 void StressClient::SessionWorker(int sessionIndex)

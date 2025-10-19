@@ -45,8 +45,10 @@ private:
     std::vector<SessionData> session_data_vec;
     std::vector<std::thread> workerThreads;
     std::atomic<bool> testRunning{false};
+    std::thread monitorThread_;  // 상태 모니터링 스레드
     
     void SessionWorker(int sessionIndex);
+    void MonitorThreadFunc();  // 상태 모니터링
     std::string GenerateRandomMessage();
     SessionData* FindSessionData(User* user);
     
