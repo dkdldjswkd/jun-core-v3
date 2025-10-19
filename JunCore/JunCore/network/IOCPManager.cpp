@@ -323,7 +323,7 @@ void IOCPManager::HandleConnectComplete(Session* session, DWORD ioSize)
     else
     {
         // 연결 실패 - 재연결 트리거
-        LOG_ERROR("Connection failed, triggering reconnect");
+        LOG_WARN("Connection failed, triggering reconnect");
         closesocket(connectSocket);
         client->TriggerReconnect();
         client->OnConnectComplete(nullptr, false);

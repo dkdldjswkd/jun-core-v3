@@ -38,6 +38,9 @@ void Client::StartClient()
     // 재연결 스레드 시작
     reconnectThread_ = std::thread(&Client::ReconnectThreadFunc, this);
 
+    // 사용자 정의 초기화 작업 수행
+    OnClientStart();
+
     // 초기 연결 시도
     LOG_INFO("Starting %d initial connections to %s:%d", targetConnectionCount_, serverIP.c_str(), serverPort);
     for (int i = 0; i < targetConnectionCount_; i++)
@@ -54,6 +57,9 @@ void Client::StopClient()
     }
 
     LOG_INFO("Stopping client");
+
+    // 사용자 정의 정리 작업 수행
+    OnClientStop();
 
     running_.store(false, std::memory_order_release);
     reconnectSignal_.release();  // 스레드 깨우기

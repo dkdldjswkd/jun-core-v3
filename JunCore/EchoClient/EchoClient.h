@@ -12,11 +12,17 @@ public:
 	User* GetUser() const { return connectedUser; }
 
 protected:
+	void OnClientStart() override;
+	void OnClientStop() override;
 	void OnConnectComplete(User* user, bool success) override;
 
 	// NetBase 패킷 핸들러 등록 (순수 가상함수 구현)
 	void RegisterPacketHandlers() override;
 
 private:
+	void ConsoleInputThreadFunc();
+
 	User* connectedUser = nullptr;
+	std::thread consoleInputThread_;
+	std::atomic<bool> inputRunning_{false};
 };

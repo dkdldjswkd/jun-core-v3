@@ -22,7 +22,7 @@ int main()
 
         StressClient client(std::shared_ptr<IOCPManager>(std::move(iocpManager)));
         client.Initialize();
-        
+
         LOG_INFO("=== Stress Test Configuration ===\n"
                  "Session Count: %d\n"
                  "Message Interval: %dms\n"
@@ -34,12 +34,15 @@ int main()
         LOG_INFO("Starting in 3 seconds…");
         Sleep(3000);
 
-		client.Start();
+        // StartClient() 호출 → OnClientStart()에서 워커 스레드 시작
+        // 하지만 자동 재연결은 사용하지 않음 (targetConnectionCount=1이므로)
+        client.StartClient();
 
-        for (;;)
-        {
-            Sleep(5000);
-        }
+        LOG_INFO("Stress test running. Press Enter to stop...");
+        cin.get();
+
+        LOG_INFO("Stopping stress test...");
+        client.StopClient();
     }
     catch (const std::exception& e)
     {

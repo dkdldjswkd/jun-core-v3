@@ -49,6 +49,17 @@ protected:
     //------------------------------
     // 클라이언트 전용 가상함수 - 사용자가 재정의
     //------------------------------
+
+    // StartClient() 호출 후 실행됨 (연결 시작 전)
+    // 각 클라이언트별 초기화 작업 수행
+    // ex) EchoClient: 콘솔 입력 스레드 시작
+    //     StressClient: 부하 테스트 스레드들 생성
+    virtual void OnClientStart() {}
+
+    // StopClient() 호출 시 실행됨 (재연결 스레드 종료 전)
+    // 각 클라이언트별 정리 작업 수행
+    virtual void OnClientStop() {}
+
     virtual void OnConnectComplete(User* user, bool success) = 0;
     void OnUserDisconnect(User* user) override;
 

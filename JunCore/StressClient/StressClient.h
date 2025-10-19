@@ -17,6 +17,9 @@ constexpr int DISCONNECT_PROBABILITY_PER_THOUSAND = 1;
 const std::string SERVER_IP			= "127.0.0.1";
 constexpr WORD SERVER_PORT			= 7777;
 
+// CLEANING 상태 플래그 (세션 정리 중)
+#define CLEANING (reinterpret_cast<User*>(0x1))
+
 struct SessionData;
 
 class StressClient : public Client
@@ -25,14 +28,12 @@ public:
     StressClient(std::shared_ptr<IOCPManager> manager);
     ~StressClient();
 
-    void Start();
     void StopStressTest();
     bool IsRunning() const { return testRunning.load(); }
 
-    // TODO: 임시 - StartClient 방식으로 리팩토링 필요
-    User* Connect() { return nullptr; }
-
 protected:
+    void OnClientStart() override;  // 워커 스레드 시작
+    void OnClientStop() override;   // 워커 스레드 정리
     void OnUserDisconnect(User* user) override;
     void OnConnectComplete(User* user, bool success) override;
     void RegisterPacketHandlers() override;
@@ -57,7 +58,7 @@ private:
 
 struct SessionData
 {
-	User* user = nullptr;
+	std::atomic<User*> user{nullptr};  // 원자적 포인터 (OnConnectComplete에서 할당)
 	std::thread workerThread;
 	LFQueue<std::string> sentMessages;
 	int sessionIndex = 0;
@@ -75,28 +76,28 @@ struct SessionData
 	SessionData& operator=(const SessionData&) = delete;
 	
 	SessionData(SessionData&& other) noexcept
-		: user(other.user)
+		: user(other.user.load())
 		, workerThread(std::move(other.workerThread))
 		, sessionIndex(other.sessionIndex)
 		, randomGenerator(std::move(other.randomGenerator))
 		, disconnectRequested(other.disconnectRequested.load())
 		, totalSendCount(other.totalSendCount)
 	{
-		other.user = nullptr;
+		other.user.store(nullptr);
 		other.totalSendCount = 0;
 		// LFQueue는 이동 생성자가 없으므로 빈 큐로 초기화됨
 	}
-	
+
 	SessionData& operator=(SessionData&& other) noexcept
 	{
 		if (this != &other) {
-			user = other.user;
+			user.store(other.user.load());
 			workerThread = std::move(other.workerThread);
 			sessionIndex = other.sessionIndex;
 			randomGenerator = std::move(other.randomGenerator);
 			disconnectRequested.store(other.disconnectRequested.load());
 			totalSendCount = other.totalSendCount;
-			other.user = nullptr;
+			other.user.store(nullptr);
 			other.totalSendCount = 0;
 			// LFQueue는 이동 대입 연산자가 없으므로 기존 큐 유지
 		}
