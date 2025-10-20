@@ -76,20 +76,31 @@ void Client::ReconnectThreadFunc()
 {
     LOG_DEBUG("Reconnect thread started");
 
-    constexpr int RECONNECT_DELAY_MS = 1000;  // 재연결 시도 간격 1초
+    constexpr int RECONNECT_DELAY_MS = 1000;
+    lastWakeupTime_ = std::chrono::steady_clock::now();
 
     while (running_.load(std::memory_order_acquire))
     {
-        // 타임아웃 있는 대기: 서버 다운 시에도 1초마다만 재시도
-        bool signaled = reconnectSignal_.try_acquire_for(std::chrono::milliseconds(RECONNECT_DELAY_MS));
+        reconnectSignal_.acquire();
 
         if (!running_.load(std::memory_order_acquire))
         {
             break;
         }
 
-        // signaled가 false여도 (타임아웃) 재연결 시도
-        // 이렇게 하면 서버 다운 시에도 무한 루프가 아닌 1초 간격 재시도
+        auto now        = std::chrono::steady_clock::now();
+        auto elapsed    = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastWakeupTime_).count();
+        lastWakeupTime_ = now;
+
+		// 얼마전에 깨워졌다면 추가 대기 (서버 내려간 경우 '연결 - 실패 - 재시도 - 연결 - 실패 - 재시도...' 루프를 지연시키기 위함)
+        if (elapsed < RECONNECT_DELAY_MS)
+        {
+            auto remainingDelay = RECONNECT_DELAY_MS - elapsed;
+            LOG_DEBUG("Additional sleep for %lld ms (elapsed: %lld ms)", remainingDelay, elapsed);
+            std::this_thread::sleep_for(std::chrono::milliseconds(remainingDelay));
+        }
+
+        // 재연결 시도
         int pending = pendingConnectCount_.load(std::memory_order_acquire);
         if (pending > 0)
         {
@@ -110,7 +121,7 @@ void Client::ReconnectThreadFunc()
 void Client::TriggerReconnect()
 {
     pendingConnectCount_.fetch_add(1, std::memory_order_release);
-    reconnectSignal_.release();  // 스레드 즉시 깨우기
+    reconnectSignal_.release();
 }
 
 void Client::OnUserDisconnect(User* user)
