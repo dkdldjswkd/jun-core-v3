@@ -13,6 +13,9 @@
     <Filter Include="util">
       <UniqueIdentifier>{5ab9afe6-cae2-4541-824a-be8572be4eeb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="logic">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="network\IOCPManager.cpp">
@@ -29,6 +32,18 @@
     </ClCompile>
     <ClCompile Include="network\Client.cpp">
       <Filter>network</Filter>
+    </ClCompile>
+    <ClCompile Include="logic\GameScene.cpp">
+      <Filter>logic</Filter>
+    </ClCompile>
+    <ClCompile Include="logic\JobObject.cpp">
+      <Filter>logic</Filter>
+    </ClCompile>
+    <ClCompile Include="logic\LogicThread.cpp">
+      <Filter>logic</Filter>
+    </ClCompile>
+    <ClCompile Include="logic\Time.cpp">
+      <Filter>logic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -64,6 +79,21 @@
     </ClInclude>
     <ClInclude Include="network\User.h">
       <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\GameObject.h">
+      <Filter>logic</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\GameScene.h">
+      <Filter>logic</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\JobObject.h">
+      <Filter>logic</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\LogicThread.h">
+      <Filter>logic</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\Time.h">
+      <Filter>logic</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

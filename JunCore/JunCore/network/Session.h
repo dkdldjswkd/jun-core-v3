@@ -102,7 +102,6 @@ public:
 	inline void SetEngine(class NetBase* eng) { engine_ = eng; }
 	inline class NetBase* GetEngine() const { return engine_; }
 	
-	inline void SetOwnerUser(class User* user) { owner_user_ = user; }
 	inline class User* GetOwnerUser() const { return owner_user_; }
 	
 	inline void Disconnect() noexcept

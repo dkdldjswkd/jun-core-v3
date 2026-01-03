@@ -20,6 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="log.cpp" />
+    <ClCompile Include="logic\GameScene.cpp" />
+    <ClCompile Include="logic\JobObject.cpp" />
+    <ClCompile Include="logic\LogicThread.cpp" />
+    <ClCompile Include="logic\Time.cpp" />
     <ClCompile Include="network\Client.cpp" />
     <ClCompile Include="network\IOCPManager.cpp" />
     <ClCompile Include="network\Server.cpp" />

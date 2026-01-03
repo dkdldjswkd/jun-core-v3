@@ -20,7 +20,6 @@ void EchoClient::RegisterPacketHandlers()
 	});
 }
 
-
 void EchoClient::OnClientStart()
 {
 	LOG_INFO("EchoClient starting - console input thread enabled");

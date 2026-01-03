@@ -19,58 +19,66 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         return false;
     }
 
-    try 
+    // LogicThread 시작
+    StartLogicThreads();
+
+    try
     {
         // 소켓 생성
         listenSocket = socket(AF_INET, SOCK_STREAM, 0);
-        if (listenSocket == INVALID_SOCKET) 
+        if (listenSocket == INVALID_SOCKET)
         {
             LOG_ERROR("Socket creation failed: %d", WSAGetLastError());
+            StopLogicThreads();
             return false;
         }
-        
+
         // 2. 소켓 옵션 세팅
         int optval = 1;
         setsockopt(listenSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval));
-        
+
         // 3. 주소 세팅
         ZeroMemory(&serverAddr, sizeof(serverAddr));
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(port);
 		inet_pton(AF_INET, bindIP, &serverAddr.sin_addr);
-        
+
         // 4. 바인드
-        if (bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) 
+        if (bind(listenSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
         {
             LOG_ERROR("Bind failed: %d", WSAGetLastError());
             closesocket(listenSocket);
+            StopLogicThreads();
             return false;
         }
-        
+
         // 5. 리슨
-        if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) 
+        if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR)
         {
             LOG_ERROR("Listen failed: %d", WSAGetLastError());
             closesocket(listenSocket);
+            StopLogicThreads();
             return false;
         }
-        
+
         // AcceptEx 함수 포인터 로딩
         if (!LoadAcceptExFunctions())
         {
             LOG_ERROR("Failed to load AcceptEx functions");
             closesocket(listenSocket);
+            StopLogicThreads();
             return false;
         }
-        
+
         // 리슨 소켓을 IOCP에 등록
         if (!iocpManager->RegisterSocket(listenSocket))
         {
             LOG_ERROR("Failed to register listen socket to IOCP");
             closesocket(listenSocket);
+            StopLogicThreads();
             return false;
         }
-        
+
         // 초기 AcceptEx 등록
         running = true;
         if (!PostAcceptEx())
@@ -78,37 +86,68 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
             LOG_ERROR("Failed to post initial AcceptEx");
             running = false;
             closesocket(listenSocket);
+            StopLogicThreads();
             return false;
         }
-        
+
         OnServerStart();
-        
-        LOG_INFO("Server started on %s:%d (Max Sessions: %lu)", bindIP, port, maxSessions);
+
+        LOG_INFO("Server started on %s:%d (Max Sessions: %lu, LogicThreads: %d)",
+                 bindIP, port, maxSessions, logic_thread_count_);
         return true;
     }
-    catch (const std::exception& e) 
+    catch (const std::exception& e)
     {
         LOG_ERROR("StartServer exception: %s", e.what());
+        StopLogicThreads();
         return false;
     }
 }
 
 void Server::StopServer()
 {
-    if (!running.exchange(false)) 
+    if (!running.exchange(false))
     {
         return; // 이미 정지됨
     }
-    
+
+    // LogicThread 먼저 정지
+    StopLogicThreads();
+
     // 리슨 소켓 정리
-    if (listenSocket != INVALID_SOCKET) 
+    if (listenSocket != INVALID_SOCKET)
     {
         closesocket(listenSocket);
         listenSocket = INVALID_SOCKET;
     }
-    
+
     // 사용자 콜백 호출
     OnServerStop();
+}
+
+void Server::StartLogicThreads()
+{
+    for (auto& thread : logic_threads_)
+    {
+        thread->Start();
+    }
+}
+
+void Server::StopLogicThreads()
+{
+    for (auto& thread : logic_threads_)
+    {
+        thread->Stop();
+    }
+}
+
+LogicThread* Server::GetLogicThread(int index)
+{
+    if (index < 0 || index >= static_cast<int>(logic_threads_.size()))
+    {
+        return nullptr;
+    }
+    return logic_threads_[index].get();
 }
 
 
@@ -201,29 +240,4 @@ bool Server::PostAcceptEx()
     }
     
     return true;
-}
-
-bool Server::OnClientConnect(SOCKET clientSocket, SOCKADDR_IN* clientAddr)
-{
-    if (!iocpManager->RegisterSocket(clientSocket))
-    {
-        LOG_WARN("IOCP registration failed for socket 0x%llX", clientSocket);
-        return false;
-    }
-
-    if (std::shared_ptr<Session> session = std::make_shared<Session>())
-    {
-        User* user = new User(session);
-        session->Set(clientSocket, clientAddr->sin_addr, ntohs(clientAddr->sin_port), this/*NetEngine*/, iocpManager->GetHandle(), user);
-        OnSessionConnect(user);
-        session->RecvAsync();
-    }
-    else
-    {
-        LOG_ERROR("Session allocation failed - closing connection");
-        closesocket(clientSocket);
-        return false;
-    }
-
-	return true;
 }

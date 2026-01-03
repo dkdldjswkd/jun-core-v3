@@ -76,9 +76,10 @@ void IOCPManager::RunWorkerThread()
 			HandleConnectComplete(p_overlapped->session_.get(), ioSize);
 		} break;
 
-		default:
-			LOG_ERROR("invalid io operation : %d", p_overlapped->operation_);
-			break;
+        default:
+        {
+            LOG_ERROR("invalid io operation : %d", p_overlapped->operation_);
+        } break;
         }
 
 	DecrementIOCount:
@@ -174,8 +175,12 @@ void IOCPManager::HandleSendComplete(Session* session)
     session->send_complete_handling_count_--;
 #endif
 
-    // 추가 송신 필요 여부 확인 및 추가 송신
-    if (!session->pending_disconnect_ && session->send_q_.GetUseCount() > 0)
+    if (session->pending_disconnect_)
+    {
+        return;
+    }
+
+    if (session->send_q_.GetUseCount() > 0)
     {
         session->SendAsync();
     }
