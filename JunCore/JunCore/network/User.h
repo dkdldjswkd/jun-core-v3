@@ -37,8 +37,16 @@ public:
     std::string GetRemoteIP() const;
     WORD GetRemotePort() const;
 
+    //------------------------------
+    // Player 관리
+    //------------------------------
+    void SetPlayer(class Player* player);
+    class Player* GetPlayer() const;
+    void ClearPlayer();
+
 private:
     std::weak_ptr<Session> session_;
+    class Player* player_{nullptr};  // 게임 로직 플레이어 객체
 };
 
 //------------------------------
@@ -91,9 +99,24 @@ inline std::string User::GetRemoteIP() const
 
 inline WORD User::GetRemotePort() const
 {
-    if (auto session = session_.lock()) 
+    if (auto session = session_.lock())
     {
         return session->port_;
     }
     return 0;
+}
+
+inline void User::SetPlayer(class Player* player)
+{
+    player_ = player;
+}
+
+inline class Player* User::GetPlayer() const
+{
+    return player_;
+}
+
+inline void User::ClearPlayer()
+{
+    player_ = nullptr;
 }

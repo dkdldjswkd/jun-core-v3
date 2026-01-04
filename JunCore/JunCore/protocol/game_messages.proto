@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package game;
+
+// 3D 위치 정보
+message Pos
+{
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// 클라이언트 → 서버: 이동 요청
+message CG_MOVE_REQ
+{
+  Pos cur_pos = 1;   // 현재 위치
+  Pos move_pos = 2;  // 목표 위치
+}
+
+// 서버 → 클라이언트: 이동 알림 (본인 + 주변 플레이어들)
+message GC_MOVE_NOTIFY
+{
+  int32 player_id = 1;  // 이동한 플레이어 ID
+  Pos cur_pos = 2;      // 현재 위치
+  Pos move_pos = 3;     // 목표 위치
+}
+
+// 클라이언트 → 서버: 로그인 요청
+message CG_LOGIN_REQ
+{
+  string username = 1;  // 사용자 이름
+}
+
+// 서버 → 클라이언트: 로그인 응답
+message GC_LOGIN_RES
+{
+  bool success = 1;       // 로그인 성공 여부
+  int32 player_id = 2;    // 할당된 플레이어 ID
+  Pos spawn_pos = 3;      // 스폰 위치
+}

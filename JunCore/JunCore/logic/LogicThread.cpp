@@ -75,6 +75,12 @@ void LogicThread::Run()
             jobObj->Flush();
         }
 
+        // ──────── 1-1. Scene Job 처리 ────────
+        for (auto* scene : m_scenes)
+        {
+            scene->FlushJobs();
+        }
+
         // ──────── 2. FixedUpdate (고정 간격) ────────
         while (m_fixedTimeAccum >= m_fixedTimeStep)
         {

@@ -1,0 +1,76 @@
+﻿#pragma once
+#include "../JunCore/logic/GameObject.h"
+#include "../JunCore/logic/JobObject.h"
+#include "../JunCore/network/User.h"
+#include "../JunCore/protocol/game_messages.pb.h"
+#include <string>
+
+// Player는 GameObject이면서 JobObject
+// - GameObject: OnUpdate, OnFixedUpdate 등 게임 로직
+// - JobObject: 패킷 핸들러 등을 Job으로 처리
+class Player : public GameObject, public JobObject
+{
+public:
+	Player(User* owner, const std::string& username);
+	~Player();
+
+protected:
+	// ──────────────────────────────────────────────────────
+	// GameObject 인터페이스 구현
+	// ──────────────────────────────────────────────────────
+	void OnUpdate() override;
+	void OnFixedUpdate() override;
+	void OnEnter(GameScene* scene) override;
+	void OnExit(GameScene* scene) override;
+
+public:
+	// ──────────────────────────────────────────────────────
+	// Player 전용 메서드
+	// ──────────────────────────────────────────────────────
+
+	// 목표 위치 설정 Job 등록
+	void PostSetDestPosJob(const game::Pos& dest_pos);
+
+	// 패킷 전송 (User를 통해)
+	template<typename T>
+	void SendPacket(const T& packet)
+	{
+		if (owner_)
+		{
+			owner_->SendPacket(packet);
+		}
+	}
+
+	// Getter
+	User* GetOwner() const { return owner_; }
+	const std::string& GetUsername() const { return username_; }
+	int32_t GetPlayerId() const { return player_id_; }
+	GameScene* GetScene() const { return scene_; }
+	void SetScene(GameScene* scene) { scene_ = scene; }
+
+	const game::Pos& GetCurrentPos() const { return currentPos_; }
+	const game::Pos& GetDestPos() const { return destPos_; }
+
+private:
+	// ──────────────────────────────────────────────────────
+	// 내부 Job 핸들러들 (LogicThread에서 실행됨)
+	// ──────────────────────────────────────────────────────
+	void HandleSetDestPos(const game::Pos& dest_pos);
+
+	// ──────────────────────────────────────────────────────
+	// 이동 관련 헬퍼
+	// ──────────────────────────────────────────────────────
+	bool HasReachedDestination() const;
+	void MoveTowardsDestination();
+
+private:
+	User* owner_;              // 소유 네트워크 세션
+	std::string username_;     // 사용자 이름
+	int32_t player_id_;        // 플레이어 ID
+	GameScene* scene_{nullptr}; // 현재 속한 Scene
+
+	// 플레이어 상태
+	game::Pos currentPos_;     // 현재 위치
+	game::Pos destPos_;        // 목표 위치
+	float moveSpeed_{0.1f};    // FixedUpdate당 이동 거리 (50Hz 기준, 초당 5m)
+};

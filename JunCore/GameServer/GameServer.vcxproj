@@ -18,71 +18,35 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="log.cpp" />
-    <ClCompile Include="logic\GameScene.cpp" />
-    <ClCompile Include="logic\JobObject.cpp" />
-    <ClCompile Include="logic\LogicThread.cpp" />
-    <ClCompile Include="logic\Time.cpp" />
-    <ClCompile Include="network\Client.cpp" />
-    <ClCompile Include="network\IOCPManager.cpp" />
-    <ClCompile Include="network\Server.cpp" />
-    <ClCompile Include="network\Session.cpp" />
-    <ClCompile Include="protocol\game_messages.pb.cc" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="core\base.h" />
-    <ClInclude Include="core\WindowsIncludes.h" />
-    <ClInclude Include="log.h" />
-    <ClInclude Include="logic\GameObject.h" />
-    <ClInclude Include="logic\GameScene.h" />
-    <ClInclude Include="logic\JobObject.h" />
-    <ClInclude Include="logic\LogicThread.h" />
-    <ClInclude Include="logic\Time.h" />
-    <ClInclude Include="network\IOCPManager.h" />
-    <ClInclude Include="network\NetBase.h" />
-    <ClInclude Include="network\Server.h" />
-    <ClInclude Include="network\Client.h" />
-    <ClInclude Include="protocol\UnifiedPacketHeader.h" />
-    <ClInclude Include="protocol\game_messages.pb.h" />
-    <ClInclude Include="network\Session.h" />
-    <ClInclude Include="network\User.h" />
-    <ClInclude Include="network\WSAInitializer.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\JunCommon\JunCommon.vcxproj">
-      <Project>{d6bec493-6610-417f-a90b-ef0cd4ac7411}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{23033721-38db-4624-a7dc-891527669bbb}</ProjectGuid>
-    <RootNamespace>JunCore</RootNamespace>
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</ProjectGuid>
+    <RootNamespace>GameServer</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -134,14 +98,16 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <ExternalIncludeDirectories>$(VcpkgRoot)vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\include</ExternalIncludeDirectories>
+      <ForcedIncludeFiles>..\JunCore\core\base.h</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -153,14 +119,16 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <ExternalIncludeDirectories>$(VcpkgRoot)vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\include</ExternalIncludeDirectories>
+      <ForcedIncludeFiles>..\JunCore\core\base.h</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -170,14 +138,16 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <ExternalIncludeDirectories>$(VcpkgRoot)vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\include</ExternalIncludeDirectories>
+      <ForcedIncludeFiles>..\JunCore\core\base.h</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -189,16 +159,32 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\JunCommon\lib</AdditionalIncludeDirectories>
-      <ForcedIncludeFiles>$(ProjectDir)core\base.h</ForcedIncludeFiles>
+      <AdditionalIncludeDirectories>$(SolutionDir)JunCore</AdditionalIncludeDirectories>
+      <ExternalIncludeDirectories>$(VcpkgRoot)vcpkg_installed\$(VcpkgTriplet)\$(VcpkgTriplet)\include</ExternalIncludeDirectories>
+      <ForcedIncludeFiles>..\JunCore\core\base.h</ForcedIncludeFiles>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DisableSpecificWarnings>4267</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;ws2_32.lib;crypt32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="GameServer.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JunCore\JunCore.vcxproj">
+      <Project>{23033721-38db-4624-a7dc-891527669bbb}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameServer.h" />
+    <ClInclude Include="Player.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -38,3 +38,12 @@ void GameScene::Update()
         obj->OnUpdate();
     }
 }
+
+void GameScene::FlushJobs()
+{
+    std::function<void()> job;
+    while (m_jobQueue.Dequeue(&job))
+    {
+        job();
+    }
+}
