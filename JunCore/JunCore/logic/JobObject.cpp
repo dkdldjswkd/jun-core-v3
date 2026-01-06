@@ -1,5 +1,15 @@
 ﻿#include "JobObject.h"
 #include "LogicThread.h"
+#include <stdexcept>
+
+JobObject::JobObject(LogicThread* logicThread)
+    : m_pLogicThread(logicThread)
+{
+    if (logicThread == nullptr)
+    {
+        throw std::invalid_argument("JobObject: LogicThread cannot be null");
+    }
+}
 
 JobObject::~JobObject()
 {

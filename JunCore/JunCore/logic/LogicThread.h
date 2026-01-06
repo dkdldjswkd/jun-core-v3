@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include "GameScene.h"
 #include "JobObject.h"
 #include "Time.h"
 #include "../../JunCommon/container/LFQueue.h"
@@ -7,6 +6,9 @@
 #include <thread>
 #include <atomic>
 #include <chrono>
+#include <functional>
+
+class GameScene;
 
 //------------------------------
 // LogicThread - Unity 스타일 게임 로직 스레드

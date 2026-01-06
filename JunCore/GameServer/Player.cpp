@@ -2,8 +2,9 @@
 #include "../JunCore/logic/GameScene.h"
 #include <cmath>
 
-Player::Player(User* owner, const std::string& username)
-	: owner_(owner)
+Player::Player(GameScene* scene, User* owner, const std::string& username)
+	: GameObject(scene)
+	, owner_(owner)
 	, username_(username)
 	, player_id_(0)  // TODO: ID 생성 로직
 {
@@ -66,8 +67,6 @@ void Player::OnExit(GameScene* scene)
 
 void Player::PostSetDestPosJob(const game::Pos& dest_pos)
 {
-	// 목표 위치 설정 Job을 JobObject 큐에 등록
-	// LogicThread에서 실행됨
 	PostJob([this, dest_pos]()
 	{
 		this->HandleSetDestPos(dest_pos);

@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="log.cpp" />
+    <ClCompile Include="logic\GameObject.cpp" />
     <ClCompile Include="logic\GameScene.cpp" />
     <ClCompile Include="logic\JobObject.cpp" />
     <ClCompile Include="logic\LogicThread.cpp" />

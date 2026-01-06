@@ -14,13 +14,10 @@ LogicThread::~LogicThread()
 void LogicThread::AddScene(GameScene* scene)
 {
     m_scenes.push_back(scene);
-    scene->SetLogicThread(this);
 }
 
 void LogicThread::RemoveScene(GameScene* scene)
 {
-    scene->SetLogicThread(nullptr);
-
     auto it = std::find(m_scenes.begin(), m_scenes.end(), scene);
     if (it != m_scenes.end())
     {
@@ -68,17 +65,11 @@ void LogicThread::Run()
 
         m_fixedTimeAccum += dt;
 
-        // ──────── 1. Job 처리 (패킷 핸들러) ────────
+        // ──────── 1. Job 처리 ────────
         JobObject* jobObj = nullptr;
         while (m_jobQueue.Dequeue(&jobObj))
         {
             jobObj->Flush();
-        }
-
-        // ──────── 1-1. Scene Job 처리 ────────
-        for (auto* scene : m_scenes)
-        {
-            scene->FlushJobs();
         }
 
         // ──────── 2. FixedUpdate (고정 간격) ────────

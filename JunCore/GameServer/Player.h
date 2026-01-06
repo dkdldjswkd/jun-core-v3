@@ -1,17 +1,17 @@
 ﻿#pragma once
 #include "../JunCore/logic/GameObject.h"
-#include "../JunCore/logic/JobObject.h"
 #include "../JunCore/network/User.h"
 #include "../JunCore/protocol/game_messages.pb.h"
 #include <string>
 
-// Player는 GameObject이면서 JobObject
-// - GameObject: OnUpdate, OnFixedUpdate 등 게임 로직
-// - JobObject: 패킷 핸들러 등을 Job으로 처리
-class Player : public GameObject, public JobObject
+// Player는 GameObject 상속
+// - GameObject는 이미 JobObject를 상속하므로 JobObject 기능 모두 사용 가능
+// - OnUpdate, OnFixedUpdate 등 게임 로직
+// - PostJob으로 패킷 핸들러 등을 Job으로 처리
+class Player : public GameObject
 {
 public:
-	Player(User* owner, const std::string& username);
+	Player(GameScene* scene, User* owner, const std::string& username);
 	~Player();
 
 protected:

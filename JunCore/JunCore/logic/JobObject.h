@@ -19,10 +19,11 @@ class JobObject
 protected:
     LFQueue<Job> m_jobQueue;
     std::atomic<bool> m_processing{false};
-    LogicThread* m_pLogicThread = nullptr;
+    LogicThread* m_pLogicThread;
 
 public:
-    JobObject() = default;
+    JobObject() = delete;
+    explicit JobObject(LogicThread* logicThread);
     virtual ~JobObject();
 
     //------------------------------
@@ -40,5 +41,12 @@ public:
     // LogicThread 관리
     //------------------------------
     LogicThread* GetLogicThread() { return m_pLogicThread; }
-    void SetLogicThread(LogicThread* thread) { m_pLogicThread = thread; }
+    void SetLogicThread(LogicThread* thread)
+    {
+        if (thread == nullptr)
+        {
+            throw std::invalid_argument("JobObject::SetLogicThread: LogicThread cannot be null");
+        }
+        m_pLogicThread = thread;
+    }
 };

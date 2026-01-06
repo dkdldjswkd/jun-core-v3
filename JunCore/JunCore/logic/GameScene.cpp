@@ -1,4 +1,23 @@
 ﻿#include "GameScene.h"
+#include "GameObject.h"
+#include "LogicThread.h"
+
+GameScene::GameScene(LogicThread* logicThread)
+    : m_pLogicThread(logicThread)
+{
+    if (m_pLogicThread)
+    {
+        m_pLogicThread->AddScene(this);
+    }
+}
+
+GameScene::~GameScene()
+{
+    if (m_pLogicThread)
+    {
+        m_pLogicThread->RemoveScene(this);
+    }
+}
 
 void GameScene::Enter(GameObject* obj)
 {
@@ -36,14 +55,5 @@ void GameScene::Update()
     for (auto* obj : m_objects)
     {
         obj->OnUpdate();
-    }
-}
-
-void GameScene::FlushJobs()
-{
-    std::function<void()> job;
-    while (m_jobQueue.Dequeue(&job))
-    {
-        job();
     }
 }
