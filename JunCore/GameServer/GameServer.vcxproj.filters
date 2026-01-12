@@ -4,6 +4,9 @@
     <Filter Include="logic">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
     </Filter>
+    <Filter Include="protocol">
+      <UniqueIdentifier>{fa4b5e4b-fba5-4c90-82c8-67b712f5bf49}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -11,11 +14,22 @@
     <ClCompile Include="Player.cpp">
       <Filter>logic</Filter>
     </ClCompile>
+    <ClCompile Include="..\JunCore\protocol\game_messages.pb.cc">
+      <Filter>protocol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameServer.h" />
     <ClInclude Include="Player.h">
       <Filter>logic</Filter>
     </ClInclude>
+    <ClInclude Include="..\JunCore\protocol\game_messages.pb.h">
+      <Filter>protocol</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\JunCore\protocol\game_messages.proto">
+      <Filter>protocol</Filter>
+    </None>
   </ItemGroup>
 </Project>

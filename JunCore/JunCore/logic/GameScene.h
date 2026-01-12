@@ -48,4 +48,5 @@ public:
     // GameObject 조회
     //------------------------------
     const std::vector<GameObject*>& GetObjects() const { return m_objects; }
+
 };

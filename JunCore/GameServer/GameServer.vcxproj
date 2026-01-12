@@ -175,6 +175,9 @@
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="..\JunCore\protocol\game_messages.pb.cc">
+      <ForcedIncludeFiles></ForcedIncludeFiles>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JunCore\JunCore.vcxproj">
@@ -184,6 +187,10 @@
   <ItemGroup>
     <ClInclude Include="GameServer.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="..\JunCore\protocol\game_messages.pb.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\JunCore\protocol\game_messages.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

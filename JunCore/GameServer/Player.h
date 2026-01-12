@@ -11,7 +11,7 @@
 class Player : public GameObject
 {
 public:
-	Player(GameScene* scene, User* owner, const std::string& username);
+	Player(GameScene* scene, User* owner, uint32_t player_id);
 	~Player();
 
 protected:
@@ -41,10 +41,45 @@ public:
 		}
 	}
 
+	// Scene 내 모든 Player에게 브로드캐스트
+	template<typename T>
+	void BroadcastToScene(const T& packet)
+	{
+		if (!scene_)
+			return;
+
+		const auto& objects = scene_->GetObjects();
+		for (auto* obj : objects)
+		{
+			Player* player = dynamic_cast<Player*>(obj);
+			if (player && player->owner_)
+			{
+				player->owner_->SendPacket(packet);
+			}
+		}
+	}
+
+	// Scene 내 다른 Player들에게 브로드캐스트 (자신 제외)
+	template<typename T>
+	void BroadcastToOthers(const T& packet)
+	{
+		if (!scene_)
+			return;
+
+		const auto& objects = scene_->GetObjects();
+		for (auto* obj : objects)
+		{
+			Player* player = dynamic_cast<Player*>(obj);
+			if (player && player != this && player->owner_)
+			{
+				player->owner_->SendPacket(packet);
+			}
+		}
+	}
+
 	// Getter
 	User* GetOwner() const { return owner_; }
-	const std::string& GetUsername() const { return username_; }
-	int32_t GetPlayerId() const { return player_id_; }
+	uint32_t GetPlayerId() const { return player_id_; }
 	GameScene* GetScene() const { return scene_; }
 	void SetScene(GameScene* scene) { scene_ = scene; }
 
@@ -64,13 +99,12 @@ private:
 	void MoveTowardsDestination();
 
 private:
-	User* owner_;              // 소유 네트워크 세션
-	std::string username_;     // 사용자 이름
-	int32_t player_id_;        // 플레이어 ID
+	User* owner_;               // 소유 네트워크 세션
+	uint32_t player_id_;        // 플레이어 ID
 	GameScene* scene_{nullptr}; // 현재 속한 Scene
 
 	// 플레이어 상태
-	game::Pos currentPos_;     // 현재 위치
-	game::Pos destPos_;        // 목표 위치
-	float moveSpeed_{0.1f};    // FixedUpdate당 이동 거리 (50Hz 기준, 초당 5m)
+	game::Pos currentPos_;      // 현재 위치
+	game::Pos destPos_;         // 목표 위치
+	float moveSpeed_{0.1f};     // FixedUpdate당 이동 거리 (50Hz 기준, 초당 5m)
 };

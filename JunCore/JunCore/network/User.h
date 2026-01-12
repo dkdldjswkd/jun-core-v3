@@ -44,9 +44,19 @@ public:
     class Player* GetPlayer() const;
     void ClearPlayer();
 
+    //------------------------------
+    // 사용자 정보 관리
+    //------------------------------
+    void SetPlayerId(uint32_t player_id);
+    uint32_t GetPlayerId() const;
+    void SetLastSceneId(int32_t scene_id);
+    int32_t GetLastSceneId() const;
+
 private:
     std::weak_ptr<Session> session_;
     class Player* player_{nullptr};  // 게임 로직 플레이어 객체
+    uint32_t player_id_{0};           // 발급된 플레이어 ID
+    int32_t last_scene_id_{0};        // DB에서 조회한 마지막 Scene ID
 };
 
 //------------------------------
@@ -119,4 +129,24 @@ inline class Player* User::GetPlayer() const
 inline void User::ClearPlayer()
 {
     player_ = nullptr;
+}
+
+inline void User::SetPlayerId(uint32_t player_id)
+{
+    player_id_ = player_id;
+}
+
+inline uint32_t User::GetPlayerId() const
+{
+    return player_id_;
+}
+
+inline void User::SetLastSceneId(int32_t scene_id)
+{
+    last_scene_id_ = scene_id;
+}
+
+inline int32_t User::GetLastSceneId() const
+{
+    return last_scene_id_;
 }

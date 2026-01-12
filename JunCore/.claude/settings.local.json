@@ -147,7 +147,17 @@
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" GameServer/GameServer.vcxproj //p:Configuration=Debug //p:Platform=x64 //clp:ErrorsOnly)",
       "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\GameServer\\\\GameServer.vcxproj\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"C:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\GameServer\\\\GameServer.vcxproj\" //p:Configuration=Debug //p:Platform=x64 //clp:ErrorsOnly)",
-      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" GameServer/GameServer.vcxproj /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)"
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" GameServer/GameServer.vcxproj /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(.generate_protobuf.bat)",
+      "Bash(vcpkg/installed/x64-windows-static/tools/protobuf/protoc:*)",
+      "Bash(./vcpkg_installed/x64-windows-static/tools/protobuf/protoc.exe:*)",
+      "Bash(\"/c/rpos/jun-core-v3/JunCore/vcpkg_installed/x64-windows-static/tools/protobuf/protoc.exe\" --cpp_out=. game_messages.proto)",
+      "Bash(/c/rpos/jun-core-v3/JunCore/vcpkg_installed/x64-windows/tools/protobuf/protoc.exe --cpp_out=. game_messages.proto)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" /c/rpos/jun-core-v3/JunCore/JunCore.sln /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" JunCore.sln /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\GameServer\\\\GameServer.vcxproj\" -p:Configuration=Debug -p:Platform=x64 -clp:ErrorsOnly)",
+      "Bash(\"C:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\vcpkg_installed\\\\x64-windows\\\\tools\\\\protobuf\\\\protoc.exe\" --cpp_out=. game_messages.proto)",
+      "Bash(\"/mnt/c/Program Files/Microsoft Visual Studio/2022/Community/MSBuild/Current/Bin/MSBuild.exe\" \"c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\JunCore.sln\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)"
     ],
     "deny": []
   }

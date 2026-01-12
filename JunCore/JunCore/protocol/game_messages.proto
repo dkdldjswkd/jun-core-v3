@@ -2,6 +2,26 @@ syntax = "proto3";
 
 package game;
 
+// 에러 코드 정의
+enum ErrorCode
+{
+  NONE = 0;                    // 에러 없음
+  UNKNOWN = 1;                 // 알 수 없는 에러
+  ALREADY_LOGGED_IN = 2;       // 이미 로그인됨
+  AUTH_FAILED = 3;             // 인증 실패
+  INVALID_MAP_INDEX = 4;       // 유효하지 않은 맵 인덱스
+  PLAYER_NOT_FOUND = 5;        // 플레이어를 찾을 수 없음
+  ALREADY_IN_GAME = 6;         // 이미 게임 중
+  SCENE_NOT_FOUND = 7;         // Scene을 찾을 수 없음
+}
+
+// 서버 → 클라이언트: 에러 알림
+message GC_ERROR_NOTIFY
+{
+  ErrorCode error_code = 1;          // 에러 코드
+  string error_message = 2;          // 에러 상세 메시지 (디버깅용)
+}
+
 // 3D 위치 정보
 message Pos
 {
@@ -28,13 +48,48 @@ message GC_MOVE_NOTIFY
 // 클라이언트 → 서버: 로그인 요청
 message CG_LOGIN_REQ
 {
-  string username = 1;  // 사용자 이름
 }
 
 // 서버 → 클라이언트: 로그인 응답
 message GC_LOGIN_RES
 {
-  bool success = 1;       // 로그인 성공 여부
-  int32 player_id = 2;    // 할당된 플레이어 ID
+  int32 player_id = 1;      // 발급된 플레이어 ID
+  int32 last_scene_id = 2;  // 마지막 위치한 Scene (기본 Scene 0)
+}
+
+// 클라이언트 → 서버: 게임 시작 요청 (로그인 후 첫 진입)
+message CG_GAME_START_REQ
+{
+}
+
+// 서버 → 클라이언트: 게임 시작 응답
+message GC_GAME_START_RES
+{
+}
+
+// 클라이언트 → 서버: Scene 진입 요청 (Scene 이동)
+message CG_SCENE_ENTER_REQ
+{
+  int32 scene_id = 1;  // 진입할 Scene ID
+}
+
+// 서버 → 클라이언트: Scene 진입 알림
+message GC_SCENE_ENTER_NOTIFY
+{
+  int32 scene_id = 1;     // 진입한 Scene ID
+  int32 player_id = 2;    // 플레이어 ID
   Pos spawn_pos = 3;      // 스폰 위치
+}
+
+// 서버 → 클라이언트: 플레이어 시야 진입 알림
+message GC_PLAYER_APPEAR_NOTIFY
+{
+  int32 player_id = 1;    // 나타난 플레이어 ID
+  Pos position = 2;       // 현재 위치
+}
+
+// 서버 → 클라이언트: 플레이어 시야 이탈 알림
+message GC_PLAYER_DISAPPEAR_NOTIFY
+{
+  int32 player_id = 1;    // 사라진 플레이어 ID
 }

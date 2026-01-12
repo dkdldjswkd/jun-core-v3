@@ -27,10 +27,19 @@ private:
 	// 패킷 핸들러들
 	// ──────────────────────────────────────────────────────
 	void HandleLoginRequest(User& user, const game::CG_LOGIN_REQ& request);
+	void HandleGameStartRequest(User& user, const game::CG_GAME_START_REQ& request);
+	void HandleSceneEnterRequest(User& user, const game::CG_SCENE_ENTER_REQ& request);
 	void HandleMoveRequest(User& user, const game::CG_MOVE_REQ& request);
 
-	// Scene 선택 로직 (TODO: 향후 여러 Scene 지원 시 확장)
-	GameScene* ChooseSceneForNewPlayer();
+	// 에러 전송 헬퍼
+	void SendError(User& user, game::ErrorCode error_code, const std::string& error_message);
+
+	// Scene 관리 헬퍼
+	GameScene* GetSceneById(int32_t scene_id);
+	int32_t GetDefaultSceneId() const { return 0; }  // 기본 시작 Scene
+
+	// Player ID 생성
+	uint32_t GeneratePlayerId();
 
 	// ──────────────────────────────────────────────────────
 	// Server 가상 함수 오버라이드
@@ -45,7 +54,8 @@ private:
 	// ──────────────────────────────────────────────────────
 	// 게임 로직 관리
 	// ──────────────────────────────────────────────────────
-	std::unique_ptr<GameScene> scene_;  // 메인 게임 씬 (TODO: GameScene 구현)
+	std::unique_ptr<GameScene> scene_;  // 메인 게임 씬
+	std::atomic<uint32_t> nextPlayerId_{1};  // Player ID 생성기
 
 	// ──────────────────────────────────────────────────────
 	// 세션 모니터링

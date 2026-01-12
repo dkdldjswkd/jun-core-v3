@@ -2,11 +2,10 @@
 #include "../JunCore/logic/GameScene.h"
 #include <cmath>
 
-Player::Player(GameScene* scene, User* owner, const std::string& username)
+Player::Player(GameScene* scene, User* owner, uint32_t player_id)
 	: GameObject(scene)
 	, owner_(owner)
-	, username_(username)
-	, player_id_(0)  // TODO: ID 생성 로직
+	, player_id_(player_id)
 {
 	// 초기 위치 설정 (원점)
 	currentPos_.set_x(0.0f);
@@ -39,30 +38,92 @@ void Player::OnFixedUpdate()
 	if (!HasReachedDestination())
 	{
 		MoveTowardsDestination();
-
-		// TODO: 주변 플레이어에게 주기적으로 브로드캐스트
-		// 예: 0.1초마다 한 번씩
 	}
+
+	// 매 프레임 모든 플레이어에게 위치 브로드캐스트 (디버깅용)
+	game::GC_MOVE_NOTIFY notify;
+	notify.set_player_id(player_id_);
+	notify.mutable_cur_pos()->CopyFrom(currentPos_);
+	notify.mutable_move_pos()->CopyFrom(destPos_);
+
+	BroadcastToScene(notify);
+
+	LOG_DEBUG("[Player::OnFixedUpdate] Broadcast position - Player (ID: %u) pos: (%.2f, %.2f, %.2f) -> dest: (%.2f, %.2f, %.2f)",
+		player_id_,
+		currentPos_.x(), currentPos_.y(), currentPos_.z(),
+		destPos_.x(), destPos_.y(), destPos_.z());
 }
 
 void Player::OnEnter(GameScene* scene)
 {
 	scene_ = scene;
 
-	// Scene 입장 시 초기화
-	LOG_INFO("[Player::OnEnter] Player %s entered scene at (%.2f, %.2f, %.2f)",
-		username_.c_str(),
+	// User에서 scene_id 가져오기
+	int32_t scene_id = owner_ ? owner_->GetLastSceneId() : 0;
+
+	LOG_INFO("[Player::OnEnter] Player (ID: %u) entered Scene %d at (%.2f, %.2f, %.2f)",
+		player_id_,
+		scene_id,
 		currentPos_.x(), currentPos_.y(), currentPos_.z());
 
-	// TODO: 주변 플레이어 정보 전송
+	// 1. SCENE_ENTER_NOTIFY 전송 (Scene Enter 완료 알림)
+	game::GC_SCENE_ENTER_NOTIFY enter_notify;
+	enter_notify.set_scene_id(scene_id);
+	enter_notify.set_player_id(player_id_);
+	enter_notify.mutable_spawn_pos()->CopyFrom(currentPos_);
+	SendPacket(enter_notify);
+
+	// 2. 주변 플레이어들에게 내가 나타났다고 알림
+	game::GC_PLAYER_APPEAR_NOTIFY my_appear;
+	my_appear.set_player_id(player_id_);
+	my_appear.mutable_position()->CopyFrom(currentPos_);
+
+	BroadcastToOthers(my_appear);
+
+	LOG_DEBUG("[Player::OnEnter] Broadcast APPEAR - Player (ID: %u) to other players",
+		player_id_);
+
+	// 3. 나에게 주변에 이미 있는 모든 플레이어 정보 전송
+	if (!scene_)
+		return;
+
+	const auto& objects = scene_->GetObjects();
+	int other_player_count = 0;
+	for (auto* obj : objects)
+	{
+		Player* other = dynamic_cast<Player*>(obj);
+		if (other && other != this && other->owner_)
+		{
+			game::GC_PLAYER_APPEAR_NOTIFY other_appear;
+			other_appear.set_player_id(other->player_id_);
+			other_appear.mutable_position()->CopyFrom(other->currentPos_);
+
+			SendPacket(other_appear);
+			other_player_count++;
+		}
+	}
+
+	if (other_player_count > 0)
+	{
+		LOG_DEBUG("[Player::OnEnter] Sent %d existing players info to Player (ID: %u)",
+			other_player_count, player_id_);
+	}
 }
 
 void Player::OnExit(GameScene* scene)
 {
-	scene_ = nullptr;
+	LOG_INFO("[Player::OnExit] Player (ID: %u) left scene", player_id_);
 
-	// TODO: 주변 플레이어에게 퇴장 알림
-	LOG_INFO("[Player::OnExit] Player %s left scene", username_.c_str());
+	// 주변 플레이어들에게 내가 사라졌다고 알림
+	game::GC_PLAYER_DISAPPEAR_NOTIFY disappear;
+	disappear.set_player_id(player_id_);
+
+	BroadcastToOthers(disappear);
+
+	LOG_DEBUG("[Player::OnExit] Broadcast DISAPPEAR - Player (ID: %u) to other players",
+		player_id_);
+
+	scene_ = nullptr;
 }
 
 void Player::PostSetDestPosJob(const game::Pos& dest_pos)
@@ -87,8 +148,8 @@ void Player::HandleSetDestPos(const game::Pos& dest_pos)
 	destPos_.set_y(dest_pos.y());
 	destPos_.set_z(dest_pos.z());
 
-	LOG_DEBUG("[Player::HandleSetDestPos] Player %s dest pos set to (%.2f, %.2f, %.2f)",
-		username_.c_str(),
+	LOG_DEBUG("[Player::HandleSetDestPos] Player (ID: %u) dest pos set to (%.2f, %.2f, %.2f)",
+		player_id_,
 		destPos_.x(), destPos_.y(), destPos_.z());
 }
 
