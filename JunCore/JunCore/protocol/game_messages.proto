@@ -9,10 +9,11 @@ enum ErrorCode
   UNKNOWN = 1;                 // 알 수 없는 에러
   ALREADY_LOGGED_IN = 2;       // 이미 로그인됨
   AUTH_FAILED = 3;             // 인증 실패
-  INVALID_MAP_INDEX = 4;       // 유효하지 않은 맵 인덱스
   PLAYER_NOT_FOUND = 5;        // 플레이어를 찾을 수 없음
   ALREADY_IN_GAME = 6;         // 이미 게임 중
   SCENE_NOT_FOUND = 7;         // Scene을 찾을 수 없음
+  NOT_LOGGED_IN = 8;           // 로그인되지 않음
+  INVALID_STATE = 9;           // 잘못된 상태
 }
 
 // 서버 → 클라이언트: 에러 알림
@@ -30,6 +31,61 @@ message Pos
   float z = 3;
 }
 
+// ============================================================
+// 로그인 플로우
+// ============================================================
+
+// 클라이언트 → 서버: 로그인 요청
+message CG_LOGIN_REQ
+{
+}
+
+// 서버 → 클라이언트: 로그인 응답
+// 클라이언트는 이 정보로 씬 로딩 시작
+message GC_LOGIN_RES
+{
+  int32 player_id = 1;      // 발급된 플레이어 ID
+  int32 scene_id = 2;       // 진입할 Scene ID
+  Pos spawn_pos = 3;        // 스폰 위치
+}
+
+// ============================================================
+// Scene 진입/이동 플로우
+// ============================================================
+
+// 클라이언트 → 서버: 씬 로딩 완료 알림
+// 첫 로그인 후, 또는 맵 이동 후 로딩 완료 시 전송
+message CG_SCENE_READY_REQ
+{
+}
+
+// 서버 → 클라이언트: Scene 진입 완료 알림
+// Player가 실제로 Scene에 들어갔을 때 전송
+message GC_SCENE_ENTER_NOTIFY
+{
+  int32 scene_id = 1;     // 진입한 Scene ID
+  int32 player_id = 2;    // 플레이어 ID
+  Pos spawn_pos = 3;      // 스폰 위치
+}
+
+// 클라이언트 → 서버: 맵 이동 요청
+message CG_SCENE_CHANGE_REQ
+{
+  int32 scene_id = 1;     // 이동할 Scene ID
+}
+
+// 서버 → 클라이언트: 맵 이동 승인
+// 클라이언트는 이 정보로 새 씬 로딩 시작
+message GC_SCENE_CHANGE_RES
+{
+  int32 scene_id = 1;     // 이동할 Scene ID
+  Pos spawn_pos = 2;      // 새 스폰 위치
+}
+
+// ============================================================
+// 이동 패킷
+// ============================================================
+
 // 클라이언트 → 서버: 이동 요청
 message CG_MOVE_REQ
 {
@@ -45,41 +101,9 @@ message GC_MOVE_NOTIFY
   Pos move_pos = 3;     // 목표 위치
 }
 
-// 클라이언트 → 서버: 로그인 요청
-message CG_LOGIN_REQ
-{
-}
-
-// 서버 → 클라이언트: 로그인 응답
-message GC_LOGIN_RES
-{
-  int32 player_id = 1;      // 발급된 플레이어 ID
-  int32 last_scene_id = 2;  // 마지막 위치한 Scene (기본 Scene 0)
-}
-
-// 클라이언트 → 서버: 게임 시작 요청 (로그인 후 첫 진입)
-message CG_GAME_START_REQ
-{
-}
-
-// 서버 → 클라이언트: 게임 시작 응답
-message GC_GAME_START_RES
-{
-}
-
-// 클라이언트 → 서버: Scene 진입 요청 (Scene 이동)
-message CG_SCENE_ENTER_REQ
-{
-  int32 scene_id = 1;  // 진입할 Scene ID
-}
-
-// 서버 → 클라이언트: Scene 진입 알림
-message GC_SCENE_ENTER_NOTIFY
-{
-  int32 scene_id = 1;     // 진입한 Scene ID
-  int32 player_id = 2;    // 플레이어 ID
-  Pos spawn_pos = 3;      // 스폰 위치
-}
+// ============================================================
+// 시야 패킷
+// ============================================================
 
 // 서버 → 클라이언트: 플레이어 시야 진입 알림
 message GC_PLAYER_APPEAR_NOTIFY

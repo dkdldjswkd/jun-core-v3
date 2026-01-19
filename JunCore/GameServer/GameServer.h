@@ -27,8 +27,8 @@ private:
 	// 패킷 핸들러들
 	// ──────────────────────────────────────────────────────
 	void HandleLoginRequest(User& user, const game::CG_LOGIN_REQ& request);
-	void HandleGameStartRequest(User& user, const game::CG_GAME_START_REQ& request);
-	void HandleSceneEnterRequest(User& user, const game::CG_SCENE_ENTER_REQ& request);
+	void HandleSceneReadyRequest(User& user, const game::CG_SCENE_READY_REQ& request);
+	void HandleSceneChangeRequest(User& user, const game::CG_SCENE_CHANGE_REQ& request);
 	void HandleMoveRequest(User& user, const game::CG_MOVE_REQ& request);
 
 	// 에러 전송 헬퍼

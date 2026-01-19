@@ -51,12 +51,17 @@ public:
     uint32_t GetPlayerId() const;
     void SetLastSceneId(int32_t scene_id);
     int32_t GetLastSceneId() const;
+    void SetSpawnPos(float x, float y, float z);
+    void GetSpawnPos(float& x, float& y, float& z) const;
 
 private:
     std::weak_ptr<Session> session_;
     class Player* player_{nullptr};  // 게임 로직 플레이어 객체
     uint32_t player_id_{0};           // 발급된 플레이어 ID
     int32_t last_scene_id_{0};        // DB에서 조회한 마지막 Scene ID
+    float spawn_x_{0.0f};             // 스폰 위치 X
+    float spawn_y_{0.0f};             // 스폰 위치 Y
+    float spawn_z_{0.0f};             // 스폰 위치 Z
 };
 
 //------------------------------
@@ -149,4 +154,18 @@ inline void User::SetLastSceneId(int32_t scene_id)
 inline int32_t User::GetLastSceneId() const
 {
     return last_scene_id_;
+}
+
+inline void User::SetSpawnPos(float x, float y, float z)
+{
+    spawn_x_ = x;
+    spawn_y_ = y;
+    spawn_z_ = z;
+}
+
+inline void User::GetSpawnPos(float& x, float& y, float& z) const
+{
+    x = spawn_x_;
+    y = spawn_y_;
+    z = spawn_z_;
 }

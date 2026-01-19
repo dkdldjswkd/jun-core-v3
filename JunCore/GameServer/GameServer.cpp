@@ -20,14 +20,14 @@ void GameServer::RegisterPacketHandlers()
 		this->HandleLoginRequest(user, request);
 	});
 
-	RegisterPacketHandler<game::CG_GAME_START_REQ>([this](User& user, const game::CG_GAME_START_REQ& request)
+	RegisterPacketHandler<game::CG_SCENE_READY_REQ>([this](User& user, const game::CG_SCENE_READY_REQ& request)
 	{
-		this->HandleGameStartRequest(user, request);
+		this->HandleSceneReadyRequest(user, request);
 	});
 
-	RegisterPacketHandler<game::CG_SCENE_ENTER_REQ>([this](User& user, const game::CG_SCENE_ENTER_REQ& request)
+	RegisterPacketHandler<game::CG_SCENE_CHANGE_REQ>([this](User& user, const game::CG_SCENE_CHANGE_REQ& request)
 	{
-		this->HandleSceneEnterRequest(user, request);
+		this->HandleSceneChangeRequest(user, request);
 	});
 
 	RegisterPacketHandler<game::CG_MOVE_REQ>([this](User& user, const game::CG_MOVE_REQ& request)
@@ -46,89 +46,129 @@ void GameServer::SendError(User& user, game::ErrorCode error_code, const std::st
 
 void GameServer::HandleLoginRequest(User& user, const game::CG_LOGIN_REQ& request)
 {
-	if (user.GetPlayer() != nullptr)
+	// 이미 로그인된 상태인지 확인
+	if (user.GetPlayerId() != 0)
 	{
 		SendError(user, game::ErrorCode::ALREADY_LOGGED_IN, "Already logged in");
 		return;
 	}
 
+	// TODO: 실제 인증 로직 (DB 조회 등)
+	bool auth_success = true;
+	if (!auth_success)
+	{
+		SendError(user, game::ErrorCode::AUTH_FAILED, "Authentication failed");
+		return;
+	}
+
 	// Player ID 생성 및 마지막 위치 조회
 	const uint32_t player_id = GeneratePlayerId();
-	const int32_t last_scene_id = GetDefaultSceneId();
+	const int32_t scene_id = GetDefaultSceneId();
 
-	// User에 정보 저장
+	// TODO: DB에서 스폰 위치 조회 (현재는 기본값)
+	const float spawn_x = 0.0f;
+	const float spawn_y = 0.0f;
+	const float spawn_z = 0.0f;
+
+	// User에 정보 저장 (씬 로딩 완료 후 사용)
 	user.SetPlayerId(player_id);
-	user.SetLastSceneId(last_scene_id);
+	user.SetLastSceneId(scene_id);
+	user.SetSpawnPos(spawn_x, spawn_y, spawn_z);
 
+	// 클라이언트에게 로그인 정보 전송 (씬 로딩용)
 	game::GC_LOGIN_RES response;
 	response.set_player_id(player_id);
-	response.set_last_scene_id(last_scene_id);
+	response.set_scene_id(scene_id);
+	response.mutable_spawn_pos()->set_x(spawn_x);
+	response.mutable_spawn_pos()->set_y(spawn_y);
+	response.mutable_spawn_pos()->set_z(spawn_z);
 	user.SendPacket(response);
 
-	LOG_INFO("[LOGIN] Player ID %u assigned", player_id);
+	LOG_INFO("[LOGIN] Player ID %u assigned, Scene %d, SpawnPos (%.2f, %.2f, %.2f)",
+		player_id, scene_id, spawn_x, spawn_y, spawn_z);
 }
 
-void GameServer::HandleGameStartRequest(User& user, const game::CG_GAME_START_REQ& request)
+void GameServer::HandleSceneReadyRequest(User& user, const game::CG_SCENE_READY_REQ& request)
 {
-	// 이미 게임 중인지 확인
-	if (user.GetPlayer() != nullptr)
+	// 로그인 확인
+	if (user.GetPlayerId() == 0)
 	{
-		SendError(user, game::ErrorCode::ALREADY_IN_GAME, "Already in game");
+		SendError(user, game::ErrorCode::NOT_LOGGED_IN, "Not logged in");
 		return;
 	}
 
-	// LOGIN에서 발급받은 player_id와 last_scene_id 가져오기
+	// 이미 게임 중인 경우 (맵 이동 후 로딩 완료)
+	Player* player = user.GetPlayer();
+	if (player != nullptr)
+	{
+		// 맵 이동 후 로딩 완료 - MoveToScene이 대기 중인 상태
+		// TODO: 현재는 첫 진입만 지원, 맵 이동은 추후 구현
+		LOG_INFO("[SCENE_READY] Player (ID: %u) scene ready after map change", player->GetPlayerId());
+		return;
+	}
+
+	// 첫 진입 (로그인 후 첫 씬 로딩 완료)
 	const uint32_t player_id = user.GetPlayerId();
-	const int32_t last_scene_id = user.GetLastSceneId();
+	const int32_t scene_id = user.GetLastSceneId();
 
 	// Scene 검증
-	GameScene* target_scene = GetSceneById(last_scene_id);
+	GameScene* target_scene = GetSceneById(scene_id);
 	if (target_scene == nullptr)
 	{
-		SendError(user, game::ErrorCode::SCENE_NOT_FOUND, "Scene not found for scene id: " + std::to_string(last_scene_id));
+		SendError(user, game::ErrorCode::SCENE_NOT_FOUND, "Scene not found: " + std::to_string(scene_id));
 		return;
 	}
 
-	LOG_INFO("[GAME_START] Starting game at Scene %d with Player ID %u", last_scene_id, player_id);
+	LOG_INFO("[SCENE_READY] Creating Player (ID: %u) at Scene %d", player_id, scene_id);
 
-	// 1. RES 전송
-	game::GC_GAME_START_RES response;
-	user.SendPacket(response);
-
-	// 2. Player 생성 (GameObject::Create가 자동으로 Scene Enter Job 등록)
+	// Player 생성 (GameObject::Create가 자동으로 Scene Enter Job 등록)
 	// Player::OnEnter에서 GC_SCENE_ENTER_NOTIFY 전송됨
-	Player* player = GameObject::Create<Player>(target_scene, &user, player_id);
+	player = GameObject::Create<Player>(target_scene, &user, player_id);
 	user.SetPlayer(player);
 }
 
-// 구현 필요
-void GameServer::HandleSceneEnterRequest(User& user, const game::CG_SCENE_ENTER_REQ& request)
+void GameServer::HandleSceneChangeRequest(User& user, const game::CG_SCENE_CHANGE_REQ& request)
 {
-	LOG_INFO("[SCENE_ENTER] Requesting Scene %d", request.scene_id());
-
 	Player* player = user.GetPlayer();
-
-	// Player가 없으면 GAME_START를 밟지 않은상태
 	if (player == nullptr)
 	{
-		SendError(user, game::ErrorCode::PLAYER_NOT_FOUND, "Use GAME_START first");
+		SendError(user, game::ErrorCode::PLAYER_NOT_FOUND, "Player not found");
 		return;
 	}
 
-	// Scene 이동 (기존 Player)
-	// 클라이언트 요청 검증
-	GameScene* target_scene = GetSceneById(request.scene_id());
+	const int32_t new_scene_id = request.scene_id();
+
+	// Scene 검증
+	GameScene* target_scene = GetSceneById(new_scene_id);
 	if (target_scene == nullptr)
 	{
-		SendError(user, game::ErrorCode::INVALID_MAP_INDEX, "Invalid scene id: " + std::to_string(request.scene_id()));
+		SendError(user, game::ErrorCode::SCENE_NOT_FOUND, "Scene not found: " + std::to_string(new_scene_id));
 		return;
 	}
 
-	LOG_INFO("[SCENE_ENTER] Moving Player (ID: %u) to Scene %d", player->GetPlayerId(), request.scene_id());
+	// TODO: Scene 이동 조건 검증 (레벨, 퀘스트 조건 등)
 
-	// TODO: MoveToScene 구현 필요 (현재 Player는 Scene 이동 기능 없음)
-	// player->MoveToScene(target_scene);
-	// MoveToScene이 OnEnter를 호출하면 GC_SCENE_ENTER_NOTIFY가 자동 전송됨
+	// TODO: DB에서 새 씬의 스폰 위치 조회 (현재는 기본값)
+	const float spawn_x = 0.0f;
+	const float spawn_y = 0.0f;
+	const float spawn_z = 0.0f;
+
+	// User에 새 씬 정보 저장
+	user.SetLastSceneId(new_scene_id);
+	user.SetSpawnPos(spawn_x, spawn_y, spawn_z);
+
+	LOG_INFO("[SCENE_CHANGE] Player (ID: %u) changing to Scene %d", player->GetPlayerId(), new_scene_id);
+
+	// 클라이언트에게 씬 변경 승인 (새 씬 로딩 시작)
+	game::GC_SCENE_CHANGE_RES response;
+	response.set_scene_id(new_scene_id);
+	response.mutable_spawn_pos()->set_x(spawn_x);
+	response.mutable_spawn_pos()->set_y(spawn_y);
+	response.mutable_spawn_pos()->set_z(spawn_z);
+	user.SendPacket(response);
+
+	// Player를 새 Scene으로 이동 (현재 Scene에서 Exit, 새 Scene에서 Enter)
+	player->MoveToScene(target_scene);
 }
 
 void GameServer::HandleMoveRequest(User& user, const game::CG_MOVE_REQ& request)
@@ -152,7 +192,7 @@ void GameServer::OnSessionConnect(User* user)
 {
 	currentSessions_++;
 	totalConnected_++;
-	LOG_INFO("[CONNECT] User 0x%llX connected", (uintptr_t)user);
+	LOG_INFO("[CONNECT] New connection");
 }
 
 void GameServer::OnUserDisconnect(User* user)
@@ -163,7 +203,7 @@ void GameServer::OnUserDisconnect(User* user)
 	Player* player = user->GetPlayer();
 	if (player == nullptr)
 	{
-		LOG_INFO("[DISCONNECT] User 0x%llX disconnected (not logged in)", (uintptr_t)user);
+		LOG_INFO("[DISCONNECT] User disconnected (not logged in)");
 		return;
 	}
 

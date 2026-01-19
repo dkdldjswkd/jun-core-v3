@@ -31,6 +31,9 @@ public:
 	// 목표 위치 설정 Job 등록
 	void PostSetDestPosJob(const game::Pos& dest_pos);
 
+	// Scene 이동 (Job으로 처리)
+	void MoveToScene(GameScene* new_scene);
+
 	// 패킷 전송 (User를 통해)
 	template<typename T>
 	void SendPacket(const T& packet)

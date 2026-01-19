@@ -58,8 +58,21 @@ void Player::OnEnter(GameScene* scene)
 {
 	scene_ = scene;
 
-	// User에서 scene_id 가져오기
-	int32_t scene_id = owner_ ? owner_->GetLastSceneId() : 0;
+	// User에서 scene_id와 spawn_pos 가져오기
+	int32_t scene_id = 0;
+	float spawn_x = 0.0f, spawn_y = 0.0f, spawn_z = 0.0f;
+
+	if (owner_)
+	{
+		scene_id = owner_->GetLastSceneId();
+		owner_->GetSpawnPos(spawn_x, spawn_y, spawn_z);
+	}
+
+	// 스폰 위치로 현재 위치 설정
+	currentPos_.set_x(spawn_x);
+	currentPos_.set_y(spawn_y);
+	currentPos_.set_z(spawn_z);
+	destPos_.CopyFrom(currentPos_);
 
 	LOG_INFO("[Player::OnEnter] Player (ID: %u) entered Scene %d at (%.2f, %.2f, %.2f)",
 		player_id_,
@@ -131,6 +144,43 @@ void Player::PostSetDestPosJob(const game::Pos& dest_pos)
 	PostJob([this, dest_pos]()
 	{
 		this->HandleSetDestPos(dest_pos);
+	});
+}
+
+void Player::MoveToScene(GameScene* new_scene)
+{
+	if (new_scene == nullptr)
+	{
+		return;
+	}
+
+	// Job #1: 현재 Scene에서 Exit + LogicThread 변경
+	PostJob([this, new_scene]()
+	{
+		if (scene_ == new_scene)
+		{
+			return;
+		}
+
+		// 이전 Scene에서 Exit
+		if (scene_)
+		{
+			scene_->Exit(this);
+			OnExit(scene_);
+		}
+
+		// Scene 포인터 업데이트
+		scene_ = new_scene;
+
+		// LogicThread 변경 (JobObject::Flush가 자동으로 새 스레드에 이동)
+		SetLogicThread(new_scene->GetLogicThread());
+	});
+
+	// Job #2: 새 Scene에서 Enter (새 LogicThread에서 실행됨)
+	PostJob([this, new_scene]()
+	{
+		new_scene->Enter(this);
+		OnEnter(new_scene);
 	});
 }
 

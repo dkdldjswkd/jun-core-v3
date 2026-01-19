@@ -78,50 +78,6 @@ struct GC_PLAYER_DISAPPEAR_NOTIFYDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_PLAYER_DISAPPEAR_NOTIFYDefaultTypeInternal _GC_PLAYER_DISAPPEAR_NOTIFY_default_instance_;
 
-inline constexpr GC_LOGIN_RES::Impl_::Impl_(
-    ::_pbi::ConstantInitialized) noexcept
-      : player_id_{0},
-        last_scene_id_{0},
-        _cached_size_{0} {}
-
-template <typename>
-PROTOBUF_CONSTEXPR GC_LOGIN_RES::GC_LOGIN_RES(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(_class_data_.base()),
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(),
-#endif  // PROTOBUF_CUSTOM_VTABLE
-      _impl_(::_pbi::ConstantInitialized()) {
-}
-struct GC_LOGIN_RESDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR GC_LOGIN_RESDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~GC_LOGIN_RESDefaultTypeInternal() {}
-  union {
-    GC_LOGIN_RES _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_LOGIN_RESDefaultTypeInternal _GC_LOGIN_RES_default_instance_;
-              template <typename>
-PROTOBUF_CONSTEXPR GC_GAME_START_RES::GC_GAME_START_RES(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(_class_data_.base()){}
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase() {
-}
-#endif  // PROTOBUF_CUSTOM_VTABLE
-struct GC_GAME_START_RESDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR GC_GAME_START_RESDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~GC_GAME_START_RESDefaultTypeInternal() {}
-  union {
-    GC_GAME_START_RES _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_GAME_START_RESDefaultTypeInternal _GC_GAME_START_RES_default_instance_;
-
 inline constexpr GC_ERROR_NOTIFY::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : error_message_(
@@ -149,14 +105,32 @@ struct GC_ERROR_NOTIFYDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_ERROR_NOTIFYDefaultTypeInternal _GC_ERROR_NOTIFY_default_instance_;
+              template <typename>
+PROTOBUF_CONSTEXPR CG_SCENE_READY_REQ::CG_SCENE_READY_REQ(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(_class_data_.base()){}
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase() {
+}
+#endif  // PROTOBUF_CUSTOM_VTABLE
+struct CG_SCENE_READY_REQDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR CG_SCENE_READY_REQDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~CG_SCENE_READY_REQDefaultTypeInternal() {}
+  union {
+    CG_SCENE_READY_REQ _instance;
+  };
+};
 
-inline constexpr CG_SCENE_ENTER_REQ::Impl_::Impl_(
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CG_SCENE_READY_REQDefaultTypeInternal _CG_SCENE_READY_REQ_default_instance_;
+
+inline constexpr CG_SCENE_CHANGE_REQ::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : scene_id_{0},
         _cached_size_{0} {}
 
 template <typename>
-PROTOBUF_CONSTEXPR CG_SCENE_ENTER_REQ::CG_SCENE_ENTER_REQ(::_pbi::ConstantInitialized)
+PROTOBUF_CONSTEXPR CG_SCENE_CHANGE_REQ::CG_SCENE_CHANGE_REQ(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
     : ::google::protobuf::Message(_class_data_.base()),
 #else   // PROTOBUF_CUSTOM_VTABLE
@@ -164,16 +138,16 @@ PROTOBUF_CONSTEXPR CG_SCENE_ENTER_REQ::CG_SCENE_ENTER_REQ(::_pbi::ConstantInitia
 #endif  // PROTOBUF_CUSTOM_VTABLE
       _impl_(::_pbi::ConstantInitialized()) {
 }
-struct CG_SCENE_ENTER_REQDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR CG_SCENE_ENTER_REQDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~CG_SCENE_ENTER_REQDefaultTypeInternal() {}
+struct CG_SCENE_CHANGE_REQDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR CG_SCENE_CHANGE_REQDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~CG_SCENE_CHANGE_REQDefaultTypeInternal() {}
   union {
-    CG_SCENE_ENTER_REQ _instance;
+    CG_SCENE_CHANGE_REQ _instance;
   };
 };
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CG_SCENE_ENTER_REQDefaultTypeInternal _CG_SCENE_ENTER_REQ_default_instance_;
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CG_SCENE_CHANGE_REQDefaultTypeInternal _CG_SCENE_CHANGE_REQ_default_instance_;
               template <typename>
 PROTOBUF_CONSTEXPR CG_LOGIN_REQ::CG_LOGIN_REQ(::_pbi::ConstantInitialized)
 #if defined(PROTOBUF_CUSTOM_VTABLE)
@@ -192,24 +166,6 @@ struct CG_LOGIN_REQDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CG_LOGIN_REQDefaultTypeInternal _CG_LOGIN_REQ_default_instance_;
-              template <typename>
-PROTOBUF_CONSTEXPR CG_GAME_START_REQ::CG_GAME_START_REQ(::_pbi::ConstantInitialized)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(_class_data_.base()){}
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase() {
-}
-#endif  // PROTOBUF_CUSTOM_VTABLE
-struct CG_GAME_START_REQDefaultTypeInternal {
-  PROTOBUF_CONSTEXPR CG_GAME_START_REQDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
-  ~CG_GAME_START_REQDefaultTypeInternal() {}
-  union {
-    CG_GAME_START_REQ _instance;
-  };
-};
-
-PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
-    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CG_GAME_START_REQDefaultTypeInternal _CG_GAME_START_REQ_default_instance_;
 
 inline constexpr GC_SCENE_ENTER_NOTIFY::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
@@ -237,6 +193,32 @@ struct GC_SCENE_ENTER_NOTIFYDefaultTypeInternal {
 
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_SCENE_ENTER_NOTIFYDefaultTypeInternal _GC_SCENE_ENTER_NOTIFY_default_instance_;
+
+inline constexpr GC_SCENE_CHANGE_RES::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        spawn_pos_{nullptr},
+        scene_id_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR GC_SCENE_CHANGE_RES::GC_SCENE_CHANGE_RES(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct GC_SCENE_CHANGE_RESDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GC_SCENE_CHANGE_RESDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GC_SCENE_CHANGE_RESDefaultTypeInternal() {}
+  union {
+    GC_SCENE_CHANGE_RES _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_SCENE_CHANGE_RESDefaultTypeInternal _GC_SCENE_CHANGE_RES_default_instance_;
 
 inline constexpr GC_PLAYER_APPEAR_NOTIFY::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
@@ -291,6 +273,33 @@ struct GC_MOVE_NOTIFYDefaultTypeInternal {
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
     PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_MOVE_NOTIFYDefaultTypeInternal _GC_MOVE_NOTIFY_default_instance_;
 
+inline constexpr GC_LOGIN_RES::Impl_::Impl_(
+    ::_pbi::ConstantInitialized) noexcept
+      : _cached_size_{0},
+        spawn_pos_{nullptr},
+        player_id_{0},
+        scene_id_{0} {}
+
+template <typename>
+PROTOBUF_CONSTEXPR GC_LOGIN_RES::GC_LOGIN_RES(::_pbi::ConstantInitialized)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(_class_data_.base()),
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(),
+#endif  // PROTOBUF_CUSTOM_VTABLE
+      _impl_(::_pbi::ConstantInitialized()) {
+}
+struct GC_LOGIN_RESDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR GC_LOGIN_RESDefaultTypeInternal() : _instance(::_pbi::ConstantInitialized{}) {}
+  ~GC_LOGIN_RESDefaultTypeInternal() {}
+  union {
+    GC_LOGIN_RES _instance;
+  };
+};
+
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
+    PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 GC_LOGIN_RESDefaultTypeInternal _GC_LOGIN_RES_default_instance_;
+
 inline constexpr CG_MOVE_REQ::Impl_::Impl_(
     ::_pbi::ConstantInitialized) noexcept
       : _cached_size_{0},
@@ -344,6 +353,71 @@ const ::uint32_t
         PROTOBUF_FIELD_OFFSET(::game::Pos, _impl_.x_),
         PROTOBUF_FIELD_OFFSET(::game::Pos, _impl_.y_),
         PROTOBUF_FIELD_OFFSET(::game::Pos, _impl_.z_),
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::game::CG_LOGIN_REQ, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _impl_.player_id_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _impl_.scene_id_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _impl_.spawn_pos_),
+        ~0u,
+        ~0u,
+        0,
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::game::CG_SCENE_READY_REQ, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_.player_id_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_),
+        ~0u,
+        ~0u,
+        0,
+        ~0u,  // no _has_bits_
+        PROTOBUF_FIELD_OFFSET(::game::CG_SCENE_CHANGE_REQ, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::game::CG_SCENE_CHANGE_REQ, _impl_.scene_id_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_CHANGE_RES, _impl_._has_bits_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_CHANGE_RES, _internal_metadata_),
+        ~0u,  // no _extensions_
+        ~0u,  // no _oneof_case_
+        ~0u,  // no _weak_field_map_
+        ~0u,  // no _inlined_string_donated_
+        ~0u,  // no _split_
+        ~0u,  // no sizeof(Split)
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_CHANGE_RES, _impl_.scene_id_),
+        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_CHANGE_RES, _impl_.spawn_pos_),
+        ~0u,
+        0,
         PROTOBUF_FIELD_OFFSET(::game::CG_MOVE_REQ, _impl_._has_bits_),
         PROTOBUF_FIELD_OFFSET(::game::CG_MOVE_REQ, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -370,63 +444,6 @@ const ::uint32_t
         ~0u,
         0,
         1,
-        ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::game::CG_LOGIN_REQ, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _impl_.player_id_),
-        PROTOBUF_FIELD_OFFSET(::game::GC_LOGIN_RES, _impl_.last_scene_id_),
-        ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::game::CG_GAME_START_REQ, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::game::GC_GAME_START_RES, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        ~0u,  // no _has_bits_
-        PROTOBUF_FIELD_OFFSET(::game::CG_SCENE_ENTER_REQ, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::game::CG_SCENE_ENTER_REQ, _impl_.scene_id_),
-        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_._has_bits_),
-        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _internal_metadata_),
-        ~0u,  // no _extensions_
-        ~0u,  // no _oneof_case_
-        ~0u,  // no _weak_field_map_
-        ~0u,  // no _inlined_string_donated_
-        ~0u,  // no _split_
-        ~0u,  // no sizeof(Split)
-        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_),
-        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_.player_id_),
-        PROTOBUF_FIELD_OFFSET(::game::GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_),
-        ~0u,
-        ~0u,
-        0,
         PROTOBUF_FIELD_OFFSET(::game::GC_PLAYER_APPEAR_NOTIFY, _impl_._has_bits_),
         PROTOBUF_FIELD_OFFSET(::game::GC_PLAYER_APPEAR_NOTIFY, _internal_metadata_),
         ~0u,  // no _extensions_
@@ -454,28 +471,28 @@ static const ::_pbi::MigrationSchema
     schemas[] ABSL_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
         {0, -1, -1, sizeof(::game::GC_ERROR_NOTIFY)},
         {10, -1, -1, sizeof(::game::Pos)},
-        {21, 31, -1, sizeof(::game::CG_MOVE_REQ)},
-        {33, 44, -1, sizeof(::game::GC_MOVE_NOTIFY)},
-        {47, -1, -1, sizeof(::game::CG_LOGIN_REQ)},
-        {55, -1, -1, sizeof(::game::GC_LOGIN_RES)},
-        {65, -1, -1, sizeof(::game::CG_GAME_START_REQ)},
-        {73, -1, -1, sizeof(::game::GC_GAME_START_RES)},
-        {81, -1, -1, sizeof(::game::CG_SCENE_ENTER_REQ)},
-        {90, 101, -1, sizeof(::game::GC_SCENE_ENTER_NOTIFY)},
-        {104, 114, -1, sizeof(::game::GC_PLAYER_APPEAR_NOTIFY)},
-        {116, -1, -1, sizeof(::game::GC_PLAYER_DISAPPEAR_NOTIFY)},
+        {21, -1, -1, sizeof(::game::CG_LOGIN_REQ)},
+        {29, 40, -1, sizeof(::game::GC_LOGIN_RES)},
+        {43, -1, -1, sizeof(::game::CG_SCENE_READY_REQ)},
+        {51, 62, -1, sizeof(::game::GC_SCENE_ENTER_NOTIFY)},
+        {65, -1, -1, sizeof(::game::CG_SCENE_CHANGE_REQ)},
+        {74, 84, -1, sizeof(::game::GC_SCENE_CHANGE_RES)},
+        {86, 96, -1, sizeof(::game::CG_MOVE_REQ)},
+        {98, 109, -1, sizeof(::game::GC_MOVE_NOTIFY)},
+        {112, 122, -1, sizeof(::game::GC_PLAYER_APPEAR_NOTIFY)},
+        {124, -1, -1, sizeof(::game::GC_PLAYER_DISAPPEAR_NOTIFY)},
 };
 static const ::_pb::Message* const file_default_instances[] = {
     &::game::_GC_ERROR_NOTIFY_default_instance_._instance,
     &::game::_Pos_default_instance_._instance,
-    &::game::_CG_MOVE_REQ_default_instance_._instance,
-    &::game::_GC_MOVE_NOTIFY_default_instance_._instance,
     &::game::_CG_LOGIN_REQ_default_instance_._instance,
     &::game::_GC_LOGIN_RES_default_instance_._instance,
-    &::game::_CG_GAME_START_REQ_default_instance_._instance,
-    &::game::_GC_GAME_START_RES_default_instance_._instance,
-    &::game::_CG_SCENE_ENTER_REQ_default_instance_._instance,
+    &::game::_CG_SCENE_READY_REQ_default_instance_._instance,
     &::game::_GC_SCENE_ENTER_NOTIFY_default_instance_._instance,
+    &::game::_CG_SCENE_CHANGE_REQ_default_instance_._instance,
+    &::game::_GC_SCENE_CHANGE_RES_default_instance_._instance,
+    &::game::_CG_MOVE_REQ_default_instance_._instance,
+    &::game::_GC_MOVE_NOTIFY_default_instance_._instance,
     &::game::_GC_PLAYER_APPEAR_NOTIFY_default_instance_._instance,
     &::game::_GC_PLAYER_DISAPPEAR_NOTIFY_default_instance_._instance,
 };
@@ -484,31 +501,33 @@ const char descriptor_table_protodef_game_5fmessages_2eproto[] ABSL_ATTRIBUTE_SE
     "\n\023game_messages.proto\022\004game\"M\n\017GC_ERROR_"
     "NOTIFY\022#\n\nerror_code\030\001 \001(\0162\017.game.ErrorC"
     "ode\022\025\n\rerror_message\030\002 \001(\t\"&\n\003Pos\022\t\n\001x\030\001"
-    " \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"F\n\013CG_MOVE_RE"
-    "Q\022\032\n\007cur_pos\030\001 \001(\0132\t.game.Pos\022\033\n\010move_po"
-    "s\030\002 \001(\0132\t.game.Pos\"\\\n\016GC_MOVE_NOTIFY\022\021\n\t"
-    "player_id\030\001 \001(\005\022\032\n\007cur_pos\030\002 \001(\0132\t.game."
-    "Pos\022\033\n\010move_pos\030\003 \001(\0132\t.game.Pos\"\016\n\014CG_L"
-    "OGIN_REQ\"8\n\014GC_LOGIN_RES\022\021\n\tplayer_id\030\001 "
-    "\001(\005\022\025\n\rlast_scene_id\030\002 \001(\005\"\023\n\021CG_GAME_ST"
-    "ART_REQ\"\023\n\021GC_GAME_START_RES\"&\n\022CG_SCENE"
-    "_ENTER_REQ\022\020\n\010scene_id\030\001 \001(\005\"Z\n\025GC_SCENE"
-    "_ENTER_NOTIFY\022\020\n\010scene_id\030\001 \001(\005\022\021\n\tplaye"
-    "r_id\030\002 \001(\005\022\034\n\tspawn_pos\030\003 \001(\0132\t.game.Pos"
-    "\"I\n\027GC_PLAYER_APPEAR_NOTIFY\022\021\n\tplayer_id"
-    "\030\001 \001(\005\022\033\n\010position\030\002 \001(\0132\t.game.Pos\"/\n\032G"
-    "C_PLAYER_DISAPPEAR_NOTIFY\022\021\n\tplayer_id\030\001"
-    " \001(\005*\241\001\n\tErrorCode\022\010\n\004NONE\020\000\022\013\n\007UNKNOWN\020"
-    "\001\022\025\n\021ALREADY_LOGGED_IN\020\002\022\017\n\013AUTH_FAILED\020"
-    "\003\022\025\n\021INVALID_MAP_INDEX\020\004\022\024\n\020PLAYER_NOT_F"
-    "OUND\020\005\022\023\n\017ALREADY_IN_GAME\020\006\022\023\n\017SCENE_NOT"
-    "_FOUND\020\007b\006proto3"
+    " \001(\002\022\t\n\001y\030\002 \001(\002\022\t\n\001z\030\003 \001(\002\"\016\n\014CG_LOGIN_R"
+    "EQ\"Q\n\014GC_LOGIN_RES\022\021\n\tplayer_id\030\001 \001(\005\022\020\n"
+    "\010scene_id\030\002 \001(\005\022\034\n\tspawn_pos\030\003 \001(\0132\t.gam"
+    "e.Pos\"\024\n\022CG_SCENE_READY_REQ\"Z\n\025GC_SCENE_"
+    "ENTER_NOTIFY\022\020\n\010scene_id\030\001 \001(\005\022\021\n\tplayer"
+    "_id\030\002 \001(\005\022\034\n\tspawn_pos\030\003 \001(\0132\t.game.Pos\""
+    "\'\n\023CG_SCENE_CHANGE_REQ\022\020\n\010scene_id\030\001 \001(\005"
+    "\"E\n\023GC_SCENE_CHANGE_RES\022\020\n\010scene_id\030\001 \001("
+    "\005\022\034\n\tspawn_pos\030\002 \001(\0132\t.game.Pos\"F\n\013CG_MO"
+    "VE_REQ\022\032\n\007cur_pos\030\001 \001(\0132\t.game.Pos\022\033\n\010mo"
+    "ve_pos\030\002 \001(\0132\t.game.Pos\"\\\n\016GC_MOVE_NOTIF"
+    "Y\022\021\n\tplayer_id\030\001 \001(\005\022\032\n\007cur_pos\030\002 \001(\0132\t."
+    "game.Pos\022\033\n\010move_pos\030\003 \001(\0132\t.game.Pos\"I\n"
+    "\027GC_PLAYER_APPEAR_NOTIFY\022\021\n\tplayer_id\030\001 "
+    "\001(\005\022\033\n\010position\030\002 \001(\0132\t.game.Pos\"/\n\032GC_P"
+    "LAYER_DISAPPEAR_NOTIFY\022\021\n\tplayer_id\030\001 \001("
+    "\005*\260\001\n\tErrorCode\022\010\n\004NONE\020\000\022\013\n\007UNKNOWN\020\001\022\025"
+    "\n\021ALREADY_LOGGED_IN\020\002\022\017\n\013AUTH_FAILED\020\003\022\024"
+    "\n\020PLAYER_NOT_FOUND\020\005\022\023\n\017ALREADY_IN_GAME\020"
+    "\006\022\023\n\017SCENE_NOT_FOUND\020\007\022\021\n\rNOT_LOGGED_IN\020"
+    "\010\022\021\n\rINVALID_STATE\020\tb\006proto3"
 };
 static ::absl::once_flag descriptor_table_game_5fmessages_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_game_5fmessages_2eproto = {
     false,
     false,
-    856,
+    948,
     descriptor_table_protodef_game_5fmessages_2eproto,
     "game_messages.proto",
     &descriptor_table_game_5fmessages_2eproto_once,
@@ -527,9 +546,9 @@ const ::google::protobuf::EnumDescriptor* ErrorCode_descriptor() {
   return file_level_enum_descriptors_game_5fmessages_2eproto[0];
 }
 PROTOBUF_CONSTINIT const uint32_t ErrorCode_internal_data_[] = {
-    524288u, 0u, };
+    262144u, 32u, 62u, };
 bool ErrorCode_IsValid(int value) {
-  return 0 <= value && value <= 7;
+  return 0 <= value && value <= 9 && ((1007u >> value) & 1) != 0;
 }
 // ===================================================================
 
@@ -1046,6 +1065,1337 @@ void Pos::InternalSwap(Pos* PROTOBUF_RESTRICT other) {
 }
 
 ::google::protobuf::Metadata Pos::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class CG_LOGIN_REQ::_Internal {
+ public:
+};
+
+CG_LOGIN_REQ::CG_LOGIN_REQ(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  // @@protoc_insertion_point(arena_constructor:game.CG_LOGIN_REQ)
+}
+CG_LOGIN_REQ::CG_LOGIN_REQ(
+    ::google::protobuf::Arena* arena,
+    const CG_LOGIN_REQ& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  CG_LOGIN_REQ* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+
+  // @@protoc_insertion_point(copy_constructor:game.CG_LOGIN_REQ)
+}
+
+inline void* CG_LOGIN_REQ::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) CG_LOGIN_REQ(arena);
+}
+constexpr auto CG_LOGIN_REQ::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CG_LOGIN_REQ),
+                                            alignof(CG_LOGIN_REQ));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull CG_LOGIN_REQ::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_CG_LOGIN_REQ_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &CG_LOGIN_REQ::MergeImpl,
+        ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<CG_LOGIN_REQ>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &CG_LOGIN_REQ::SharedDtor,
+        ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<CG_LOGIN_REQ>(), &CG_LOGIN_REQ::ByteSizeLong,
+            &CG_LOGIN_REQ::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(CG_LOGIN_REQ, _impl_._cached_size_),
+        false,
+    },
+    &CG_LOGIN_REQ::kDescriptorMethods,
+    &descriptor_table_game_5fmessages_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* CG_LOGIN_REQ::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 0, 0, 0, 2> CG_LOGIN_REQ::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    0, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967295,  // skipmap
+    offsetof(decltype(_table_), field_names),  // no field_entries
+    0,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game::CG_LOGIN_REQ>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+  }}, {{
+    65535, 65535
+  }},
+  // no field_entries, or aux_entries
+  {{
+  }},
+};
+
+
+
+
+
+
+
+
+::google::protobuf::Metadata CG_LOGIN_REQ::GetMetadata() const {
+  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class GC_LOGIN_RES::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<GC_LOGIN_RES>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_._has_bits_);
+};
+
+GC_LOGIN_RES::GC_LOGIN_RES(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:game.GC_LOGIN_RES)
+}
+inline PROTOBUF_NDEBUG_INLINE GC_LOGIN_RES::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::game::GC_LOGIN_RES& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0} {}
+
+GC_LOGIN_RES::GC_LOGIN_RES(
+    ::google::protobuf::Arena* arena,
+    const GC_LOGIN_RES& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  GC_LOGIN_RES* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
+  _impl_.spawn_pos_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::game::Pos>(
+                              arena, *from._impl_.spawn_pos_)
+                        : nullptr;
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, player_id_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, player_id_),
+           offsetof(Impl_, scene_id_) -
+               offsetof(Impl_, player_id_) +
+               sizeof(Impl_::scene_id_));
+
+  // @@protoc_insertion_point(copy_constructor:game.GC_LOGIN_RES)
+}
+inline PROTOBUF_NDEBUG_INLINE GC_LOGIN_RES::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void GC_LOGIN_RES::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, spawn_pos_),
+           0,
+           offsetof(Impl_, scene_id_) -
+               offsetof(Impl_, spawn_pos_) +
+               sizeof(Impl_::scene_id_));
+}
+GC_LOGIN_RES::~GC_LOGIN_RES() {
+  // @@protoc_insertion_point(destructor:game.GC_LOGIN_RES)
+  SharedDtor(*this);
+}
+inline void GC_LOGIN_RES::SharedDtor(MessageLite& self) {
+  GC_LOGIN_RES& this_ = static_cast<GC_LOGIN_RES&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  delete this_._impl_.spawn_pos_;
+  this_._impl_.~Impl_();
+}
+
+inline void* GC_LOGIN_RES::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) GC_LOGIN_RES(arena);
+}
+constexpr auto GC_LOGIN_RES::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GC_LOGIN_RES),
+                                            alignof(GC_LOGIN_RES));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull GC_LOGIN_RES::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_GC_LOGIN_RES_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &GC_LOGIN_RES::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<GC_LOGIN_RES>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &GC_LOGIN_RES::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<GC_LOGIN_RES>(), &GC_LOGIN_RES::ByteSizeLong,
+            &GC_LOGIN_RES::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_._cached_size_),
+        false,
+    },
+    &GC_LOGIN_RES::kDescriptorMethods,
+    &descriptor_table_game_5fmessages_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* GC_LOGIN_RES::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 3, 1, 0, 2> GC_LOGIN_RES::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_._has_bits_),
+    0, // no _extensions_
+    3, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967288,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    3,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game::GC_LOGIN_RES>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // int32 player_id = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_LOGIN_RES, _impl_.player_id_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.player_id_)}},
+    // int32 scene_id = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_LOGIN_RES, _impl_.scene_id_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.scene_id_)}},
+    // .game.Pos spawn_pos = 3;
+    {::_pbi::TcParser::FastMtS1,
+     {26, 0, 0, PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.spawn_pos_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // int32 player_id = 1;
+    {PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.player_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+    // int32 scene_id = 2;
+    {PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.scene_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+    // .game.Pos spawn_pos = 3;
+    {PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.spawn_pos_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::game::Pos>()},
+  }}, {{
+  }},
+};
+
+PROTOBUF_NOINLINE void GC_LOGIN_RES::Clear() {
+// @@protoc_insertion_point(message_clear_start:game.GC_LOGIN_RES)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(_impl_.spawn_pos_ != nullptr);
+    _impl_.spawn_pos_->Clear();
+  }
+  ::memset(&_impl_.player_id_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.scene_id_) -
+      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.scene_id_));
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* GC_LOGIN_RES::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const GC_LOGIN_RES& this_ = static_cast<const GC_LOGIN_RES&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* GC_LOGIN_RES::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const GC_LOGIN_RES& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:game.GC_LOGIN_RES)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // int32 player_id = 1;
+          if (this_._internal_player_id() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<1>(
+                    stream, this_._internal_player_id(), target);
+          }
+
+          // int32 scene_id = 2;
+          if (this_._internal_scene_id() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<2>(
+                    stream, this_._internal_scene_id(), target);
+          }
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // .game.Pos spawn_pos = 3;
+          if (cached_has_bits & 0x00000001u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                3, *this_._impl_.spawn_pos_, this_._impl_.spawn_pos_->GetCachedSize(), target,
+                stream);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:game.GC_LOGIN_RES)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t GC_LOGIN_RES::ByteSizeLong(const MessageLite& base) {
+          const GC_LOGIN_RES& this_ = static_cast<const GC_LOGIN_RES&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t GC_LOGIN_RES::ByteSizeLong() const {
+          const GC_LOGIN_RES& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:game.GC_LOGIN_RES)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // .game.Pos spawn_pos = 3;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.spawn_pos_);
+            }
+          }
+           {
+            // int32 player_id = 1;
+            if (this_._internal_player_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_player_id());
+            }
+            // int32 scene_id = 2;
+            if (this_._internal_scene_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_scene_id());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void GC_LOGIN_RES::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<GC_LOGIN_RES*>(&to_msg);
+  auto& from = static_cast<const GC_LOGIN_RES&>(from_msg);
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:game.GC_LOGIN_RES)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(from._impl_.spawn_pos_ != nullptr);
+    if (_this->_impl_.spawn_pos_ == nullptr) {
+      _this->_impl_.spawn_pos_ =
+          ::google::protobuf::Message::CopyConstruct<::game::Pos>(arena, *from._impl_.spawn_pos_);
+    } else {
+      _this->_impl_.spawn_pos_->MergeFrom(*from._impl_.spawn_pos_);
+    }
+  }
+  if (from._internal_player_id() != 0) {
+    _this->_impl_.player_id_ = from._impl_.player_id_;
+  }
+  if (from._internal_scene_id() != 0) {
+    _this->_impl_.scene_id_ = from._impl_.scene_id_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GC_LOGIN_RES::CopyFrom(const GC_LOGIN_RES& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:game.GC_LOGIN_RES)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void GC_LOGIN_RES::InternalSwap(GC_LOGIN_RES* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.scene_id_)
+      + sizeof(GC_LOGIN_RES::_impl_.scene_id_)
+      - PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.spawn_pos_)>(
+          reinterpret_cast<char*>(&_impl_.spawn_pos_),
+          reinterpret_cast<char*>(&other->_impl_.spawn_pos_));
+}
+
+::google::protobuf::Metadata GC_LOGIN_RES::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class CG_SCENE_READY_REQ::_Internal {
+ public:
+};
+
+CG_SCENE_READY_REQ::CG_SCENE_READY_REQ(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  // @@protoc_insertion_point(arena_constructor:game.CG_SCENE_READY_REQ)
+}
+CG_SCENE_READY_REQ::CG_SCENE_READY_REQ(
+    ::google::protobuf::Arena* arena,
+    const CG_SCENE_READY_REQ& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  CG_SCENE_READY_REQ* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+
+  // @@protoc_insertion_point(copy_constructor:game.CG_SCENE_READY_REQ)
+}
+
+inline void* CG_SCENE_READY_REQ::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) CG_SCENE_READY_REQ(arena);
+}
+constexpr auto CG_SCENE_READY_REQ::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CG_SCENE_READY_REQ),
+                                            alignof(CG_SCENE_READY_REQ));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull CG_SCENE_READY_REQ::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_CG_SCENE_READY_REQ_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &CG_SCENE_READY_REQ::MergeImpl,
+        ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<CG_SCENE_READY_REQ>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &CG_SCENE_READY_REQ::SharedDtor,
+        ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<CG_SCENE_READY_REQ>(), &CG_SCENE_READY_REQ::ByteSizeLong,
+            &CG_SCENE_READY_REQ::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(CG_SCENE_READY_REQ, _impl_._cached_size_),
+        false,
+    },
+    &CG_SCENE_READY_REQ::kDescriptorMethods,
+    &descriptor_table_game_5fmessages_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* CG_SCENE_READY_REQ::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 0, 0, 0, 2> CG_SCENE_READY_REQ::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    0, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967295,  // skipmap
+    offsetof(decltype(_table_), field_names),  // no field_entries
+    0,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game::CG_SCENE_READY_REQ>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+  }}, {{
+    65535, 65535
+  }},
+  // no field_entries, or aux_entries
+  {{
+  }},
+};
+
+
+
+
+
+
+
+
+::google::protobuf::Metadata CG_SCENE_READY_REQ::GetMetadata() const {
+  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class GC_SCENE_ENTER_NOTIFY::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<GC_SCENE_ENTER_NOTIFY>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_._has_bits_);
+};
+
+GC_SCENE_ENTER_NOTIFY::GC_SCENE_ENTER_NOTIFY(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:game.GC_SCENE_ENTER_NOTIFY)
+}
+inline PROTOBUF_NDEBUG_INLINE GC_SCENE_ENTER_NOTIFY::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::game::GC_SCENE_ENTER_NOTIFY& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0} {}
+
+GC_SCENE_ENTER_NOTIFY::GC_SCENE_ENTER_NOTIFY(
+    ::google::protobuf::Arena* arena,
+    const GC_SCENE_ENTER_NOTIFY& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  GC_SCENE_ENTER_NOTIFY* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
+  _impl_.spawn_pos_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::game::Pos>(
+                              arena, *from._impl_.spawn_pos_)
+                        : nullptr;
+  ::memcpy(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, scene_id_),
+           reinterpret_cast<const char *>(&from._impl_) +
+               offsetof(Impl_, scene_id_),
+           offsetof(Impl_, player_id_) -
+               offsetof(Impl_, scene_id_) +
+               sizeof(Impl_::player_id_));
+
+  // @@protoc_insertion_point(copy_constructor:game.GC_SCENE_ENTER_NOTIFY)
+}
+inline PROTOBUF_NDEBUG_INLINE GC_SCENE_ENTER_NOTIFY::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void GC_SCENE_ENTER_NOTIFY::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, spawn_pos_),
+           0,
+           offsetof(Impl_, player_id_) -
+               offsetof(Impl_, spawn_pos_) +
+               sizeof(Impl_::player_id_));
+}
+GC_SCENE_ENTER_NOTIFY::~GC_SCENE_ENTER_NOTIFY() {
+  // @@protoc_insertion_point(destructor:game.GC_SCENE_ENTER_NOTIFY)
+  SharedDtor(*this);
+}
+inline void GC_SCENE_ENTER_NOTIFY::SharedDtor(MessageLite& self) {
+  GC_SCENE_ENTER_NOTIFY& this_ = static_cast<GC_SCENE_ENTER_NOTIFY&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  delete this_._impl_.spawn_pos_;
+  this_._impl_.~Impl_();
+}
+
+inline void* GC_SCENE_ENTER_NOTIFY::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) GC_SCENE_ENTER_NOTIFY(arena);
+}
+constexpr auto GC_SCENE_ENTER_NOTIFY::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GC_SCENE_ENTER_NOTIFY),
+                                            alignof(GC_SCENE_ENTER_NOTIFY));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull GC_SCENE_ENTER_NOTIFY::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_GC_SCENE_ENTER_NOTIFY_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &GC_SCENE_ENTER_NOTIFY::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<GC_SCENE_ENTER_NOTIFY>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &GC_SCENE_ENTER_NOTIFY::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<GC_SCENE_ENTER_NOTIFY>(), &GC_SCENE_ENTER_NOTIFY::ByteSizeLong,
+            &GC_SCENE_ENTER_NOTIFY::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_._cached_size_),
+        false,
+    },
+    &GC_SCENE_ENTER_NOTIFY::kDescriptorMethods,
+    &descriptor_table_game_5fmessages_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* GC_SCENE_ENTER_NOTIFY::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<2, 3, 1, 0, 2> GC_SCENE_ENTER_NOTIFY::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_._has_bits_),
+    0, // no _extensions_
+    3, 24,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967288,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    3,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game::GC_SCENE_ENTER_NOTIFY>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    {::_pbi::TcParser::MiniParse, {}},
+    // int32 scene_id = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_)}},
+    // int32 player_id = 2;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_), 63>(),
+     {16, 63, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_)}},
+    // .game.Pos spawn_pos = 3;
+    {::_pbi::TcParser::FastMtS1,
+     {26, 0, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // int32 scene_id = 1;
+    {PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+    // int32 player_id = 2;
+    {PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+    // .game.Pos spawn_pos = 3;
+    {PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::game::Pos>()},
+  }}, {{
+  }},
+};
+
+PROTOBUF_NOINLINE void GC_SCENE_ENTER_NOTIFY::Clear() {
+// @@protoc_insertion_point(message_clear_start:game.GC_SCENE_ENTER_NOTIFY)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(_impl_.spawn_pos_ != nullptr);
+    _impl_.spawn_pos_->Clear();
+  }
+  ::memset(&_impl_.scene_id_, 0, static_cast<::size_t>(
+      reinterpret_cast<char*>(&_impl_.player_id_) -
+      reinterpret_cast<char*>(&_impl_.scene_id_)) + sizeof(_impl_.player_id_));
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* GC_SCENE_ENTER_NOTIFY::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const GC_SCENE_ENTER_NOTIFY& this_ = static_cast<const GC_SCENE_ENTER_NOTIFY&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* GC_SCENE_ENTER_NOTIFY::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const GC_SCENE_ENTER_NOTIFY& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:game.GC_SCENE_ENTER_NOTIFY)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // int32 scene_id = 1;
+          if (this_._internal_scene_id() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<1>(
+                    stream, this_._internal_scene_id(), target);
+          }
+
+          // int32 player_id = 2;
+          if (this_._internal_player_id() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<2>(
+                    stream, this_._internal_player_id(), target);
+          }
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // .game.Pos spawn_pos = 3;
+          if (cached_has_bits & 0x00000001u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                3, *this_._impl_.spawn_pos_, this_._impl_.spawn_pos_->GetCachedSize(), target,
+                stream);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:game.GC_SCENE_ENTER_NOTIFY)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t GC_SCENE_ENTER_NOTIFY::ByteSizeLong(const MessageLite& base) {
+          const GC_SCENE_ENTER_NOTIFY& this_ = static_cast<const GC_SCENE_ENTER_NOTIFY&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t GC_SCENE_ENTER_NOTIFY::ByteSizeLong() const {
+          const GC_SCENE_ENTER_NOTIFY& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:game.GC_SCENE_ENTER_NOTIFY)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // .game.Pos spawn_pos = 3;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.spawn_pos_);
+            }
+          }
+           {
+            // int32 scene_id = 1;
+            if (this_._internal_scene_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_scene_id());
+            }
+            // int32 player_id = 2;
+            if (this_._internal_player_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_player_id());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void GC_SCENE_ENTER_NOTIFY::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<GC_SCENE_ENTER_NOTIFY*>(&to_msg);
+  auto& from = static_cast<const GC_SCENE_ENTER_NOTIFY&>(from_msg);
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:game.GC_SCENE_ENTER_NOTIFY)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(from._impl_.spawn_pos_ != nullptr);
+    if (_this->_impl_.spawn_pos_ == nullptr) {
+      _this->_impl_.spawn_pos_ =
+          ::google::protobuf::Message::CopyConstruct<::game::Pos>(arena, *from._impl_.spawn_pos_);
+    } else {
+      _this->_impl_.spawn_pos_->MergeFrom(*from._impl_.spawn_pos_);
+    }
+  }
+  if (from._internal_scene_id() != 0) {
+    _this->_impl_.scene_id_ = from._impl_.scene_id_;
+  }
+  if (from._internal_player_id() != 0) {
+    _this->_impl_.player_id_ = from._impl_.player_id_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GC_SCENE_ENTER_NOTIFY::CopyFrom(const GC_SCENE_ENTER_NOTIFY& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:game.GC_SCENE_ENTER_NOTIFY)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void GC_SCENE_ENTER_NOTIFY::InternalSwap(GC_SCENE_ENTER_NOTIFY* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_)
+      + sizeof(GC_SCENE_ENTER_NOTIFY::_impl_.player_id_)
+      - PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_)>(
+          reinterpret_cast<char*>(&_impl_.spawn_pos_),
+          reinterpret_cast<char*>(&other->_impl_.spawn_pos_));
+}
+
+::google::protobuf::Metadata GC_SCENE_ENTER_NOTIFY::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class CG_SCENE_CHANGE_REQ::_Internal {
+ public:
+};
+
+CG_SCENE_CHANGE_REQ::CG_SCENE_CHANGE_REQ(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:game.CG_SCENE_CHANGE_REQ)
+}
+CG_SCENE_CHANGE_REQ::CG_SCENE_CHANGE_REQ(
+    ::google::protobuf::Arena* arena, const CG_SCENE_CHANGE_REQ& from)
+    : CG_SCENE_CHANGE_REQ(arena) {
+  MergeFrom(from);
+}
+inline PROTOBUF_NDEBUG_INLINE CG_SCENE_CHANGE_REQ::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void CG_SCENE_CHANGE_REQ::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  _impl_.scene_id_ = {};
+}
+CG_SCENE_CHANGE_REQ::~CG_SCENE_CHANGE_REQ() {
+  // @@protoc_insertion_point(destructor:game.CG_SCENE_CHANGE_REQ)
+  SharedDtor(*this);
+}
+inline void CG_SCENE_CHANGE_REQ::SharedDtor(MessageLite& self) {
+  CG_SCENE_CHANGE_REQ& this_ = static_cast<CG_SCENE_CHANGE_REQ&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  this_._impl_.~Impl_();
+}
+
+inline void* CG_SCENE_CHANGE_REQ::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) CG_SCENE_CHANGE_REQ(arena);
+}
+constexpr auto CG_SCENE_CHANGE_REQ::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CG_SCENE_CHANGE_REQ),
+                                            alignof(CG_SCENE_CHANGE_REQ));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull CG_SCENE_CHANGE_REQ::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_CG_SCENE_CHANGE_REQ_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &CG_SCENE_CHANGE_REQ::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<CG_SCENE_CHANGE_REQ>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &CG_SCENE_CHANGE_REQ::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<CG_SCENE_CHANGE_REQ>(), &CG_SCENE_CHANGE_REQ::ByteSizeLong,
+            &CG_SCENE_CHANGE_REQ::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(CG_SCENE_CHANGE_REQ, _impl_._cached_size_),
+        false,
+    },
+    &CG_SCENE_CHANGE_REQ::kDescriptorMethods,
+    &descriptor_table_game_5fmessages_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* CG_SCENE_CHANGE_REQ::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<0, 1, 0, 0, 2> CG_SCENE_CHANGE_REQ::_table_ = {
+  {
+    0,  // no _has_bits_
+    0, // no _extensions_
+    1, 0,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967294,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    1,  // num_field_entries
+    0,  // num_aux_entries
+    offsetof(decltype(_table_), field_names),  // no aux_entries
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game::CG_SCENE_CHANGE_REQ>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // int32 scene_id = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CG_SCENE_CHANGE_REQ, _impl_.scene_id_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(CG_SCENE_CHANGE_REQ, _impl_.scene_id_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // int32 scene_id = 1;
+    {PROTOBUF_FIELD_OFFSET(CG_SCENE_CHANGE_REQ, _impl_.scene_id_), 0, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+  }},
+  // no aux_entries
+  {{
+  }},
+};
+
+PROTOBUF_NOINLINE void CG_SCENE_CHANGE_REQ::Clear() {
+// @@protoc_insertion_point(message_clear_start:game.CG_SCENE_CHANGE_REQ)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  _impl_.scene_id_ = 0;
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* CG_SCENE_CHANGE_REQ::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const CG_SCENE_CHANGE_REQ& this_ = static_cast<const CG_SCENE_CHANGE_REQ&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* CG_SCENE_CHANGE_REQ::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const CG_SCENE_CHANGE_REQ& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:game.CG_SCENE_CHANGE_REQ)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // int32 scene_id = 1;
+          if (this_._internal_scene_id() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<1>(
+                    stream, this_._internal_scene_id(), target);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:game.CG_SCENE_CHANGE_REQ)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t CG_SCENE_CHANGE_REQ::ByteSizeLong(const MessageLite& base) {
+          const CG_SCENE_CHANGE_REQ& this_ = static_cast<const CG_SCENE_CHANGE_REQ&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t CG_SCENE_CHANGE_REQ::ByteSizeLong() const {
+          const CG_SCENE_CHANGE_REQ& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:game.CG_SCENE_CHANGE_REQ)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+           {
+            // int32 scene_id = 1;
+            if (this_._internal_scene_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_scene_id());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void CG_SCENE_CHANGE_REQ::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<CG_SCENE_CHANGE_REQ*>(&to_msg);
+  auto& from = static_cast<const CG_SCENE_CHANGE_REQ&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:game.CG_SCENE_CHANGE_REQ)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_scene_id() != 0) {
+    _this->_impl_.scene_id_ = from._impl_.scene_id_;
+  }
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void CG_SCENE_CHANGE_REQ::CopyFrom(const CG_SCENE_CHANGE_REQ& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:game.CG_SCENE_CHANGE_REQ)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void CG_SCENE_CHANGE_REQ::InternalSwap(CG_SCENE_CHANGE_REQ* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+        swap(_impl_.scene_id_, other->_impl_.scene_id_);
+}
+
+::google::protobuf::Metadata CG_SCENE_CHANGE_REQ::GetMetadata() const {
+  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
+}
+// ===================================================================
+
+class GC_SCENE_CHANGE_RES::_Internal {
+ public:
+  using HasBits =
+      decltype(std::declval<GC_SCENE_CHANGE_RES>()._impl_._has_bits_);
+  static constexpr ::int32_t kHasBitsOffset =
+      8 * PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_._has_bits_);
+};
+
+GC_SCENE_CHANGE_RES::GC_SCENE_CHANGE_RES(::google::protobuf::Arena* arena)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  SharedCtor(arena);
+  // @@protoc_insertion_point(arena_constructor:game.GC_SCENE_CHANGE_RES)
+}
+inline PROTOBUF_NDEBUG_INLINE GC_SCENE_CHANGE_RES::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
+    const Impl_& from, const ::game::GC_SCENE_CHANGE_RES& from_msg)
+      : _has_bits_{from._has_bits_},
+        _cached_size_{0} {}
+
+GC_SCENE_CHANGE_RES::GC_SCENE_CHANGE_RES(
+    ::google::protobuf::Arena* arena,
+    const GC_SCENE_CHANGE_RES& from)
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+    : ::google::protobuf::Message(arena, _class_data_.base()) {
+#else   // PROTOBUF_CUSTOM_VTABLE
+    : ::google::protobuf::Message(arena) {
+#endif  // PROTOBUF_CUSTOM_VTABLE
+  GC_SCENE_CHANGE_RES* const _this = this;
+  (void)_this;
+  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
+      from._internal_metadata_);
+  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
+  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
+  _impl_.spawn_pos_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::game::Pos>(
+                              arena, *from._impl_.spawn_pos_)
+                        : nullptr;
+  _impl_.scene_id_ = from._impl_.scene_id_;
+
+  // @@protoc_insertion_point(copy_constructor:game.GC_SCENE_CHANGE_RES)
+}
+inline PROTOBUF_NDEBUG_INLINE GC_SCENE_CHANGE_RES::Impl_::Impl_(
+    ::google::protobuf::internal::InternalVisibility visibility,
+    ::google::protobuf::Arena* arena)
+      : _cached_size_{0} {}
+
+inline void GC_SCENE_CHANGE_RES::SharedCtor(::_pb::Arena* arena) {
+  new (&_impl_) Impl_(internal_visibility(), arena);
+  ::memset(reinterpret_cast<char *>(&_impl_) +
+               offsetof(Impl_, spawn_pos_),
+           0,
+           offsetof(Impl_, scene_id_) -
+               offsetof(Impl_, spawn_pos_) +
+               sizeof(Impl_::scene_id_));
+}
+GC_SCENE_CHANGE_RES::~GC_SCENE_CHANGE_RES() {
+  // @@protoc_insertion_point(destructor:game.GC_SCENE_CHANGE_RES)
+  SharedDtor(*this);
+}
+inline void GC_SCENE_CHANGE_RES::SharedDtor(MessageLite& self) {
+  GC_SCENE_CHANGE_RES& this_ = static_cast<GC_SCENE_CHANGE_RES&>(self);
+  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
+  ABSL_DCHECK(this_.GetArena() == nullptr);
+  delete this_._impl_.spawn_pos_;
+  this_._impl_.~Impl_();
+}
+
+inline void* GC_SCENE_CHANGE_RES::PlacementNew_(const void*, void* mem,
+                                        ::google::protobuf::Arena* arena) {
+  return ::new (mem) GC_SCENE_CHANGE_RES(arena);
+}
+constexpr auto GC_SCENE_CHANGE_RES::InternalNewImpl_() {
+  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GC_SCENE_CHANGE_RES),
+                                            alignof(GC_SCENE_CHANGE_RES));
+}
+PROTOBUF_CONSTINIT
+PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::google::protobuf::internal::ClassDataFull GC_SCENE_CHANGE_RES::_class_data_ = {
+    ::google::protobuf::internal::ClassData{
+        &_GC_SCENE_CHANGE_RES_default_instance_._instance,
+        &_table_.header,
+        nullptr,  // OnDemandRegisterArenaDtor
+        nullptr,  // IsInitialized
+        &GC_SCENE_CHANGE_RES::MergeImpl,
+        ::google::protobuf::Message::GetNewImpl<GC_SCENE_CHANGE_RES>(),
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        &GC_SCENE_CHANGE_RES::SharedDtor,
+        ::google::protobuf::Message::GetClearImpl<GC_SCENE_CHANGE_RES>(), &GC_SCENE_CHANGE_RES::ByteSizeLong,
+            &GC_SCENE_CHANGE_RES::_InternalSerialize,
+#endif  // PROTOBUF_CUSTOM_VTABLE
+        PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_._cached_size_),
+        false,
+    },
+    &GC_SCENE_CHANGE_RES::kDescriptorMethods,
+    &descriptor_table_game_5fmessages_2eproto,
+    nullptr,  // tracker
+};
+const ::google::protobuf::internal::ClassData* GC_SCENE_CHANGE_RES::GetClassData() const {
+  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
+  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
+  return _class_data_.base();
+}
+PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
+const ::_pbi::TcParseTable<1, 2, 1, 0, 2> GC_SCENE_CHANGE_RES::_table_ = {
+  {
+    PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_._has_bits_),
+    0, // no _extensions_
+    2, 8,  // max_field_number, fast_idx_mask
+    offsetof(decltype(_table_), field_lookup_table),
+    4294967292,  // skipmap
+    offsetof(decltype(_table_), field_entries),
+    2,  // num_field_entries
+    1,  // num_aux_entries
+    offsetof(decltype(_table_), aux_entries),
+    _class_data_.base(),
+    nullptr,  // post_loop_handler
+    ::_pbi::TcParser::GenericFallback,  // fallback
+    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
+    ::_pbi::TcParser::GetTable<::game::GC_SCENE_CHANGE_RES>(),  // to_prefetch
+    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
+  }, {{
+    // .game.Pos spawn_pos = 2;
+    {::_pbi::TcParser::FastMtS1,
+     {18, 0, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_.spawn_pos_)}},
+    // int32 scene_id = 1;
+    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_SCENE_CHANGE_RES, _impl_.scene_id_), 63>(),
+     {8, 63, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_.scene_id_)}},
+  }}, {{
+    65535, 65535
+  }}, {{
+    // int32 scene_id = 1;
+    {PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_.scene_id_), -1, 0,
+    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
+    // .game.Pos spawn_pos = 2;
+    {PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_.spawn_pos_), _Internal::kHasBitsOffset + 0, 0,
+    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
+  }}, {{
+    {::_pbi::TcParser::GetTable<::game::Pos>()},
+  }}, {{
+  }},
+};
+
+PROTOBUF_NOINLINE void GC_SCENE_CHANGE_RES::Clear() {
+// @@protoc_insertion_point(message_clear_start:game.GC_SCENE_CHANGE_RES)
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  ::uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  cached_has_bits = _impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(_impl_.spawn_pos_ != nullptr);
+    _impl_.spawn_pos_->Clear();
+  }
+  _impl_.scene_id_ = 0;
+  _impl_._has_bits_.Clear();
+  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
+}
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::uint8_t* GC_SCENE_CHANGE_RES::_InternalSerialize(
+            const MessageLite& base, ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) {
+          const GC_SCENE_CHANGE_RES& this_ = static_cast<const GC_SCENE_CHANGE_RES&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::uint8_t* GC_SCENE_CHANGE_RES::_InternalSerialize(
+            ::uint8_t* target,
+            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
+          const GC_SCENE_CHANGE_RES& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(serialize_to_array_start:game.GC_SCENE_CHANGE_RES)
+          ::uint32_t cached_has_bits = 0;
+          (void)cached_has_bits;
+
+          // int32 scene_id = 1;
+          if (this_._internal_scene_id() != 0) {
+            target = ::google::protobuf::internal::WireFormatLite::
+                WriteInt32ToArrayWithField<1>(
+                    stream, this_._internal_scene_id(), target);
+          }
+
+          cached_has_bits = this_._impl_._has_bits_[0];
+          // .game.Pos spawn_pos = 2;
+          if (cached_has_bits & 0x00000001u) {
+            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
+                2, *this_._impl_.spawn_pos_, this_._impl_.spawn_pos_->GetCachedSize(), target,
+                stream);
+          }
+
+          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
+            target =
+                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
+          }
+          // @@protoc_insertion_point(serialize_to_array_end:game.GC_SCENE_CHANGE_RES)
+          return target;
+        }
+
+#if defined(PROTOBUF_CUSTOM_VTABLE)
+        ::size_t GC_SCENE_CHANGE_RES::ByteSizeLong(const MessageLite& base) {
+          const GC_SCENE_CHANGE_RES& this_ = static_cast<const GC_SCENE_CHANGE_RES&>(base);
+#else   // PROTOBUF_CUSTOM_VTABLE
+        ::size_t GC_SCENE_CHANGE_RES::ByteSizeLong() const {
+          const GC_SCENE_CHANGE_RES& this_ = *this;
+#endif  // PROTOBUF_CUSTOM_VTABLE
+          // @@protoc_insertion_point(message_byte_size_start:game.GC_SCENE_CHANGE_RES)
+          ::size_t total_size = 0;
+
+          ::uint32_t cached_has_bits = 0;
+          // Prevent compiler warnings about cached_has_bits being unused
+          (void)cached_has_bits;
+
+          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
+           {
+            // .game.Pos spawn_pos = 2;
+            cached_has_bits = this_._impl_._has_bits_[0];
+            if (cached_has_bits & 0x00000001u) {
+              total_size += 1 +
+                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.spawn_pos_);
+            }
+          }
+           {
+            // int32 scene_id = 1;
+            if (this_._internal_scene_id() != 0) {
+              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
+                  this_._internal_scene_id());
+            }
+          }
+          return this_.MaybeComputeUnknownFieldsSize(total_size,
+                                                     &this_._impl_._cached_size_);
+        }
+
+void GC_SCENE_CHANGE_RES::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
+  auto* const _this = static_cast<GC_SCENE_CHANGE_RES*>(&to_msg);
+  auto& from = static_cast<const GC_SCENE_CHANGE_RES&>(from_msg);
+  ::google::protobuf::Arena* arena = _this->GetArena();
+  // @@protoc_insertion_point(class_specific_merge_from_start:game.GC_SCENE_CHANGE_RES)
+  ABSL_DCHECK_NE(&from, _this);
+  ::uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  cached_has_bits = from._impl_._has_bits_[0];
+  if (cached_has_bits & 0x00000001u) {
+    ABSL_DCHECK(from._impl_.spawn_pos_ != nullptr);
+    if (_this->_impl_.spawn_pos_ == nullptr) {
+      _this->_impl_.spawn_pos_ =
+          ::google::protobuf::Message::CopyConstruct<::game::Pos>(arena, *from._impl_.spawn_pos_);
+    } else {
+      _this->_impl_.spawn_pos_->MergeFrom(*from._impl_.spawn_pos_);
+    }
+  }
+  if (from._internal_scene_id() != 0) {
+    _this->_impl_.scene_id_ = from._impl_.scene_id_;
+  }
+  _this->_impl_._has_bits_[0] |= cached_has_bits;
+  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void GC_SCENE_CHANGE_RES::CopyFrom(const GC_SCENE_CHANGE_RES& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:game.GC_SCENE_CHANGE_RES)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+
+void GC_SCENE_CHANGE_RES::InternalSwap(GC_SCENE_CHANGE_RES* PROTOBUF_RESTRICT other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
+  ::google::protobuf::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_.scene_id_)
+      + sizeof(GC_SCENE_CHANGE_RES::_impl_.scene_id_)
+      - PROTOBUF_FIELD_OFFSET(GC_SCENE_CHANGE_RES, _impl_.spawn_pos_)>(
+          reinterpret_cast<char*>(&_impl_.spawn_pos_),
+          reinterpret_cast<char*>(&other->_impl_.spawn_pos_));
+}
+
+::google::protobuf::Metadata GC_SCENE_CHANGE_RES::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================
@@ -1674,1079 +3024,6 @@ void GC_MOVE_NOTIFY::InternalSwap(GC_MOVE_NOTIFY* PROTOBUF_RESTRICT other) {
 }
 
 ::google::protobuf::Metadata GC_MOVE_NOTIFY::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class CG_LOGIN_REQ::_Internal {
- public:
-};
-
-CG_LOGIN_REQ::CG_LOGIN_REQ(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(arena_constructor:game.CG_LOGIN_REQ)
-}
-CG_LOGIN_REQ::CG_LOGIN_REQ(
-    ::google::protobuf::Arena* arena,
-    const CG_LOGIN_REQ& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  CG_LOGIN_REQ* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-
-  // @@protoc_insertion_point(copy_constructor:game.CG_LOGIN_REQ)
-}
-
-inline void* CG_LOGIN_REQ::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) CG_LOGIN_REQ(arena);
-}
-constexpr auto CG_LOGIN_REQ::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CG_LOGIN_REQ),
-                                            alignof(CG_LOGIN_REQ));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull CG_LOGIN_REQ::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_CG_LOGIN_REQ_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &CG_LOGIN_REQ::MergeImpl,
-        ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<CG_LOGIN_REQ>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &CG_LOGIN_REQ::SharedDtor,
-        ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<CG_LOGIN_REQ>(), &CG_LOGIN_REQ::ByteSizeLong,
-            &CG_LOGIN_REQ::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(CG_LOGIN_REQ, _impl_._cached_size_),
-        false,
-    },
-    &CG_LOGIN_REQ::kDescriptorMethods,
-    &descriptor_table_game_5fmessages_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* CG_LOGIN_REQ::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 0, 0, 0, 2> CG_LOGIN_REQ::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    0, 0,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967295,  // skipmap
-    offsetof(decltype(_table_), field_names),  // no field_entries
-    0,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::game::CG_LOGIN_REQ>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-  }}, {{
-    65535, 65535
-  }},
-  // no field_entries, or aux_entries
-  {{
-  }},
-};
-
-
-
-
-
-
-
-
-::google::protobuf::Metadata CG_LOGIN_REQ::GetMetadata() const {
-  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class GC_LOGIN_RES::_Internal {
- public:
-};
-
-GC_LOGIN_RES::GC_LOGIN_RES(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:game.GC_LOGIN_RES)
-}
-GC_LOGIN_RES::GC_LOGIN_RES(
-    ::google::protobuf::Arena* arena, const GC_LOGIN_RES& from)
-    : GC_LOGIN_RES(arena) {
-  MergeFrom(from);
-}
-inline PROTOBUF_NDEBUG_INLINE GC_LOGIN_RES::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility,
-    ::google::protobuf::Arena* arena)
-      : _cached_size_{0} {}
-
-inline void GC_LOGIN_RES::SharedCtor(::_pb::Arena* arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, player_id_),
-           0,
-           offsetof(Impl_, last_scene_id_) -
-               offsetof(Impl_, player_id_) +
-               sizeof(Impl_::last_scene_id_));
-}
-GC_LOGIN_RES::~GC_LOGIN_RES() {
-  // @@protoc_insertion_point(destructor:game.GC_LOGIN_RES)
-  SharedDtor(*this);
-}
-inline void GC_LOGIN_RES::SharedDtor(MessageLite& self) {
-  GC_LOGIN_RES& this_ = static_cast<GC_LOGIN_RES&>(self);
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.~Impl_();
-}
-
-inline void* GC_LOGIN_RES::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) GC_LOGIN_RES(arena);
-}
-constexpr auto GC_LOGIN_RES::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GC_LOGIN_RES),
-                                            alignof(GC_LOGIN_RES));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull GC_LOGIN_RES::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_GC_LOGIN_RES_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &GC_LOGIN_RES::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<GC_LOGIN_RES>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &GC_LOGIN_RES::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<GC_LOGIN_RES>(), &GC_LOGIN_RES::ByteSizeLong,
-            &GC_LOGIN_RES::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_._cached_size_),
-        false,
-    },
-    &GC_LOGIN_RES::kDescriptorMethods,
-    &descriptor_table_game_5fmessages_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* GC_LOGIN_RES::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<1, 2, 0, 0, 2> GC_LOGIN_RES::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    2, 8,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967292,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    2,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::game::GC_LOGIN_RES>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // int32 last_scene_id = 2;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_LOGIN_RES, _impl_.last_scene_id_), 63>(),
-     {16, 63, 0, PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.last_scene_id_)}},
-    // int32 player_id = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_LOGIN_RES, _impl_.player_id_), 63>(),
-     {8, 63, 0, PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.player_id_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // int32 player_id = 1;
-    {PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.player_id_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-    // int32 last_scene_id = 2;
-    {PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.last_scene_id_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-  }},
-  // no aux_entries
-  {{
-  }},
-};
-
-PROTOBUF_NOINLINE void GC_LOGIN_RES::Clear() {
-// @@protoc_insertion_point(message_clear_start:game.GC_LOGIN_RES)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  ::memset(&_impl_.player_id_, 0, static_cast<::size_t>(
-      reinterpret_cast<char*>(&_impl_.last_scene_id_) -
-      reinterpret_cast<char*>(&_impl_.player_id_)) + sizeof(_impl_.last_scene_id_));
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* GC_LOGIN_RES::_InternalSerialize(
-            const MessageLite& base, ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const GC_LOGIN_RES& this_ = static_cast<const GC_LOGIN_RES&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* GC_LOGIN_RES::_InternalSerialize(
-            ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const GC_LOGIN_RES& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:game.GC_LOGIN_RES)
-          ::uint32_t cached_has_bits = 0;
-          (void)cached_has_bits;
-
-          // int32 player_id = 1;
-          if (this_._internal_player_id() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<1>(
-                    stream, this_._internal_player_id(), target);
-          }
-
-          // int32 last_scene_id = 2;
-          if (this_._internal_last_scene_id() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<2>(
-                    stream, this_._internal_last_scene_id(), target);
-          }
-
-          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-            target =
-                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-          }
-          // @@protoc_insertion_point(serialize_to_array_end:game.GC_LOGIN_RES)
-          return target;
-        }
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t GC_LOGIN_RES::ByteSizeLong(const MessageLite& base) {
-          const GC_LOGIN_RES& this_ = static_cast<const GC_LOGIN_RES&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t GC_LOGIN_RES::ByteSizeLong() const {
-          const GC_LOGIN_RES& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:game.GC_LOGIN_RES)
-          ::size_t total_size = 0;
-
-          ::uint32_t cached_has_bits = 0;
-          // Prevent compiler warnings about cached_has_bits being unused
-          (void)cached_has_bits;
-
-          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // int32 player_id = 1;
-            if (this_._internal_player_id() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_player_id());
-            }
-            // int32 last_scene_id = 2;
-            if (this_._internal_last_scene_id() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_last_scene_id());
-            }
-          }
-          return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                                     &this_._impl_._cached_size_);
-        }
-
-void GC_LOGIN_RES::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<GC_LOGIN_RES*>(&to_msg);
-  auto& from = static_cast<const GC_LOGIN_RES&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:game.GC_LOGIN_RES)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from._internal_player_id() != 0) {
-    _this->_impl_.player_id_ = from._impl_.player_id_;
-  }
-  if (from._internal_last_scene_id() != 0) {
-    _this->_impl_.last_scene_id_ = from._impl_.last_scene_id_;
-  }
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
-}
-
-void GC_LOGIN_RES::CopyFrom(const GC_LOGIN_RES& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:game.GC_LOGIN_RES)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-
-void GC_LOGIN_RES::InternalSwap(GC_LOGIN_RES* PROTOBUF_RESTRICT other) {
-  using std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.last_scene_id_)
-      + sizeof(GC_LOGIN_RES::_impl_.last_scene_id_)
-      - PROTOBUF_FIELD_OFFSET(GC_LOGIN_RES, _impl_.player_id_)>(
-          reinterpret_cast<char*>(&_impl_.player_id_),
-          reinterpret_cast<char*>(&other->_impl_.player_id_));
-}
-
-::google::protobuf::Metadata GC_LOGIN_RES::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class CG_GAME_START_REQ::_Internal {
- public:
-};
-
-CG_GAME_START_REQ::CG_GAME_START_REQ(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(arena_constructor:game.CG_GAME_START_REQ)
-}
-CG_GAME_START_REQ::CG_GAME_START_REQ(
-    ::google::protobuf::Arena* arena,
-    const CG_GAME_START_REQ& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  CG_GAME_START_REQ* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-
-  // @@protoc_insertion_point(copy_constructor:game.CG_GAME_START_REQ)
-}
-
-inline void* CG_GAME_START_REQ::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) CG_GAME_START_REQ(arena);
-}
-constexpr auto CG_GAME_START_REQ::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CG_GAME_START_REQ),
-                                            alignof(CG_GAME_START_REQ));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull CG_GAME_START_REQ::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_CG_GAME_START_REQ_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &CG_GAME_START_REQ::MergeImpl,
-        ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<CG_GAME_START_REQ>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &CG_GAME_START_REQ::SharedDtor,
-        ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<CG_GAME_START_REQ>(), &CG_GAME_START_REQ::ByteSizeLong,
-            &CG_GAME_START_REQ::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(CG_GAME_START_REQ, _impl_._cached_size_),
-        false,
-    },
-    &CG_GAME_START_REQ::kDescriptorMethods,
-    &descriptor_table_game_5fmessages_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* CG_GAME_START_REQ::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 0, 0, 0, 2> CG_GAME_START_REQ::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    0, 0,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967295,  // skipmap
-    offsetof(decltype(_table_), field_names),  // no field_entries
-    0,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::game::CG_GAME_START_REQ>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-  }}, {{
-    65535, 65535
-  }},
-  // no field_entries, or aux_entries
-  {{
-  }},
-};
-
-
-
-
-
-
-
-
-::google::protobuf::Metadata CG_GAME_START_REQ::GetMetadata() const {
-  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class GC_GAME_START_RES::_Internal {
- public:
-};
-
-GC_GAME_START_RES::GC_GAME_START_RES(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  // @@protoc_insertion_point(arena_constructor:game.GC_GAME_START_RES)
-}
-GC_GAME_START_RES::GC_GAME_START_RES(
-    ::google::protobuf::Arena* arena,
-    const GC_GAME_START_RES& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::internal::ZeroFieldsBase(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::internal::ZeroFieldsBase(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  GC_GAME_START_RES* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-
-  // @@protoc_insertion_point(copy_constructor:game.GC_GAME_START_RES)
-}
-
-inline void* GC_GAME_START_RES::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) GC_GAME_START_RES(arena);
-}
-constexpr auto GC_GAME_START_RES::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GC_GAME_START_RES),
-                                            alignof(GC_GAME_START_RES));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull GC_GAME_START_RES::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_GC_GAME_START_RES_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &GC_GAME_START_RES::MergeImpl,
-        ::google::protobuf::internal::ZeroFieldsBase::GetNewImpl<GC_GAME_START_RES>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &GC_GAME_START_RES::SharedDtor,
-        ::google::protobuf::internal::ZeroFieldsBase::GetClearImpl<GC_GAME_START_RES>(), &GC_GAME_START_RES::ByteSizeLong,
-            &GC_GAME_START_RES::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(GC_GAME_START_RES, _impl_._cached_size_),
-        false,
-    },
-    &GC_GAME_START_RES::kDescriptorMethods,
-    &descriptor_table_game_5fmessages_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* GC_GAME_START_RES::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 0, 0, 0, 2> GC_GAME_START_RES::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    0, 0,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967295,  // skipmap
-    offsetof(decltype(_table_), field_names),  // no field_entries
-    0,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::game::GC_GAME_START_RES>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-  }}, {{
-    65535, 65535
-  }},
-  // no field_entries, or aux_entries
-  {{
-  }},
-};
-
-
-
-
-
-
-
-
-::google::protobuf::Metadata GC_GAME_START_RES::GetMetadata() const {
-  return ::google::protobuf::internal::ZeroFieldsBase::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class CG_SCENE_ENTER_REQ::_Internal {
- public:
-};
-
-CG_SCENE_ENTER_REQ::CG_SCENE_ENTER_REQ(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:game.CG_SCENE_ENTER_REQ)
-}
-CG_SCENE_ENTER_REQ::CG_SCENE_ENTER_REQ(
-    ::google::protobuf::Arena* arena, const CG_SCENE_ENTER_REQ& from)
-    : CG_SCENE_ENTER_REQ(arena) {
-  MergeFrom(from);
-}
-inline PROTOBUF_NDEBUG_INLINE CG_SCENE_ENTER_REQ::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility,
-    ::google::protobuf::Arena* arena)
-      : _cached_size_{0} {}
-
-inline void CG_SCENE_ENTER_REQ::SharedCtor(::_pb::Arena* arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  _impl_.scene_id_ = {};
-}
-CG_SCENE_ENTER_REQ::~CG_SCENE_ENTER_REQ() {
-  // @@protoc_insertion_point(destructor:game.CG_SCENE_ENTER_REQ)
-  SharedDtor(*this);
-}
-inline void CG_SCENE_ENTER_REQ::SharedDtor(MessageLite& self) {
-  CG_SCENE_ENTER_REQ& this_ = static_cast<CG_SCENE_ENTER_REQ&>(self);
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  this_._impl_.~Impl_();
-}
-
-inline void* CG_SCENE_ENTER_REQ::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) CG_SCENE_ENTER_REQ(arena);
-}
-constexpr auto CG_SCENE_ENTER_REQ::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(CG_SCENE_ENTER_REQ),
-                                            alignof(CG_SCENE_ENTER_REQ));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull CG_SCENE_ENTER_REQ::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_CG_SCENE_ENTER_REQ_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &CG_SCENE_ENTER_REQ::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<CG_SCENE_ENTER_REQ>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &CG_SCENE_ENTER_REQ::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<CG_SCENE_ENTER_REQ>(), &CG_SCENE_ENTER_REQ::ByteSizeLong,
-            &CG_SCENE_ENTER_REQ::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(CG_SCENE_ENTER_REQ, _impl_._cached_size_),
-        false,
-    },
-    &CG_SCENE_ENTER_REQ::kDescriptorMethods,
-    &descriptor_table_game_5fmessages_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* CG_SCENE_ENTER_REQ::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<0, 1, 0, 0, 2> CG_SCENE_ENTER_REQ::_table_ = {
-  {
-    0,  // no _has_bits_
-    0, // no _extensions_
-    1, 0,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967294,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    1,  // num_field_entries
-    0,  // num_aux_entries
-    offsetof(decltype(_table_), field_names),  // no aux_entries
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::game::CG_SCENE_ENTER_REQ>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    // int32 scene_id = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(CG_SCENE_ENTER_REQ, _impl_.scene_id_), 63>(),
-     {8, 63, 0, PROTOBUF_FIELD_OFFSET(CG_SCENE_ENTER_REQ, _impl_.scene_id_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // int32 scene_id = 1;
-    {PROTOBUF_FIELD_OFFSET(CG_SCENE_ENTER_REQ, _impl_.scene_id_), 0, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-  }},
-  // no aux_entries
-  {{
-  }},
-};
-
-PROTOBUF_NOINLINE void CG_SCENE_ENTER_REQ::Clear() {
-// @@protoc_insertion_point(message_clear_start:game.CG_SCENE_ENTER_REQ)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  _impl_.scene_id_ = 0;
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* CG_SCENE_ENTER_REQ::_InternalSerialize(
-            const MessageLite& base, ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const CG_SCENE_ENTER_REQ& this_ = static_cast<const CG_SCENE_ENTER_REQ&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* CG_SCENE_ENTER_REQ::_InternalSerialize(
-            ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const CG_SCENE_ENTER_REQ& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:game.CG_SCENE_ENTER_REQ)
-          ::uint32_t cached_has_bits = 0;
-          (void)cached_has_bits;
-
-          // int32 scene_id = 1;
-          if (this_._internal_scene_id() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<1>(
-                    stream, this_._internal_scene_id(), target);
-          }
-
-          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-            target =
-                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-          }
-          // @@protoc_insertion_point(serialize_to_array_end:game.CG_SCENE_ENTER_REQ)
-          return target;
-        }
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t CG_SCENE_ENTER_REQ::ByteSizeLong(const MessageLite& base) {
-          const CG_SCENE_ENTER_REQ& this_ = static_cast<const CG_SCENE_ENTER_REQ&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t CG_SCENE_ENTER_REQ::ByteSizeLong() const {
-          const CG_SCENE_ENTER_REQ& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:game.CG_SCENE_ENTER_REQ)
-          ::size_t total_size = 0;
-
-          ::uint32_t cached_has_bits = 0;
-          // Prevent compiler warnings about cached_has_bits being unused
-          (void)cached_has_bits;
-
-           {
-            // int32 scene_id = 1;
-            if (this_._internal_scene_id() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_scene_id());
-            }
-          }
-          return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                                     &this_._impl_._cached_size_);
-        }
-
-void CG_SCENE_ENTER_REQ::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<CG_SCENE_ENTER_REQ*>(&to_msg);
-  auto& from = static_cast<const CG_SCENE_ENTER_REQ&>(from_msg);
-  // @@protoc_insertion_point(class_specific_merge_from_start:game.CG_SCENE_ENTER_REQ)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  if (from._internal_scene_id() != 0) {
-    _this->_impl_.scene_id_ = from._impl_.scene_id_;
-  }
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
-}
-
-void CG_SCENE_ENTER_REQ::CopyFrom(const CG_SCENE_ENTER_REQ& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:game.CG_SCENE_ENTER_REQ)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-
-void CG_SCENE_ENTER_REQ::InternalSwap(CG_SCENE_ENTER_REQ* PROTOBUF_RESTRICT other) {
-  using std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-        swap(_impl_.scene_id_, other->_impl_.scene_id_);
-}
-
-::google::protobuf::Metadata CG_SCENE_ENTER_REQ::GetMetadata() const {
-  return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
-}
-// ===================================================================
-
-class GC_SCENE_ENTER_NOTIFY::_Internal {
- public:
-  using HasBits =
-      decltype(std::declval<GC_SCENE_ENTER_NOTIFY>()._impl_._has_bits_);
-  static constexpr ::int32_t kHasBitsOffset =
-      8 * PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_._has_bits_);
-};
-
-GC_SCENE_ENTER_NOTIFY::GC_SCENE_ENTER_NOTIFY(::google::protobuf::Arena* arena)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  SharedCtor(arena);
-  // @@protoc_insertion_point(arena_constructor:game.GC_SCENE_ENTER_NOTIFY)
-}
-inline PROTOBUF_NDEBUG_INLINE GC_SCENE_ENTER_NOTIFY::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility, ::google::protobuf::Arena* arena,
-    const Impl_& from, const ::game::GC_SCENE_ENTER_NOTIFY& from_msg)
-      : _has_bits_{from._has_bits_},
-        _cached_size_{0} {}
-
-GC_SCENE_ENTER_NOTIFY::GC_SCENE_ENTER_NOTIFY(
-    ::google::protobuf::Arena* arena,
-    const GC_SCENE_ENTER_NOTIFY& from)
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-    : ::google::protobuf::Message(arena, _class_data_.base()) {
-#else   // PROTOBUF_CUSTOM_VTABLE
-    : ::google::protobuf::Message(arena) {
-#endif  // PROTOBUF_CUSTOM_VTABLE
-  GC_SCENE_ENTER_NOTIFY* const _this = this;
-  (void)_this;
-  _internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(
-      from._internal_metadata_);
-  new (&_impl_) Impl_(internal_visibility(), arena, from._impl_, from);
-  ::uint32_t cached_has_bits = _impl_._has_bits_[0];
-  _impl_.spawn_pos_ = (cached_has_bits & 0x00000001u) ? ::google::protobuf::Message::CopyConstruct<::game::Pos>(
-                              arena, *from._impl_.spawn_pos_)
-                        : nullptr;
-  ::memcpy(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, scene_id_),
-           reinterpret_cast<const char *>(&from._impl_) +
-               offsetof(Impl_, scene_id_),
-           offsetof(Impl_, player_id_) -
-               offsetof(Impl_, scene_id_) +
-               sizeof(Impl_::player_id_));
-
-  // @@protoc_insertion_point(copy_constructor:game.GC_SCENE_ENTER_NOTIFY)
-}
-inline PROTOBUF_NDEBUG_INLINE GC_SCENE_ENTER_NOTIFY::Impl_::Impl_(
-    ::google::protobuf::internal::InternalVisibility visibility,
-    ::google::protobuf::Arena* arena)
-      : _cached_size_{0} {}
-
-inline void GC_SCENE_ENTER_NOTIFY::SharedCtor(::_pb::Arena* arena) {
-  new (&_impl_) Impl_(internal_visibility(), arena);
-  ::memset(reinterpret_cast<char *>(&_impl_) +
-               offsetof(Impl_, spawn_pos_),
-           0,
-           offsetof(Impl_, player_id_) -
-               offsetof(Impl_, spawn_pos_) +
-               sizeof(Impl_::player_id_));
-}
-GC_SCENE_ENTER_NOTIFY::~GC_SCENE_ENTER_NOTIFY() {
-  // @@protoc_insertion_point(destructor:game.GC_SCENE_ENTER_NOTIFY)
-  SharedDtor(*this);
-}
-inline void GC_SCENE_ENTER_NOTIFY::SharedDtor(MessageLite& self) {
-  GC_SCENE_ENTER_NOTIFY& this_ = static_cast<GC_SCENE_ENTER_NOTIFY&>(self);
-  this_._internal_metadata_.Delete<::google::protobuf::UnknownFieldSet>();
-  ABSL_DCHECK(this_.GetArena() == nullptr);
-  delete this_._impl_.spawn_pos_;
-  this_._impl_.~Impl_();
-}
-
-inline void* GC_SCENE_ENTER_NOTIFY::PlacementNew_(const void*, void* mem,
-                                        ::google::protobuf::Arena* arena) {
-  return ::new (mem) GC_SCENE_ENTER_NOTIFY(arena);
-}
-constexpr auto GC_SCENE_ENTER_NOTIFY::InternalNewImpl_() {
-  return ::google::protobuf::internal::MessageCreator::ZeroInit(sizeof(GC_SCENE_ENTER_NOTIFY),
-                                            alignof(GC_SCENE_ENTER_NOTIFY));
-}
-PROTOBUF_CONSTINIT
-PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::google::protobuf::internal::ClassDataFull GC_SCENE_ENTER_NOTIFY::_class_data_ = {
-    ::google::protobuf::internal::ClassData{
-        &_GC_SCENE_ENTER_NOTIFY_default_instance_._instance,
-        &_table_.header,
-        nullptr,  // OnDemandRegisterArenaDtor
-        nullptr,  // IsInitialized
-        &GC_SCENE_ENTER_NOTIFY::MergeImpl,
-        ::google::protobuf::Message::GetNewImpl<GC_SCENE_ENTER_NOTIFY>(),
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        &GC_SCENE_ENTER_NOTIFY::SharedDtor,
-        ::google::protobuf::Message::GetClearImpl<GC_SCENE_ENTER_NOTIFY>(), &GC_SCENE_ENTER_NOTIFY::ByteSizeLong,
-            &GC_SCENE_ENTER_NOTIFY::_InternalSerialize,
-#endif  // PROTOBUF_CUSTOM_VTABLE
-        PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_._cached_size_),
-        false,
-    },
-    &GC_SCENE_ENTER_NOTIFY::kDescriptorMethods,
-    &descriptor_table_game_5fmessages_2eproto,
-    nullptr,  // tracker
-};
-const ::google::protobuf::internal::ClassData* GC_SCENE_ENTER_NOTIFY::GetClassData() const {
-  ::google::protobuf::internal::PrefetchToLocalCache(&_class_data_);
-  ::google::protobuf::internal::PrefetchToLocalCache(_class_data_.tc_table);
-  return _class_data_.base();
-}
-PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1
-const ::_pbi::TcParseTable<2, 3, 1, 0, 2> GC_SCENE_ENTER_NOTIFY::_table_ = {
-  {
-    PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_._has_bits_),
-    0, // no _extensions_
-    3, 24,  // max_field_number, fast_idx_mask
-    offsetof(decltype(_table_), field_lookup_table),
-    4294967288,  // skipmap
-    offsetof(decltype(_table_), field_entries),
-    3,  // num_field_entries
-    1,  // num_aux_entries
-    offsetof(decltype(_table_), aux_entries),
-    _class_data_.base(),
-    nullptr,  // post_loop_handler
-    ::_pbi::TcParser::GenericFallback,  // fallback
-    #ifdef PROTOBUF_PREFETCH_PARSE_TABLE
-    ::_pbi::TcParser::GetTable<::game::GC_SCENE_ENTER_NOTIFY>(),  // to_prefetch
-    #endif  // PROTOBUF_PREFETCH_PARSE_TABLE
-  }, {{
-    {::_pbi::TcParser::MiniParse, {}},
-    // int32 scene_id = 1;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_), 63>(),
-     {8, 63, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_)}},
-    // int32 player_id = 2;
-    {::_pbi::TcParser::SingularVarintNoZag1<::uint32_t, offsetof(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_), 63>(),
-     {16, 63, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_)}},
-    // .game.Pos spawn_pos = 3;
-    {::_pbi::TcParser::FastMtS1,
-     {26, 0, 0, PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_)}},
-  }}, {{
-    65535, 65535
-  }}, {{
-    // int32 scene_id = 1;
-    {PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.scene_id_), -1, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-    // int32 player_id = 2;
-    {PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_), -1, 0,
-    (0 | ::_fl::kFcSingular | ::_fl::kInt32)},
-    // .game.Pos spawn_pos = 3;
-    {PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_), _Internal::kHasBitsOffset + 0, 0,
-    (0 | ::_fl::kFcOptional | ::_fl::kMessage | ::_fl::kTvTable)},
-  }}, {{
-    {::_pbi::TcParser::GetTable<::game::Pos>()},
-  }}, {{
-  }},
-};
-
-PROTOBUF_NOINLINE void GC_SCENE_ENTER_NOTIFY::Clear() {
-// @@protoc_insertion_point(message_clear_start:game.GC_SCENE_ENTER_NOTIFY)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  ::uint32_t cached_has_bits = 0;
-  // Prevent compiler warnings about cached_has_bits being unused
-  (void) cached_has_bits;
-
-  cached_has_bits = _impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000001u) {
-    ABSL_DCHECK(_impl_.spawn_pos_ != nullptr);
-    _impl_.spawn_pos_->Clear();
-  }
-  ::memset(&_impl_.scene_id_, 0, static_cast<::size_t>(
-      reinterpret_cast<char*>(&_impl_.player_id_) -
-      reinterpret_cast<char*>(&_impl_.scene_id_)) + sizeof(_impl_.player_id_));
-  _impl_._has_bits_.Clear();
-  _internal_metadata_.Clear<::google::protobuf::UnknownFieldSet>();
-}
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::uint8_t* GC_SCENE_ENTER_NOTIFY::_InternalSerialize(
-            const MessageLite& base, ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) {
-          const GC_SCENE_ENTER_NOTIFY& this_ = static_cast<const GC_SCENE_ENTER_NOTIFY&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::uint8_t* GC_SCENE_ENTER_NOTIFY::_InternalSerialize(
-            ::uint8_t* target,
-            ::google::protobuf::io::EpsCopyOutputStream* stream) const {
-          const GC_SCENE_ENTER_NOTIFY& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(serialize_to_array_start:game.GC_SCENE_ENTER_NOTIFY)
-          ::uint32_t cached_has_bits = 0;
-          (void)cached_has_bits;
-
-          // int32 scene_id = 1;
-          if (this_._internal_scene_id() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<1>(
-                    stream, this_._internal_scene_id(), target);
-          }
-
-          // int32 player_id = 2;
-          if (this_._internal_player_id() != 0) {
-            target = ::google::protobuf::internal::WireFormatLite::
-                WriteInt32ToArrayWithField<2>(
-                    stream, this_._internal_player_id(), target);
-          }
-
-          cached_has_bits = this_._impl_._has_bits_[0];
-          // .game.Pos spawn_pos = 3;
-          if (cached_has_bits & 0x00000001u) {
-            target = ::google::protobuf::internal::WireFormatLite::InternalWriteMessage(
-                3, *this_._impl_.spawn_pos_, this_._impl_.spawn_pos_->GetCachedSize(), target,
-                stream);
-          }
-
-          if (PROTOBUF_PREDICT_FALSE(this_._internal_metadata_.have_unknown_fields())) {
-            target =
-                ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
-                    this_._internal_metadata_.unknown_fields<::google::protobuf::UnknownFieldSet>(::google::protobuf::UnknownFieldSet::default_instance), target, stream);
-          }
-          // @@protoc_insertion_point(serialize_to_array_end:game.GC_SCENE_ENTER_NOTIFY)
-          return target;
-        }
-
-#if defined(PROTOBUF_CUSTOM_VTABLE)
-        ::size_t GC_SCENE_ENTER_NOTIFY::ByteSizeLong(const MessageLite& base) {
-          const GC_SCENE_ENTER_NOTIFY& this_ = static_cast<const GC_SCENE_ENTER_NOTIFY&>(base);
-#else   // PROTOBUF_CUSTOM_VTABLE
-        ::size_t GC_SCENE_ENTER_NOTIFY::ByteSizeLong() const {
-          const GC_SCENE_ENTER_NOTIFY& this_ = *this;
-#endif  // PROTOBUF_CUSTOM_VTABLE
-          // @@protoc_insertion_point(message_byte_size_start:game.GC_SCENE_ENTER_NOTIFY)
-          ::size_t total_size = 0;
-
-          ::uint32_t cached_has_bits = 0;
-          // Prevent compiler warnings about cached_has_bits being unused
-          (void)cached_has_bits;
-
-          ::_pbi::Prefetch5LinesFrom7Lines(&this_);
-           {
-            // .game.Pos spawn_pos = 3;
-            cached_has_bits = this_._impl_._has_bits_[0];
-            if (cached_has_bits & 0x00000001u) {
-              total_size += 1 +
-                            ::google::protobuf::internal::WireFormatLite::MessageSize(*this_._impl_.spawn_pos_);
-            }
-          }
-           {
-            // int32 scene_id = 1;
-            if (this_._internal_scene_id() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_scene_id());
-            }
-            // int32 player_id = 2;
-            if (this_._internal_player_id() != 0) {
-              total_size += ::_pbi::WireFormatLite::Int32SizePlusOne(
-                  this_._internal_player_id());
-            }
-          }
-          return this_.MaybeComputeUnknownFieldsSize(total_size,
-                                                     &this_._impl_._cached_size_);
-        }
-
-void GC_SCENE_ENTER_NOTIFY::MergeImpl(::google::protobuf::MessageLite& to_msg, const ::google::protobuf::MessageLite& from_msg) {
-  auto* const _this = static_cast<GC_SCENE_ENTER_NOTIFY*>(&to_msg);
-  auto& from = static_cast<const GC_SCENE_ENTER_NOTIFY&>(from_msg);
-  ::google::protobuf::Arena* arena = _this->GetArena();
-  // @@protoc_insertion_point(class_specific_merge_from_start:game.GC_SCENE_ENTER_NOTIFY)
-  ABSL_DCHECK_NE(&from, _this);
-  ::uint32_t cached_has_bits = 0;
-  (void) cached_has_bits;
-
-  cached_has_bits = from._impl_._has_bits_[0];
-  if (cached_has_bits & 0x00000001u) {
-    ABSL_DCHECK(from._impl_.spawn_pos_ != nullptr);
-    if (_this->_impl_.spawn_pos_ == nullptr) {
-      _this->_impl_.spawn_pos_ =
-          ::google::protobuf::Message::CopyConstruct<::game::Pos>(arena, *from._impl_.spawn_pos_);
-    } else {
-      _this->_impl_.spawn_pos_->MergeFrom(*from._impl_.spawn_pos_);
-    }
-  }
-  if (from._internal_scene_id() != 0) {
-    _this->_impl_.scene_id_ = from._impl_.scene_id_;
-  }
-  if (from._internal_player_id() != 0) {
-    _this->_impl_.player_id_ = from._impl_.player_id_;
-  }
-  _this->_impl_._has_bits_[0] |= cached_has_bits;
-  _this->_internal_metadata_.MergeFrom<::google::protobuf::UnknownFieldSet>(from._internal_metadata_);
-}
-
-void GC_SCENE_ENTER_NOTIFY::CopyFrom(const GC_SCENE_ENTER_NOTIFY& from) {
-// @@protoc_insertion_point(class_specific_copy_from_start:game.GC_SCENE_ENTER_NOTIFY)
-  if (&from == this) return;
-  Clear();
-  MergeFrom(from);
-}
-
-
-void GC_SCENE_ENTER_NOTIFY::InternalSwap(GC_SCENE_ENTER_NOTIFY* PROTOBUF_RESTRICT other) {
-  using std::swap;
-  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
-  swap(_impl_._has_bits_[0], other->_impl_._has_bits_[0]);
-  ::google::protobuf::internal::memswap<
-      PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.player_id_)
-      + sizeof(GC_SCENE_ENTER_NOTIFY::_impl_.player_id_)
-      - PROTOBUF_FIELD_OFFSET(GC_SCENE_ENTER_NOTIFY, _impl_.spawn_pos_)>(
-          reinterpret_cast<char*>(&_impl_.spawn_pos_),
-          reinterpret_cast<char*>(&other->_impl_.spawn_pos_));
-}
-
-::google::protobuf::Metadata GC_SCENE_ENTER_NOTIFY::GetMetadata() const {
   return ::google::protobuf::Message::GetMetadataImpl(GetClassData()->full());
 }
 // ===================================================================
