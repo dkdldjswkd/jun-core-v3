@@ -104,9 +104,9 @@ void IOCPManager::HandleRecvComplete(Session* session, DWORD ioSize)
 		const int _recv_byte = session->recv_buf_.GetUseSize();
 
 		// 최소 데이터 수신 여부 체크 (UnifiedPacketHeader 크기)
-		if (_recv_byte <= UNIFIED_HEADER_SIZE)
+		if (_recv_byte < UNIFIED_HEADER_SIZE)
 		{
-			break; 
+			break;
 		}
 
 		uint32_t _packet_len;
