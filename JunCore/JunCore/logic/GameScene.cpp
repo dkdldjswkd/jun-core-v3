@@ -23,12 +23,12 @@ void GameScene::Enter(GameObject* obj)
 {
     m_objects.push_back(obj);
     obj->m_pScene = this;
-    obj->OnEnter(this);
+    obj->OnEnter();
 }
 
 void GameScene::Exit(GameObject* obj)
 {
-    obj->OnExit(this);
+    obj->OnExit();
     obj->m_pScene = nullptr;
 
     auto it = std::find(m_objects.begin(), m_objects.end(), obj);

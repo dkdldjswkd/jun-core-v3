@@ -20,8 +20,8 @@ protected:
     //------------------------------
     // 가상 함수 (사용자 구현)
     //------------------------------
-    virtual void OnEnter(GameScene* scene) {}
-    virtual void OnExit(GameScene* scene) {}
+    virtual void OnEnter() {}
+    virtual void OnExit() {}
     virtual void OnFixedUpdate() {}
     virtual void OnUpdate() {}
 

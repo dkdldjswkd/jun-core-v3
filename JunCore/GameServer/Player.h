@@ -20,8 +20,8 @@ protected:
 	// ──────────────────────────────────────────────────────
 	void OnUpdate() override;
 	void OnFixedUpdate() override;
-	void OnEnter(GameScene* scene) override;
-	void OnExit(GameScene* scene) override;
+	void OnEnter() override;
+	void OnExit() override;
 
 public:
 	// ──────────────────────────────────────────────────────
@@ -30,9 +30,6 @@ public:
 
 	// 목표 위치 설정 Job 등록
 	void PostSetDestPosJob(const game::Pos& dest_pos);
-
-	// Scene 이동 (Job으로 처리)
-	void MoveToScene(GameScene* new_scene);
 
 	// 패킷 전송 (User를 통해)
 	template<typename T>
@@ -48,10 +45,10 @@ public:
 	template<typename T>
 	void BroadcastToScene(const T& packet)
 	{
-		if (!scene_)
+		if (!m_pScene)
 			return;
 
-		const auto& objects = scene_->GetObjects();
+		const auto& objects = m_pScene->GetObjects();
 		for (auto* obj : objects)
 		{
 			Player* player = dynamic_cast<Player*>(obj);
@@ -66,10 +63,10 @@ public:
 	template<typename T>
 	void BroadcastToOthers(const T& packet)
 	{
-		if (!scene_)
+		if (!m_pScene)
 			return;
 
-		const auto& objects = scene_->GetObjects();
+		const auto& objects = m_pScene->GetObjects();
 		for (auto* obj : objects)
 		{
 			Player* player = dynamic_cast<Player*>(obj);
@@ -83,8 +80,6 @@ public:
 	// Getter
 	User* GetOwner() const { return owner_; }
 	uint32_t GetPlayerId() const { return player_id_; }
-	GameScene* GetScene() const { return scene_; }
-	void SetScene(GameScene* scene) { scene_ = scene; }
 
 	const game::Pos& GetCurrentPos() const { return currentPos_; }
 	const game::Pos& GetDestPos() const { return destPos_; }
@@ -104,7 +99,6 @@ private:
 private:
 	User* owner_;               // 소유 네트워크 세션
 	uint32_t player_id_;        // 플레이어 ID
-	GameScene* scene_{nullptr}; // 현재 속한 Scene
 
 	// 플레이어 상태
 	game::Pos currentPos_;      // 현재 위치

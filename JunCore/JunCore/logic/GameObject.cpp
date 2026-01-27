@@ -22,15 +22,11 @@ void GameObject::MoveToScene(GameScene* newScene)
         if (m_pScene == newScene)
             return;
 
-        // 이전 Scene에서 Exit
+        // 이전 Scene에서 Exit (Exit 내부에서 OnExit + m_pScene=nullptr 처리)
         if (m_pScene)
         {
             m_pScene->Exit(this);
-            OnExit(m_pScene);
         }
-
-        // Scene 포인터 업데이트
-        m_pScene = newScene;
 
         // LogicThread 변경 (같은 스레드여도 호출, 내부에서 비교 로직 있을 수 있음)
         SetLogicThread(newScene->GetLogicThread());
@@ -41,8 +37,7 @@ void GameObject::MoveToScene(GameScene* newScene)
     //       자동으로 이 JobObject를 새 LogicThread로 이동시킴
     //       따라서 이 Job은 새 LogicThread에서 실행됨
     PostJob([this, newScene]() {
-        newScene->Enter(this);
-        OnEnter(newScene);
+        newScene->Enter(this);  // Enter 내부에서 m_pScene 설정 + OnEnter 호출
     });
 }
 
@@ -51,9 +46,7 @@ void GameObject::ExitScene()
     PostJob([this]() {
         if (m_pScene)
         {
-            m_pScene->Exit(this);
-            OnExit(m_pScene);
-            m_pScene = nullptr;
+            m_pScene->Exit(this);  // Exit 내부에서 OnExit + m_pScene=nullptr 처리
         }
     });
 }

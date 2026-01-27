@@ -42,13 +42,18 @@ int main()
 			return -1;
 		}
 
+		bool isProfileMode = false;
+
 		// 메인 루프: 1초마다 통계 출력
-		for (;;)
+		while(true)
 		{
 			Sleep(1000);
-			std::system("cls");
 
-			log(gameServer);
+			if (isProfileMode)
+			{
+				std::system("cls");
+				log(gameServer);
+			}
 		}
 
 		gameServer.StopServer();

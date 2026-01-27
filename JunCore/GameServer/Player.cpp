@@ -54,10 +54,8 @@ void Player::OnFixedUpdate()
 		destPos_.x(), destPos_.y(), destPos_.z());
 }
 
-void Player::OnEnter(GameScene* scene)
+void Player::OnEnter()
 {
-	scene_ = scene;
-
 	// User에서 scene_id와 spawn_pos 가져오기
 	int32_t scene_id = 0;
 	float spawn_x = 0.0f, spawn_y = 0.0f, spawn_z = 0.0f;
@@ -97,10 +95,10 @@ void Player::OnEnter(GameScene* scene)
 		player_id_);
 
 	// 3. 나에게 주변에 이미 있는 모든 플레이어 정보 전송
-	if (!scene_)
+	if (!m_pScene)
 		return;
 
-	const auto& objects = scene_->GetObjects();
+	const auto& objects = m_pScene->GetObjects();
 	int other_player_count = 0;
 	for (auto* obj : objects)
 	{
@@ -123,7 +121,7 @@ void Player::OnEnter(GameScene* scene)
 	}
 }
 
-void Player::OnExit(GameScene* scene)
+void Player::OnExit()
 {
 	LOG_INFO("[Player::OnExit] Player (ID: %u) left scene", player_id_);
 
@@ -136,7 +134,6 @@ void Player::OnExit(GameScene* scene)
 	LOG_DEBUG("[Player::OnExit] Broadcast DISAPPEAR - Player (ID: %u) to other players",
 		player_id_);
 
-	scene_ = nullptr;
 }
 
 void Player::PostSetDestPosJob(const game::Pos& dest_pos)
@@ -144,43 +141,6 @@ void Player::PostSetDestPosJob(const game::Pos& dest_pos)
 	PostJob([this, dest_pos]()
 	{
 		this->HandleSetDestPos(dest_pos);
-	});
-}
-
-void Player::MoveToScene(GameScene* new_scene)
-{
-	if (new_scene == nullptr)
-	{
-		return;
-	}
-
-	// Job #1: 현재 Scene에서 Exit + LogicThread 변경
-	PostJob([this, new_scene]()
-	{
-		if (scene_ == new_scene)
-		{
-			return;
-		}
-
-		// 이전 Scene에서 Exit
-		if (scene_)
-		{
-			scene_->Exit(this);
-			OnExit(scene_);
-		}
-
-		// Scene 포인터 업데이트
-		scene_ = new_scene;
-
-		// LogicThread 변경 (JobObject::Flush가 자동으로 새 스레드에 이동)
-		SetLogicThread(new_scene->GetLogicThread());
-	});
-
-	// Job #2: 새 Scene에서 Enter (새 LogicThread에서 실행됨)
-	PostJob([this, new_scene]()
-	{
-		new_scene->Enter(this);
-		OnEnter(new_scene);
 	});
 }
 
