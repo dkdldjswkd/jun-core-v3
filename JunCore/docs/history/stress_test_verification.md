@@ -192,6 +192,89 @@ void StressClient::OnConnectComplete(User* user, bool success) {
 
 ---
 
+## 개선된 테스트 설계: 서버 응답 타임아웃 + Disconnect 통합
+
+### 기존 방식의 한계
+
+기존에는 **서버가 패킷을 받고 응답을 안 하는 경우**를 감지할 수 없었습니다:
+- 패킷 보내고 Queue에 저장
+- 응답 오면 Queue에서 꺼내서 비교
+- **응답이 안 오면?** → Queue에 쌓이기만 함, 에러 감지 불가
+
+### 개선된 설계
+
+**핵심 아이디어**: 개별 패킷 타임스탬프 대신 **마지막 수신 시간**만 추적
+
+```cpp
+struct SessionData {
+    DWORD lastRecvTime{0};        // 마지막 패킷 수신 시간
+    DWORD connectionStartTime{0}; // 연결 시작 시간
+};
+```
+
+### 세션 라이프사이클
+
+```
+연결 ─────────────────────────────────────────────────► 시간
+    │
+    │◄────── 15초 ──────►│◄─── 이후 ────────────────►
+    │                    │
+    │  타임아웃 검사만    │  랜덤 disconnect 확률 적용
+    │  (disconnect 안함) │  (disconnect 후 재연결)
+    │                    │
+    │  10초 동안 응답    │  재연결 후 다시 15초 보호
+    │  없으면 에러       │
+```
+
+### 구현 로직
+
+```cpp
+// 1. 응답 수신 시 시간 갱신
+void HandleEchoResponse(User& user, const echo::EchoResponse& response) {
+    sessionData->lastRecvTime = GetTickCount64();
+    // 기존 메시지 정합성 검사...
+}
+
+// 2. 주기적으로 타임아웃 체크
+void SessionWorker(int sessionIndex) {
+    DWORD now = GetTickCount64();
+
+    // 10초 동안 응답 없으면 서버 먹통
+    if (lastRecvTime != 0 && now - lastRecvTime > RESPONSE_TIMEOUT_MS) {
+        LOG_ASSERT("Server not responding for %dms!", RESPONSE_TIMEOUT_MS);
+    }
+
+    // 15초 이상 연결 유지 후에만 랜덤 disconnect 적용
+    if (now - connectionStartTime > DISCONNECT_GRACE_PERIOD_MS) {
+        if (rand() <= DISCONNECT_PROBABILITY) {
+            user->Disconnect();
+        }
+    }
+}
+```
+
+### 왜 이 설계가 좋은가?
+
+| 항목 | 설명 |
+|------|------|
+| **간단함** | 개별 패킷 타임스탬프 불필요, 변수 2개만 관리 |
+| **충돌 방지** | 15초 보호 기간 동안 disconnect 안 함 → 타임아웃 검사 가능 |
+| **통합 테스트** | 하나의 세션이 두 가지 역할을 시간 순서대로 수행 |
+| **재연결 안전** | 재연결 시 다시 15초 보호 → 타임아웃 검사 반복 |
+
+### 검증 범위 확장
+
+| 검증 항목 | 기존 | 개선 후 |
+|-----------|:----:|:-------:|
+| 패킷 정합성 | ✅ | ✅ |
+| 패킷 순서 보장 | ✅ | ✅ |
+| 서버 Disconnect 감지 | ✅ | ✅ |
+| **서버 응답 타임아웃** | ❌ | ✅ |
+| **핸들러 누락 감지** | ❌ | ✅ |
+| **서버 먹통/데드락 감지** | ❌ | ✅ |
+
+---
+
 ## 향후 개선 방향
 
 1. **서버 측 모니터링 연동** - CPU, 메모리, 핸들 수 실시간 추적
