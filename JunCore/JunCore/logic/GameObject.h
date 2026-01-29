@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Entity.h"
 #include "JobObject.h"
 
 class GameScene;
@@ -7,12 +8,15 @@ class GameScene;
 // GameObject - Unity 스타일 게임 객체
 // Player, Monster, NPC 등의 기반 클래스
 //
+// Entity 상속:
+// - 컴포넌트 시스템 (AddComponent, GetComponent)
+//
 // JobObject 상속:
 // - GameObject는 Scene에 종속되어 존재
 // - Scene 이동 시 LogicThread도 함께 이동 가능
 // - 모든 상태 변경을 Job으로 처리하여 스레드 안전 보장
 //------------------------------
-class GameObject : public JobObject
+class GameObject : public Entity, public JobObject
 {
 protected:
     GameScene* m_pScene = nullptr;

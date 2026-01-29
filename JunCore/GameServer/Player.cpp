@@ -1,24 +1,19 @@
 ﻿#include "Player.h"
 #include "../JunCore/logic/GameScene.h"
-#include <cmath>
 
 Player::Player(GameScene* scene, User* owner, uint32_t player_id)
 	: GameObject(scene)
 	, owner_(owner)
 	, player_id_(player_id)
+	, m_pMoveComp(nullptr)
 {
-	// 초기 위치 설정 (원점)
-	currentPos_.set_x(0.0f);
-	currentPos_.set_y(0.0f);
-	currentPos_.set_z(0.0f);
-
-	destPos_.set_x(0.0f);
-	destPos_.set_y(0.0f);
-	destPos_.set_z(0.0f);
+	// MoveComponent 추가 (Entity가 소유권 관리)
+	m_pMoveComp = AddComponent<MoveComponent>(0.1f);  // 50Hz 기준 초당 5m 이동
 }
 
 Player::~Player()
 {
+	// m_pMoveComp는 Entity가 unique_ptr로 관리하므로 별도 삭제 불필요
 }
 
 void Player::OnUpdate()
@@ -34,24 +29,21 @@ void Player::OnFixedUpdate()
 	// FixedUpdate는 항상 동일한 간격으로 호출됨을 보장
 	// ──────────────────────────────────────────────────────
 
-	// 목표 위치까지 이동
-	if (!HasReachedDestination())
-	{
-		MoveTowardsDestination();
-	}
+	// 모든 컴포넌트의 FixedUpdate 호출 (MoveComponent 포함)
+	FixedUpdateComponents();
 
 	// 매 프레임 모든 플레이어에게 위치 브로드캐스트 (디버깅용)
 	game::GC_MOVE_NOTIFY notify;
 	notify.set_player_id(player_id_);
-	notify.mutable_cur_pos()->CopyFrom(currentPos_);
-	notify.mutable_move_pos()->CopyFrom(destPos_);
+	notify.mutable_cur_pos()->CopyFrom(GetCurrentPos());
+	notify.mutable_move_pos()->CopyFrom(GetDestPos());
 
 	BroadcastToScene(notify);
 
 	LOG_DEBUG("[Player::OnFixedUpdate] Broadcast position - Player (ID: %u) pos: (%.2f, %.2f, %.2f) -> dest: (%.2f, %.2f, %.2f)",
 		player_id_,
-		currentPos_.x(), currentPos_.y(), currentPos_.z(),
-		destPos_.x(), destPos_.y(), destPos_.z());
+		m_pMoveComp->GetX(), m_pMoveComp->GetY(), m_pMoveComp->GetZ(),
+		m_pMoveComp->GetDestX(), m_pMoveComp->GetDestY(), m_pMoveComp->GetDestZ());
 }
 
 void Player::OnEnter()
@@ -66,28 +58,26 @@ void Player::OnEnter()
 		owner_->GetSpawnPos(spawn_x, spawn_y, spawn_z);
 	}
 
-	// 스폰 위치로 현재 위치 설정
-	currentPos_.set_x(spawn_x);
-	currentPos_.set_y(spawn_y);
-	currentPos_.set_z(spawn_z);
-	destPos_.CopyFrom(currentPos_);
+	// 스폰 위치로 MoveComponent에 위치 설정
+	m_pMoveComp->SetPosition(spawn_x, spawn_y, spawn_z);
+	m_pMoveComp->SetDestination(spawn_x, spawn_y, spawn_z);
 
 	LOG_INFO("[Player::OnEnter] Player (ID: %u) entered Scene %d at (%.2f, %.2f, %.2f)",
 		player_id_,
 		scene_id,
-		currentPos_.x(), currentPos_.y(), currentPos_.z());
+		spawn_x, spawn_y, spawn_z);
 
 	// 1. SCENE_ENTER_NOTIFY 전송 (Scene Enter 완료 알림)
 	game::GC_SCENE_ENTER_NOTIFY enter_notify;
 	enter_notify.set_scene_id(scene_id);
 	enter_notify.set_player_id(player_id_);
-	enter_notify.mutable_spawn_pos()->CopyFrom(currentPos_);
+	enter_notify.mutable_spawn_pos()->CopyFrom(GetCurrentPos());
 	SendPacket(enter_notify);
 
 	// 2. 주변 플레이어들에게 내가 나타났다고 알림
 	game::GC_PLAYER_APPEAR_NOTIFY my_appear;
 	my_appear.set_player_id(player_id_);
-	my_appear.mutable_position()->CopyFrom(currentPos_);
+	my_appear.mutable_position()->CopyFrom(GetCurrentPos());
 
 	BroadcastToOthers(my_appear);
 
@@ -107,7 +97,7 @@ void Player::OnEnter()
 		{
 			game::GC_PLAYER_APPEAR_NOTIFY other_appear;
 			other_appear.set_player_id(other->player_id_);
-			other_appear.mutable_position()->CopyFrom(other->currentPos_);
+			other_appear.mutable_position()->CopyFrom(other->GetCurrentPos());
 
 			SendPacket(other_appear);
 			other_player_count++;
@@ -154,59 +144,27 @@ void Player::HandleSetDestPos(const game::Pos& dest_pos)
 	// - 목표 위치가 맵 범위 내인지
 	// - 벽 충돌 체크 등
 
-	destPos_.set_x(dest_pos.x());
-	destPos_.set_y(dest_pos.y());
-	destPos_.set_z(dest_pos.z());
+	m_pMoveComp->SetDestination(dest_pos.x(), dest_pos.y(), dest_pos.z());
 
 	LOG_DEBUG("[Player::HandleSetDestPos] Player (ID: %u) dest pos set to (%.2f, %.2f, %.2f)",
 		player_id_,
-		destPos_.x(), destPos_.y(), destPos_.z());
+		dest_pos.x(), dest_pos.y(), dest_pos.z());
 }
 
-bool Player::HasReachedDestination() const
+game::Pos Player::GetCurrentPos() const
 {
-	// 거리 계산 (XZ 평면만 사용, Y는 높이이므로 제외)
-	float dx = destPos_.x() - currentPos_.x();
-	float dz = destPos_.z() - currentPos_.z();
-	float distanceSq = dx * dx + dz * dz;
-
-	// 0.1m 이내면 도착으로 간주
-	const float ARRIVAL_THRESHOLD = 0.1f;
-	return distanceSq < (ARRIVAL_THRESHOLD * ARRIVAL_THRESHOLD);
+	game::Pos pos;
+	pos.set_x(m_pMoveComp->GetX());
+	pos.set_y(m_pMoveComp->GetY());
+	pos.set_z(m_pMoveComp->GetZ());
+	return pos;
 }
 
-void Player::MoveTowardsDestination()
+game::Pos Player::GetDestPos() const
 {
-	// 방향 벡터 계산
-	float dx = destPos_.x() - currentPos_.x();
-	float dz = destPos_.z() - currentPos_.z();
-
-	// 거리 계산
-	float distance = std::sqrt(dx * dx + dz * dz);
-
-	if (distance < 0.001f)
-	{
-		// 이미 도착
-		return;
-	}
-
-	// 정규화된 방향 벡터
-	float dirX = dx / distance;
-	float dirZ = dz / distance;
-
-	// 이동 거리 (moveSpeed는 FixedUpdate당 이동 거리)
-	float moveDistance = moveSpeed_;
-
-	// 목표 지점을 넘어가지 않도록 제한
-	if (moveDistance > distance)
-	{
-		moveDistance = distance;
-	}
-
-	// 위치 업데이트
-	currentPos_.set_x(currentPos_.x() + dirX * moveDistance);
-	currentPos_.set_z(currentPos_.z() + dirZ * moveDistance);
-
-	// Y축은 그대로 유지 (높이 변화 없음)
-	// 추후 지형 높이에 따라 Y도 업데이트 필요
+	game::Pos pos;
+	pos.set_x(m_pMoveComp->GetDestX());
+	pos.set_y(m_pMoveComp->GetDestY());
+	pos.set_z(m_pMoveComp->GetDestZ());
+	return pos;
 }

@@ -35,10 +35,13 @@
     <ClInclude Include="core\base.h" />
     <ClInclude Include="core\WindowsIncludes.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="logic\Component.h" />
+    <ClInclude Include="logic\Entity.h" />
     <ClInclude Include="logic\GameObject.h" />
     <ClInclude Include="logic\GameScene.h" />
     <ClInclude Include="logic\JobObject.h" />
     <ClInclude Include="logic\LogicThread.h" />
+    <ClInclude Include="logic\MoveComponent.h" />
     <ClInclude Include="logic\Time.h" />
     <ClInclude Include="network\IOCPManager.h" />
     <ClInclude Include="network\NetBase.h" />
