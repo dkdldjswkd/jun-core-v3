@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/logic/GameObject.h"
-#include "../JunCore/logic/MoveComponent.h"
+#include "../JunCore/core/Event.h"
+#include "MoveComponent.h"
 #include "../JunCore/network/User.h"
 #include "../JunCore/protocol/game_messages.pb.h"
 #include <string>
@@ -96,8 +97,17 @@ private:
 	// ──────────────────────────────────────────────────────
 	void HandleSetDestPos(const game::Pos& dest_pos);
 
+	// ──────────────────────────────────────────────────────
+	// 이동 이벤트 핸들러
+	// ──────────────────────────────────────────────────────
+	void BroadcastMoveNotify();
+
 private:
 	User* owner_;               // 소유 네트워크 세션
 	uint32_t player_id_;        // 플레이어 ID
 	MoveComponent* m_pMoveComp; // 이동 컴포넌트 (Entity가 소유권 관리)
+
+	// 이벤트 구독 (RAII 자동 해제)
+	Subscription m_moveStartSub;
+	Subscription m_arrivedSub;
 };

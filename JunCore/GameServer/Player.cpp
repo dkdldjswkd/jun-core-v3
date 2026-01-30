@@ -9,6 +9,17 @@ Player::Player(GameScene* scene, User* owner, uint32_t player_id)
 {
 	// MoveComponent 추가 (Entity가 소유권 관리)
 	m_pMoveComp = AddComponent<MoveComponent>(0.1f);  // 50Hz 기준 초당 5m 이동
+
+	// 이동 이벤트 구독 (RAII - Player 소멸 시 자동 해제)
+	m_moveStartSub = m_pMoveComp->OnMoveStart.Subscribe([this]()
+	{
+		BroadcastMoveNotify();
+	});
+
+	m_arrivedSub = m_pMoveComp->OnArrived.Subscribe([this]()
+	{
+		BroadcastMoveNotify();
+	});
 }
 
 Player::~Player()
@@ -30,20 +41,8 @@ void Player::OnFixedUpdate()
 	// ──────────────────────────────────────────────────────
 
 	// 모든 컴포넌트의 FixedUpdate 호출 (MoveComponent 포함)
+	// MoveComponent가 이동 시작/도착 시 이벤트 발행 → BroadcastMoveNotify 호출됨
 	FixedUpdateComponents();
-
-	// 매 프레임 모든 플레이어에게 위치 브로드캐스트 (디버깅용)
-	game::GC_MOVE_NOTIFY notify;
-	notify.set_player_id(player_id_);
-	notify.mutable_cur_pos()->CopyFrom(GetCurrentPos());
-	notify.mutable_move_pos()->CopyFrom(GetDestPos());
-
-	BroadcastToScene(notify);
-
-	LOG_DEBUG("[Player::OnFixedUpdate] Broadcast position - Player (ID: %u) pos: (%.2f, %.2f, %.2f) -> dest: (%.2f, %.2f, %.2f)",
-		player_id_,
-		m_pMoveComp->GetX(), m_pMoveComp->GetY(), m_pMoveComp->GetZ(),
-		m_pMoveComp->GetDestX(), m_pMoveComp->GetDestY(), m_pMoveComp->GetDestZ());
 }
 
 void Player::OnEnter()
@@ -167,4 +166,19 @@ game::Pos Player::GetDestPos() const
 	pos.set_y(m_pMoveComp->GetDestY());
 	pos.set_z(m_pMoveComp->GetDestZ());
 	return pos;
+}
+
+void Player::BroadcastMoveNotify()
+{
+	game::GC_MOVE_NOTIFY notify;
+	notify.set_player_id(player_id_);
+	notify.mutable_cur_pos()->CopyFrom(GetCurrentPos());
+	notify.mutable_move_pos()->CopyFrom(GetDestPos());
+
+	BroadcastToScene(notify);
+
+	LOG_DEBUG("[Player::BroadcastMoveNotify] Player (ID: %u) pos: (%.2f, %.2f, %.2f) -> dest: (%.2f, %.2f, %.2f)",
+		player_id_,
+		m_pMoveComp->GetX(), m_pMoveComp->GetY(), m_pMoveComp->GetZ(),
+		m_pMoveComp->GetDestX(), m_pMoveComp->GetDestY(), m_pMoveComp->GetDestZ());
 }

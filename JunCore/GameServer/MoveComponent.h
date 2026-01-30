@@ -1,6 +1,6 @@
 #pragma once
-#include "Component.h"
-#include "../core/Event.h"
+#include "../JunCore/logic/Component.h"
+#include "../JunCore/core/Event.h"
 #include <cmath>
 
 //──────────────────────────────────────────────────────────────

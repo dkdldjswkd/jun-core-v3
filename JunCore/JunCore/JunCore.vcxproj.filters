@@ -59,6 +59,9 @@
     <ClInclude Include="core\base.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="core\Event.h">
+      <Filter>core</Filter>
+    </ClInclude>
     <ClInclude Include="core\WindowsIncludes.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -82,6 +85,12 @@
     </ClInclude>
     <ClInclude Include="network\User.h">
       <Filter>network</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\Component.h">
+      <Filter>logic</Filter>
+    </ClInclude>
+    <ClInclude Include="logic\Entity.h">
+      <Filter>logic</Filter>
     </ClInclude>
     <ClInclude Include="logic\GameObject.h">
       <Filter>logic</Filter>

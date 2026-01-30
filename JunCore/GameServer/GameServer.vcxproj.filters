@@ -20,6 +20,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameServer.h" />
+    <ClInclude Include="MoveComponent.h">
+      <Filter>logic</Filter>
+    </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>logic</Filter>
     </ClInclude>

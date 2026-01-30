@@ -642,9 +642,30 @@ When using JunCommon classes from JunCore, use the correct relative paths:
 </ItemGroup>
 ```
 
-### .vcxproj.filters 파일도 함께 업데이트
+### .vcxproj.filters 파일도 함께 업데이트 (필수!)
+- **파일 추가 시 반드시 .vcxproj.filters 파일도 함께 업데이트해야 함**
 - Visual Studio 솔루션 탐색기에서 폴더 구조를 제대로 보여주기 위해 필요
 - 필터 파일에도 동일하게 파일과 폴더 구조를 추가
+
+```xml
+<!-- .vcxproj.filters 파일 예시 -->
+<ItemGroup>
+  <ClInclude Include="core\Event.h">
+    <Filter>core</Filter>
+  </ClInclude>
+  <ClInclude Include="logic\Component.h">
+    <Filter>logic</Filter>
+  </ClInclude>
+</ItemGroup>
+```
+
+### 프레임워크 vs 게임 로직 파일 위치 구분
+- **JunCore (프레임워크)**: 범용 클래스만 포함
+  - Entity, Component, Event, GameObject 등 기반 클래스
+  - 네트워크, 로직 스레드 등 인프라
+- **GameServer (게임 로직)**: 게임 특화 클래스
+  - MoveComponent, Player 등 구체화 클래스
+  - 게임별 컴포넌트 및 로직
 
 ## 코어 수정/신규 코어 생성 시 필수 규칙
 
