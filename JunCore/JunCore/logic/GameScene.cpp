@@ -1,6 +1,7 @@
 ﻿#include "GameScene.h"
 #include "GameObject.h"
 #include "LogicThread.h"
+#include "GameObjectManager.h"
 
 GameScene::GameScene(LogicThread* logicThread)
     : m_pLogicThread(logicThread)
@@ -24,6 +25,10 @@ void GameScene::Enter(GameObject* obj)
     m_objects.push_back(obj);
     obj->m_pScene = this;
     obj->OnEnter();
+
+    // OnEnter 완료 후 GameObjectManager에 등록
+    // 다른 스레드에서 PostTo로 접근 가능해짐
+    GameObjectManager::Instance().Register(obj);
 }
 
 void GameScene::Exit(GameObject* obj)

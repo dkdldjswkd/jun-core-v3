@@ -1,27 +1,27 @@
 ﻿#pragma once
+#include "JobObject.h"
 #include "GameObject.h"
 #include "GameScene.h"
-#include "../core/Event.h"
 #include <unordered_map>
-#include <shared_mutex>
 #include <atomic>
 #include <cstdint>
+#include <type_traits>
 
 //------------------------------
 // GameObjectManager - 전역 GameObject 관리자
-// 팩토리 패턴으로 생성 + SN 기반 조회 제공
+// JobObject 상속으로 코어 JobThread에서 실행됨
+// - SN 발급: atomic (락 불필요)
+// - 등록/해제/조회: JobThread에서 직렬 처리 (락 불필요)
 //------------------------------
-class GameObjectManager
+class GameObjectManager : public JobObject
 {
 private:
     std::unordered_map<uint64_t, GameObject*> m_objects;
-    std::unordered_map<uint64_t, Subscription> m_subscriptions;
-    mutable std::shared_mutex m_mutex;
     std::atomic<uint64_t> m_nextSN{1};
 
     // 싱글톤
-    GameObjectManager() = default;
-    ~GameObjectManager() = default;
+    GameObjectManager();
+    ~GameObjectManager();
 
 public:
     GameObjectManager(const GameObjectManager&) = delete;
@@ -30,38 +30,34 @@ public:
     //------------------------------
     // 싱글톤 접근
     //------------------------------
-    static GameObjectManager& Instance()
+    static GameObjectManager& Instance();
+
+    //------------------------------
+    // 초기화 (Server에서 호출)
+    // 코어 JobThread 설정
+    //------------------------------
+    void Initialize(JobThread* coreThread);
+
+    //------------------------------
+    // SN 발급 (atomic - 락 불필요, 어디서든 호출 가능)
+    //------------------------------
+    uint64_t GenerateSN()
     {
-        static GameObjectManager instance;
-        return instance;
+        return m_nextSN.fetch_add(1);
     }
 
     //------------------------------
-    // 팩토리: 생성 + SN 부여 + 등록 + Event 구독
+    // 팩토리: 생성 + Scene Enter Job 등록
+    // Lock 불필요 (SN은 atomic, 등록은 Enter에서 Job)
     //------------------------------
     template<typename T, typename... Args>
     T* Create(GameScene* scene, Args&&... args)
     {
         static_assert(std::is_base_of<GameObject, T>::value, "T must derive from GameObject");
 
-        // 1. SN 발급
-        uint64_t sn = m_nextSN++;
-
-        // 2. 객체 생성
         T* obj = new T(scene, std::forward<Args>(args)...);
-        obj->m_sn = sn;
 
-        // 3. 맵에 등록 + 삭제 이벤트 구독
-        {
-            std::unique_lock lock(m_mutex);
-            m_objects[sn] = obj;
-
-            m_subscriptions[sn] = obj->OnBeforeDestroy.Subscribe([this, sn]() {
-                Unregister(sn);
-            });
-        }
-
-        // 4. Scene에 Enter Job 등록
+        // Scene Enter Job 등록 (Enter에서 OnEnter + GM 등록)
         obj->PostJob([obj, scene]() {
             scene->Enter(obj);
         });
@@ -70,70 +66,20 @@ public:
     }
 
     //------------------------------
-    // 조회 (SN으로 GameObject 찾기)
+    // GameObject 등록 (GameScene::Enter에서 호출)
+    // JobObject의 PostJob으로 처리됨
     //------------------------------
-    GameObject* Find(uint64_t sn)
-    {
-        std::shared_lock lock(m_mutex);
-        auto it = m_objects.find(sn);
-        if (it == m_objects.end())
-        {
-            return nullptr;
-        }
-
-        // 삭제 마킹된 경우 null 반환
-        if (it->second->IsMarkedForDelete())
-        {
-            return nullptr;
-        }
-
-        return it->second;
-    }
+    void Register(GameObject* obj);
 
     //------------------------------
-    // 타입 캐스팅 조회
+    // GameObject 해제 (OnBeforeDestroy에서 호출)
+    // JobObject의 PostJob으로 처리됨
     //------------------------------
-    template<typename T>
-    T* Find(uint64_t sn)
-    {
-        return dynamic_cast<T*>(Find(sn));
-    }
+    void Unregister(uint64_t sn);
 
     //------------------------------
     // 크로스 스레드 Job 전달
+    // JobThread에서 대상 찾아서 PostJob
     //------------------------------
-    bool PostTo(uint64_t sn, Job job)
-    {
-        GameObject* obj = nullptr;
-        {
-            std::shared_lock lock(m_mutex);
-            auto it = m_objects.find(sn);
-            if (it == m_objects.end())
-            {
-                return false;
-            }
-            obj = it->second;
-        }
-        // 락 해제 후 PostJob 호출 (PostJob은 lock-free로 자체 스레드 안전)
-        return obj->PostJob(std::move(job));
-    }
-
-    //------------------------------
-    // 등록 해제 (OnBeforeDestroy에서 자동 호출)
-    //------------------------------
-    void Unregister(uint64_t sn)
-    {
-        std::unique_lock lock(m_mutex);
-        m_objects.erase(sn);
-        m_subscriptions.erase(sn);
-    }
-
-    //------------------------------
-    // 등록된 객체 수
-    //------------------------------
-    size_t Count() const
-    {
-        std::shared_lock lock(m_mutex);
-        return m_objects.size();
-    }
+    void PostTo(uint64_t sn, Job job);
 };

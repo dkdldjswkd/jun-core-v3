@@ -122,8 +122,6 @@ void GameServer::HandleSceneReadyRequest(User& user, const game::CG_SCENE_READY_
 
 	LOG_INFO("[SCENE_READY] Creating Player (ID: %u) at Scene %d", player_id, scene_id);
 
-	// Player 생성 (GameObjectManager가 자동으로 SN 부여 + Scene Enter Job 등록)
-	// Player::OnEnter에서 GC_SCENE_ENTER_NOTIFY 전송됨
 	player = GameObjectManager::Instance().Create<Player>(target_scene, &user, player_id);
 	user.SetPlayer(player);
 }

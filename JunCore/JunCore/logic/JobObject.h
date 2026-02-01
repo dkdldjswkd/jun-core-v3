@@ -3,7 +3,7 @@
 #include <functional>
 #include <atomic>
 
-class LogicThread;
+class JobThread;
 
 //------------------------------
 // Job - 처리할 작업 단위
@@ -12,7 +12,8 @@ using Job = std::function<void()>;
 
 //------------------------------
 // JobObject - Job을 받아서 처리하는 객체
-// Player, Monster 등이 상속
+// Player, Monster, GameObjectManager 등이 상속
+// JobThread (또는 LogicThread)에서 Flush됨
 //------------------------------
 class JobObject
 {
@@ -20,11 +21,12 @@ protected:
     LFQueue<Job> m_jobQueue;
     std::atomic<bool> m_processing{false};
     std::atomic<bool> m_markedForDelete{false};
-    LogicThread* m_pLogicThread;
+    JobThread* m_pJobThread;
 
 public:
-    JobObject() = delete;
-    explicit JobObject(LogicThread* logicThread);
+    // 기본 생성자 (싱글톤 패턴용 - Initialize에서 JobThread 설정 필수)
+    JobObject();
+    explicit JobObject(JobThread* jobThread);
     virtual ~JobObject();
 
     //------------------------------
@@ -34,7 +36,7 @@ public:
     bool PostJob(Job job);
 
     //------------------------------
-    // Job 처리 (LogicThread에서 호출)
+    // Job 처리 (JobThread에서 호출)
     // Lost Wakeup 방지 로직 포함
     //------------------------------
     void Flush();
@@ -46,15 +48,8 @@ public:
     bool IsMarkedForDelete() const { return m_markedForDelete.load(); }
 
     //------------------------------
-    // LogicThread 관리
+    // JobThread 관리
     //------------------------------
-    LogicThread* GetLogicThread() { return m_pLogicThread; }
-    void SetLogicThread(LogicThread* thread)
-    {
-        if (thread == nullptr)
-        {
-            throw std::invalid_argument("JobObject::SetLogicThread: LogicThread cannot be null");
-        }
-        m_pLogicThread = thread;
-    }
+    JobThread* GetJobThread() { return m_pJobThread; }
+    void SetJobThread(JobThread* thread);
 };

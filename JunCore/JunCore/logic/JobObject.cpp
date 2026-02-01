@@ -1,13 +1,19 @@
 ﻿#include "JobObject.h"
-#include "LogicThread.h"
+#include "JobThread.h"
 #include <stdexcept>
 
-JobObject::JobObject(LogicThread* logicThread)
-    : m_pLogicThread(logicThread)
+JobObject::JobObject()
+    : m_pJobThread(nullptr)
 {
-    if (logicThread == nullptr)
+    // 기본 생성자 - Initialize에서 JobThread 설정 필수
+}
+
+JobObject::JobObject(JobThread* jobThread)
+    : m_pJobThread(jobThread)
+{
+    if (jobThread == nullptr)
     {
-        throw std::invalid_argument("JobObject: LogicThread cannot be null");
+        throw std::invalid_argument("JobObject: JobThread cannot be null");
     }
 }
 
@@ -35,7 +41,7 @@ bool JobObject::PostJob(Job job)
     bool expected = false;
     if (m_processing.compare_exchange_strong(expected, true))
     {
-        m_pLogicThread->GetJobQueue()->Enqueue(this);
+        m_pJobThread->GetJobQueue()->Enqueue(this);
     }
 
     return true;
@@ -46,42 +52,52 @@ void JobObject::MarkForDelete()
     m_markedForDelete.store(true);
 }
 
+void JobObject::SetJobThread(JobThread* thread)
+{
+    if (thread == nullptr)
+    {
+        throw std::invalid_argument("JobObject::SetJobThread: JobThread cannot be null");
+    }
+    m_pJobThread = thread;
+}
+
 void JobObject::Flush()
 {
-    LogicThread* pOldThread = m_pLogicThread;  // 현재 스레드 저장
+	if (m_markedForDelete.load())
+	{
+		return;
+	}
+
+    JobThread* pOldThread = m_pJobThread;
 
     Job job;
     while (m_jobQueue.Dequeue(&job))
     {
-        job();  // Job 실행
+		job();
 
-        // 스레드가 변경되었다면 (ChangeScene 등)
-        if (m_pLogicThread != pOldThread)
+        if (m_markedForDelete.load())
         {
-            // 새 스레드에 등록하고 즉시 종료
-            // m_processing은 true 유지 (아직 처리 중)
-            m_pLogicThread->GetJobQueue()->Enqueue(this);
+            return;
+        }
+
+        // 스레드가 변경되었다면
+        if (m_pJobThread != pOldThread)
+        {
+            // 새 스레드에 등록하고 종료
+            m_pJobThread->GetJobQueue()->Enqueue(this);
             return;
         }
     }
 
-    // 처리 완료
     m_processing.store(false);
 
-    // 삭제 마킹된 경우 여기서 종료 (LogicThread가 delete 처리)
-    if (m_markedForDelete.load())
-    {
-        return;
-    }
-
-    // Lost Wakeup 방지: Flush 완료 직후 새로운 Job이 들어왔는지 체크
-    // 스레드 변경되지 않은 경우에만 재스케줄
+    // Lost Wakeup 방지
     if (m_jobQueue.GetUseCount() > 0)
     {
         bool expected = false;
         if (m_processing.compare_exchange_strong(expected, true))
         {
-            m_pLogicThread->GetJobQueue()->Enqueue(this);
+            m_pJobThread->GetJobQueue()->Enqueue(this);
         }
     }
 }

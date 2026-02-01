@@ -21,8 +21,10 @@
   <ItemGroup>
     <ClCompile Include="log.cpp" />
     <ClCompile Include="logic\GameObject.cpp" />
+    <ClCompile Include="logic\GameObjectManager.cpp" />
     <ClCompile Include="logic\GameScene.cpp" />
     <ClCompile Include="logic\JobObject.cpp" />
+    <ClCompile Include="logic\JobThread.cpp" />
     <ClCompile Include="logic\LogicThread.cpp" />
     <ClCompile Include="logic\Time.cpp" />
     <ClCompile Include="network\Client.cpp" />
@@ -42,6 +44,7 @@
     <ClInclude Include="logic\GameObjectManager.h" />
     <ClInclude Include="logic\GameScene.h" />
     <ClInclude Include="logic\JobObject.h" />
+    <ClInclude Include="logic\JobThread.h" />
     <ClInclude Include="logic\LogicThread.h" />
     <ClInclude Include="logic\Time.h" />
     <ClInclude Include="network\IOCPManager.h" />

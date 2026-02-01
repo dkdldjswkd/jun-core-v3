@@ -1,4 +1,5 @@
 ﻿#include "Server.h"
+#include "../logic/GameObjectManager.h"
 #include <iostream>
 
 //------------------------------
@@ -127,6 +128,13 @@ void Server::StopServer()
 
 void Server::StartLogicThreads()
 {
+    // 코어 JobThread 시작 (시스템 매니저들 공유)
+    core_thread_->Start();
+
+    // 시스템 매니저 초기화 (코어 JobThread 연결)
+    GameObjectManager::Instance().Initialize(core_thread_.get());
+
+    // LogicThread 시작
     for (auto& thread : logic_threads_)
     {
         thread->Start();
@@ -135,10 +143,14 @@ void Server::StartLogicThreads()
 
 void Server::StopLogicThreads()
 {
+    // LogicThread 먼저 정지
     for (auto& thread : logic_threads_)
     {
         thread->Stop();
     }
+
+    // 코어 JobThread 정지 (시스템 매니저들 포함)
+    core_thread_->Stop();
 }
 
 LogicThread* Server::GetLogicThread(int index)

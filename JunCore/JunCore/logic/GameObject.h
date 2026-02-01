@@ -23,7 +23,7 @@ class GameObject : public Entity, public JobObject
 {
 protected:
     GameScene* m_pScene = nullptr;
-    uint64_t m_sn = 0;  // Serial Number (GameObjectManager에서 부여)
+    uint64_t m_sn = 0;
 
     //------------------------------
     // 가상 함수 (사용자 구현)
@@ -34,10 +34,9 @@ protected:
     virtual void OnUpdate() {}
 
     friend class GameScene;
-    friend class GameObjectManager;
 
     //------------------------------
-    // 생성자 (protected - Factory 패턴 사용)
+    // 생성자 (protected)
     //------------------------------
     explicit GameObject(GameScene* scene);
 

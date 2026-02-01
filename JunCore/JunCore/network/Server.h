@@ -4,6 +4,7 @@
 #include "IOCPManager.h"
 #include "Session.h"
 #include "../../JunCommon/container/LFStack.h"
+#include "../logic/JobThread.h"
 #include "../logic/LogicThread.h"
 #include <thread>
 #include <atomic>
@@ -85,6 +86,12 @@ private:
     LPFN_GETACCEPTEXSOCKADDRS fnGetAcceptExSockaddrs = nullptr;
 
     //------------------------------
+    // 코어 JobThread (시스템 매니저들 공유)
+    // GameObjectManager, GuildManager 등이 사용
+    //------------------------------
+    std::unique_ptr<JobThread> core_thread_;
+
+    //------------------------------
     // LogicThread 관리
     //------------------------------
     std::vector<std::unique_ptr<LogicThread>> logic_threads_;
@@ -104,6 +111,9 @@ private:
 inline Server::Server(std::shared_ptr<IOCPManager> manager, int logic_thread_count)
     : NetBase(manager), logic_thread_count_(logic_thread_count)
 {
+    // 코어 JobThread 생성 (시스템 매니저들 공유)
+    core_thread_ = std::make_unique<JobThread>();
+
     // LogicThread 생성 (시작은 StartLogicThreads()에서)
     logic_threads_.reserve(logic_thread_count_);
     for (int i = 0; i < logic_thread_count_; ++i)

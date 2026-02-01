@@ -3,12 +3,13 @@
 #include "GameScene.h"
 
 LogicThread::LogicThread()
+    : JobThread()
 {
 }
 
 LogicThread::~LogicThread()
 {
-    Stop();
+    // JobThread 소멸자가 Stop() 호출
 }
 
 void LogicThread::AddScene(GameScene* scene)
@@ -27,6 +28,11 @@ void LogicThread::RemoveScene(GameScene* scene)
 
 void LogicThread::Start()
 {
+    if (m_running.load())
+    {
+        return;
+    }
+
     m_running.store(true);
     m_lastFrameTime = std::chrono::steady_clock::now();
 
@@ -37,12 +43,7 @@ void LogicThread::Start()
 
 void LogicThread::Stop()
 {
-    m_running.store(false);
-
-    if (m_worker.joinable())
-    {
-        m_worker.join();
-    }
+    JobThread::Stop();
 }
 
 void LogicThread::Run()
@@ -65,18 +66,8 @@ void LogicThread::Run()
 
         m_fixedTimeAccum += dt;
 
-        // ──────── 1. Job 처리 ────────
-        JobObject* jobObj = nullptr;
-        while (m_jobQueue.Dequeue(&jobObj))
-        {
-            jobObj->Flush();
-
-            // Flush 후 삭제 마킹된 객체는 바로 삭제
-            if (jobObj->IsMarkedForDelete())
-            {
-                delete jobObj;
-            }
-        }
+        // ──────── 1. JobObject 플러시 ────────
+        ProcessJobObjects();
 
         // ──────── 2. FixedUpdate (고정 간격) ────────
         while (m_fixedTimeAccum >= m_fixedTimeStep)
@@ -107,6 +98,9 @@ void LogicThread::Run()
             );
         }
     }
+
+    // 종료 전 남은 JobObject 모두 처리
+    ProcessJobObjects();
 }
 
 float LogicThread::CalcDeltaTime()
