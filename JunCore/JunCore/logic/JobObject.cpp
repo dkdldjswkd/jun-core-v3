@@ -21,8 +21,14 @@ JobObject::~JobObject()
     }
 }
 
-void JobObject::PostJob(Job job)
+bool JobObject::PostJob(Job job)
 {
+    // 삭제 마킹된 경우 Job 거부
+    if (m_markedForDelete.load())
+    {
+        return false;
+    }
+
     m_jobQueue.Enqueue(std::move(job));
 
     // CAS로 스케줄 시도
@@ -31,6 +37,13 @@ void JobObject::PostJob(Job job)
     {
         m_pLogicThread->GetJobQueue()->Enqueue(this);
     }
+
+    return true;
+}
+
+void JobObject::MarkForDelete()
+{
+    m_markedForDelete.store(true);
 }
 
 void JobObject::Flush()
@@ -54,6 +67,12 @@ void JobObject::Flush()
 
     // 처리 완료
     m_processing.store(false);
+
+    // 삭제 마킹된 경우 여기서 종료 (LogicThread가 delete 처리)
+    if (m_markedForDelete.load())
+    {
+        return;
+    }
 
     // Lost Wakeup 방지: Flush 완료 직후 새로운 Job이 들어왔는지 체크
     // 스레드 변경되지 않은 경우에만 재스케줄

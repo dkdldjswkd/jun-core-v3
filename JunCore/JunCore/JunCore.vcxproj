@@ -39,6 +39,7 @@
     <ClInclude Include="logic\Component.h" />
     <ClInclude Include="logic\Entity.h" />
     <ClInclude Include="logic\GameObject.h" />
+    <ClInclude Include="logic\GameObjectManager.h" />
     <ClInclude Include="logic\GameScene.h" />
     <ClInclude Include="logic\JobObject.h" />
     <ClInclude Include="logic\LogicThread.h" />

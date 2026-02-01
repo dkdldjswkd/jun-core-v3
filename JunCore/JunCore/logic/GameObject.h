@@ -1,8 +1,11 @@
 ﻿#pragma once
 #include "Entity.h"
 #include "JobObject.h"
+#include "../core/Event.h"
+#include <cstdint>
 
 class GameScene;
+class GameObjectManager;
 
 //------------------------------
 // GameObject - Unity 스타일 게임 객체
@@ -20,6 +23,7 @@ class GameObject : public Entity, public JobObject
 {
 protected:
     GameScene* m_pScene = nullptr;
+    uint64_t m_sn = 0;  // Serial Number (GameObjectManager에서 부여)
 
     //------------------------------
     // 가상 함수 (사용자 구현)
@@ -30,6 +34,7 @@ protected:
     virtual void OnUpdate() {}
 
     friend class GameScene;
+    friend class GameObjectManager;
 
     //------------------------------
     // 생성자 (protected - Factory 패턴 사용)
@@ -40,11 +45,14 @@ public:
     virtual ~GameObject();
 
     //------------------------------
-    // Factory 메서드 (완전한 초기화 보장)
-    // 템플릿 구현은 이 헤더 끝에 정의됨 (GameScene.h include 후)
+    // Event: 삭제 전 알림
     //------------------------------
-    template<typename T, typename... Args>
-    static T* Create(GameScene* scene, Args&&... args);
+    Event<> OnBeforeDestroy;
+
+    //------------------------------
+    // 삭제 처리 (OnBeforeDestroy 발행 후 MarkForDelete)
+    //------------------------------
+    void Destroy();
 
     //------------------------------
     // Scene 관리
@@ -57,26 +65,9 @@ public:
     //------------------------------
     GameScene* GetScene() { return m_pScene; }
     bool IsInScene() const { return m_pScene != nullptr; }
+
+    //------------------------------
+    // Serial Number 접근
+    //------------------------------
+    uint64_t GetSN() const { return m_sn; }
 };
-
-//------------------------------
-// 템플릿 구현 (GameScene.h 필요)
-//------------------------------
-#include "GameScene.h"
-
-template<typename T, typename... Args>
-inline T* GameObject::Create(GameScene* scene, Args&&... args)
-{
-    static_assert(std::is_base_of<GameObject, T>::value, "T must derive from GameObject");
-
-    // 1. 객체 생성 (생성자 완료)
-    T* obj = new T(scene, std::forward<Args>(args)...);
-
-    // 2. Scene에 Enter Job 등록 (완전히 초기화된 객체 사용)
-    // GameScene::Enter()가 내부에서 OnEnter() 호출함
-    obj->PostJob([obj, scene]() {
-        scene->Enter(obj);
-    });
-
-    return obj;
-}

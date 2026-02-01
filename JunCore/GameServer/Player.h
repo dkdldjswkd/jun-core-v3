@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "../JunCore/logic/GameObject.h"
+#include "../JunCore/logic/GameScene.h"
 #include "../JunCore/core/Event.h"
 #include "MoveComponent.h"
 #include "../JunCore/network/User.h"

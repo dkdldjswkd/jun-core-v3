@@ -19,6 +19,7 @@ class JobObject
 protected:
     LFQueue<Job> m_jobQueue;
     std::atomic<bool> m_processing{false};
+    std::atomic<bool> m_markedForDelete{false};
     LogicThread* m_pLogicThread;
 
 public:
@@ -28,14 +29,21 @@ public:
 
     //------------------------------
     // Job 추가 (네트워크 스레드에서 호출)
+    // 삭제 마킹된 경우 false 반환
     //------------------------------
-    void PostJob(Job job);
+    bool PostJob(Job job);
 
     //------------------------------
     // Job 처리 (LogicThread에서 호출)
     // Lost Wakeup 방지 로직 포함
     //------------------------------
     void Flush();
+
+    //------------------------------
+    // 삭제 마킹 (이후 PostJob 거부됨)
+    //------------------------------
+    void MarkForDelete();
+    bool IsMarkedForDelete() const { return m_markedForDelete.load(); }
 
     //------------------------------
     // LogicThread 관리

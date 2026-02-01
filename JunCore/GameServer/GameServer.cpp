@@ -2,6 +2,7 @@
 #include "GameServer.h"
 #include "Player.h"
 #include "../JunCore/logic/GameScene.h"
+#include "../JunCore/logic/GameObjectManager.h"
 #include "../JunCore/logic/LogicThread.h"
 
 GameServer::GameServer(std::shared_ptr<IOCPManager> manager, int logic_thread_count)
@@ -121,9 +122,9 @@ void GameServer::HandleSceneReadyRequest(User& user, const game::CG_SCENE_READY_
 
 	LOG_INFO("[SCENE_READY] Creating Player (ID: %u) at Scene %d", player_id, scene_id);
 
-	// Player 생성 (GameObject::Create가 자동으로 Scene Enter Job 등록)
+	// Player 생성 (GameObjectManager가 자동으로 SN 부여 + Scene Enter Job 등록)
 	// Player::OnEnter에서 GC_SCENE_ENTER_NOTIFY 전송됨
-	player = GameObject::Create<Player>(target_scene, &user, player_id);
+	player = GameObjectManager::Instance().Create<Player>(target_scene, &user, player_id);
 	user.SetPlayer(player);
 }
 
@@ -209,8 +210,9 @@ void GameServer::OnUserDisconnect(User* user)
 
 	LOG_INFO("[DISCONNECT] Player (ID: %u) disconnected", player->GetPlayerId());
 
-	player->ExitScene();
-	// TODO: delete player - JobObject 생명주기 관리 정책 필요
+	// Player 삭제 (Scene Exit + OnBeforeDestroy + MarkForDelete)
+	// PostJob으로 감싸져 있어 LogicThread에서 안전하게 실행됨
+	player->Destroy();
 	user->ClearPlayer();
 }
 

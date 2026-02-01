@@ -164,7 +164,12 @@
       "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" JunCore/JunCore.vcxproj -p:Configuration=Debug -p:Platform=x64 -clp:ErrorsOnly)",
       "Bash(del \"c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\JunCore\\\\logic\\\\MoveComponent.h\")",
       "Bash(cmd /c del \"c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\JunCore\\\\logic\\\\MoveComponent.h\")",
-      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" GameServer/GameServer.vcxproj -p:Configuration=Debug -p:Platform=x64 -clp:ErrorsOnly)"
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" GameServer/GameServer.vcxproj -p:Configuration=Debug -p:Platform=x64 -clp:ErrorsOnly)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" JunCore/JunCore.vcxproj /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"JunCore\\\\JunCore.vcxproj\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
+      "Bash(\"C:\\\\Program Files\\\\Microsoft Visual Studio\\\\2022\\\\Community\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\JunCore\\\\JunCore.vcxproj\" \"/p:Configuration=Debug\" \"/p:Platform=x64\" \"/clp:ErrorsOnly\")",
+      "Bash(cmd /c:*)",
+      "Bash(powershell:*)"
     ],
     "deny": []
   }

@@ -95,6 +95,9 @@
     <ClInclude Include="logic\GameObject.h">
       <Filter>logic</Filter>
     </ClInclude>
+    <ClInclude Include="logic\GameObjectManager.h">
+      <Filter>logic</Filter>
+    </ClInclude>
     <ClInclude Include="logic\GameScene.h">
       <Filter>logic</Filter>
     </ClInclude>

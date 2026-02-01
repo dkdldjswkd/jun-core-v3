@@ -70,6 +70,12 @@ void LogicThread::Run()
         while (m_jobQueue.Dequeue(&jobObj))
         {
             jobObj->Flush();
+
+            // Flush 후 삭제 마킹된 객체는 바로 삭제
+            if (jobObj->IsMarkedForDelete())
+            {
+                delete jobObj;
+            }
         }
 
         // ──────── 2. FixedUpdate (고정 간격) ────────

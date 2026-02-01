@@ -11,6 +11,25 @@ GameObject::~GameObject()
 {
 }
 
+void GameObject::Destroy()
+{
+    // PostJob으로 감싸서 LogicThread에서 실행되도록 보장
+    // 외부 스레드에서 호출해도 안전
+    PostJob([this]() {
+        // Scene에서 Exit
+        if (m_pScene)
+        {
+            m_pScene->Exit(this);
+        }
+
+        // 삭제 전 이벤트 발행 (구독자들에게 알림)
+        OnBeforeDestroy.Invoke();
+
+        // 삭제 마킹 (이후 PostJob 거부, Flush 후 delete)
+        MarkForDelete();
+    });
+}
+
 void GameObject::MoveToScene(GameScene* newScene)
 {
     if (newScene == nullptr)
