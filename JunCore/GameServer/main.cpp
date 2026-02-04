@@ -25,7 +25,7 @@ int main()
 			return -1;
 		}
 
-		// GameServer 생성 (LogicThread 2개)
+		// GameServer 생성 (GameThread 2개)
 		GameServer gameServer(std::shared_ptr<IOCPManager>(std::move(iocpManager)), 2);
 		gameServer.Initialize();
 

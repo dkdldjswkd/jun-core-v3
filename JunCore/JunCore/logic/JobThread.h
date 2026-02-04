@@ -10,7 +10,7 @@ class JobObject;
 
 //------------------------------
 // JobThread - JobObject 처리 스레드 기반 클래스
-// LogicThread가 상속하여 Scene Update 기능 추가
+// GameThread가 상속하여 Scene Update 기능 추가
 // GameObjectManager 등 시스템 매니저들은 JobObject로 이 스레드 공유
 //------------------------------
 class JobThread
@@ -52,7 +52,7 @@ protected:
     virtual void Run();
 
     //------------------------------
-    // JobObject 처리 (LogicThread에서도 호출)
+    // JobObject 처리 (GameThread에서도 호출)
     //------------------------------
     void ProcessJobObjects();
 };

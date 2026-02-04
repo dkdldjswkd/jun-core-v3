@@ -16,7 +16,7 @@ class GameObjectManager;
 //
 // JobObject 상속:
 // - GameObject는 Scene에 종속되어 존재
-// - Scene 이동 시 LogicThread도 함께 이동 가능
+// - Scene 이동 시 GameThread도 함께 이동 가능
 // - 모든 상태 변경을 Job으로 처리하여 스레드 안전 보장
 //------------------------------
 class GameObject : public Entity, public JobObject

@@ -20,8 +20,8 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         return false;
     }
 
-    // LogicThread 시작
-    StartLogicThreads();
+    // GameThread 시작
+    StartGameThreads();
 
     try
     {
@@ -30,7 +30,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         if (listenSocket == INVALID_SOCKET)
         {
             LOG_ERROR("Socket creation failed: %d", WSAGetLastError());
-            StopLogicThreads();
+            StopGameThreads();
             return false;
         }
 
@@ -49,7 +49,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         {
             LOG_ERROR("Bind failed: %d", WSAGetLastError());
             closesocket(listenSocket);
-            StopLogicThreads();
+            StopGameThreads();
             return false;
         }
 
@@ -58,7 +58,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         {
             LOG_ERROR("Listen failed: %d", WSAGetLastError());
             closesocket(listenSocket);
-            StopLogicThreads();
+            StopGameThreads();
             return false;
         }
 
@@ -67,7 +67,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         {
             LOG_ERROR("Failed to load AcceptEx functions");
             closesocket(listenSocket);
-            StopLogicThreads();
+            StopGameThreads();
             return false;
         }
 
@@ -76,7 +76,7 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
         {
             LOG_ERROR("Failed to register listen socket to IOCP");
             closesocket(listenSocket);
-            StopLogicThreads();
+            StopGameThreads();
             return false;
         }
 
@@ -87,20 +87,20 @@ bool Server::StartServer(const char* bindIP, WORD port, DWORD maxSessions)
             LOG_ERROR("Failed to post initial AcceptEx");
             running = false;
             closesocket(listenSocket);
-            StopLogicThreads();
+            StopGameThreads();
             return false;
         }
 
         OnServerStart();
 
-        LOG_INFO("Server started on %s:%d (Max Sessions: %lu, LogicThreads: %d)",
-                 bindIP, port, maxSessions, logic_thread_count_);
+        LOG_INFO("Server started on %s:%d (Max Sessions: %lu, GameThreads: %d)",
+                 bindIP, port, maxSessions, game_thread_count_);
         return true;
     }
     catch (const std::exception& e)
     {
         LOG_ERROR("StartServer exception: %s", e.what());
-        StopLogicThreads();
+        StopGameThreads();
         return false;
     }
 }
@@ -112,8 +112,8 @@ void Server::StopServer()
         return; // 이미 정지됨
     }
 
-    // LogicThread 먼저 정지
-    StopLogicThreads();
+    // GameThread 먼저 정지
+    StopGameThreads();
 
     // 리슨 소켓 정리
     if (listenSocket != INVALID_SOCKET)
@@ -126,7 +126,7 @@ void Server::StopServer()
     OnServerStop();
 }
 
-void Server::StartLogicThreads()
+void Server::StartGameThreads()
 {
     // 코어 JobThread 시작 (시스템 매니저들 공유)
     core_thread_->Start();
@@ -134,17 +134,17 @@ void Server::StartLogicThreads()
     // 시스템 매니저 초기화 (코어 JobThread 연결)
     GameObjectManager::Instance().Initialize(core_thread_.get());
 
-    // LogicThread 시작
-    for (auto& thread : logic_threads_)
+    // GameThread 시작
+    for (auto& thread : game_threads_)
     {
         thread->Start();
     }
 }
 
-void Server::StopLogicThreads()
+void Server::StopGameThreads()
 {
-    // LogicThread 먼저 정지
-    for (auto& thread : logic_threads_)
+    // GameThread 먼저 정지
+    for (auto& thread : game_threads_)
     {
         thread->Stop();
     }
@@ -153,13 +153,13 @@ void Server::StopLogicThreads()
     core_thread_->Stop();
 }
 
-LogicThread* Server::GetLogicThread(int index)
+GameThread* Server::GetGameThread(int index)
 {
-    if (index < 0 || index >= static_cast<int>(logic_threads_.size()))
+    if (index < 0 || index >= static_cast<int>(game_threads_.size()))
     {
         return nullptr;
     }
-    return logic_threads_[index].get();
+    return game_threads_[index].get();
 }
 
 

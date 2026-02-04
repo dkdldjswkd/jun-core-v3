@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <functional>
 
-class LogicThread;
+class GameThread;
 class GameObject;
 
 //------------------------------
@@ -15,7 +15,7 @@ class GameScene
 {
 protected:
     std::vector<GameObject*> m_objects;
-    LogicThread* m_pLogicThread = nullptr;
+    GameThread* m_pGameThread = nullptr;
 
     //------------------------------
     // 가상 함수 (사용자 구현)
@@ -24,7 +24,7 @@ protected:
     virtual void OnUpdate() {}
 
 public:
-    explicit GameScene(LogicThread* logicThread);
+    explicit GameScene(GameThread* gameThread);
     virtual ~GameScene();
 
     //------------------------------
@@ -34,15 +34,15 @@ public:
     void Exit(GameObject* obj);
 
     //------------------------------
-    // 프레임 업데이트 (LogicThread에서 호출)
+    // 프레임 업데이트 (GameThread에서 호출)
     //------------------------------
     void FixedUpdate();
     void Update();
 
     //------------------------------
-    // LogicThread 관리
+    // GameThread 관리
     //------------------------------
-    LogicThread* GetLogicThread() { return m_pLogicThread; }
+    GameThread* GetGameThread() { return m_pGameThread; }
 
     //------------------------------
     // GameObject 조회

@@ -2,7 +2,7 @@
 
 //------------------------------
 // Time - Unity 스타일 시간 관리 (TLS 기반)
-// LogicThread별 독립적인 시간 관리
+// GameThread별 독립적인 시간 관리
 //------------------------------
 class Time
 {
@@ -22,7 +22,7 @@ public:
     static int frameCount() { return s_frameCount; }
 
     //------------------------------
-    // LogicThread에서만 호출 (내부용)
+    // GameThread에서만 호출 (내부용)
     //------------------------------
     static void SetDeltaTime(float dt) { s_deltaTime = dt; }
     static void SetFixedDeltaTime(float dt) { s_fixedDeltaTime = dt; }

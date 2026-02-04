@@ -36,7 +36,7 @@ void Player::OnUpdate()
 void Player::OnFixedUpdate()
 {
 	// ──────────────────────────────────────────────────────
-	// LogicThread에서 고정 간격으로 호출됨 (50Hz 기본)
+	// GameThread에서 고정 간격으로 호출됨 (50Hz 기본)
 	// FixedUpdate는 항상 동일한 간격으로 호출됨을 보장
 	// ──────────────────────────────────────────────────────
 
@@ -136,7 +136,7 @@ void Player::PostSetDestPosJob(const game::Pos& dest_pos)
 void Player::HandleSetDestPos(const game::Pos& dest_pos)
 {
 	// ──────────────────────────────────────────────────────
-	// LogicThread에서 실행되는 목표 위치 설정
+	// GameThread에서 실행되는 목표 위치 설정
 	// ──────────────────────────────────────────────────────
 
 	// TODO: 이동 검증

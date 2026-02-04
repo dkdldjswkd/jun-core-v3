@@ -48,7 +48,7 @@
     <ClCompile Include="logic\JobThread.cpp">
       <Filter>logic</Filter>
     </ClCompile>
-    <ClCompile Include="logic\LogicThread.cpp">
+    <ClCompile Include="logic\GameThread.cpp">
       <Filter>logic</Filter>
     </ClCompile>
     <ClCompile Include="logic\Time.cpp">
@@ -116,7 +116,7 @@
     <ClInclude Include="logic\JobThread.h">
       <Filter>logic</Filter>
     </ClInclude>
-    <ClInclude Include="logic\LogicThread.h">
+    <ClInclude Include="logic\GameThread.h">
       <Filter>logic</Filter>
     </ClInclude>
     <ClInclude Include="logic\Time.h">

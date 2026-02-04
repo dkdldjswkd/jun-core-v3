@@ -5,7 +5,7 @@
 #include "Session.h"
 #include "../../JunCommon/container/LFStack.h"
 #include "../logic/JobThread.h"
-#include "../logic/LogicThread.h"
+#include "../logic/GameThread.h"
 #include <thread>
 #include <atomic>
 #include <memory>
@@ -41,7 +41,7 @@ class Server : public NetBase
     friend class IOCPManager; // IOCPManager가 private 멤버에 접근할 수 있도록
     
 public:
-    Server(std::shared_ptr<IOCPManager> manager, int logic_thread_count = 0);
+    Server(std::shared_ptr<IOCPManager> manager, int game_thread_count = 0);
     virtual ~Server();
 
     Server(const Server&) = delete;
@@ -56,12 +56,12 @@ public:
     bool IsServerRunning() const noexcept { return running.load(); }
 
     //------------------------------
-    // LogicThread 관리
+    // GameThread 관리
     //------------------------------
-    void StartLogicThreads();
-    void StopLogicThreads();
-    LogicThread* GetLogicThread(int index);
-    int GetLogicThreadCount() const { return static_cast<int>(logic_threads_.size()); }
+    void StartGameThreads();
+    void StopGameThreads();
+    GameThread* GetGameThread(int index);
+    int GetGameThreadCount() const { return static_cast<int>(game_threads_.size()); }
 
 protected:
     //------------------------------
@@ -92,10 +92,10 @@ private:
     std::unique_ptr<JobThread> core_thread_;
 
     //------------------------------
-    // LogicThread 관리
+    // GameThread 관리
     //------------------------------
-    std::vector<std::unique_ptr<LogicThread>> logic_threads_;
-    int logic_thread_count_ = 0;
+    std::vector<std::unique_ptr<GameThread>> game_threads_;
+    int game_thread_count_ = 0;
 
     //------------------------------
     // 내부 메서드들
@@ -108,17 +108,17 @@ private:
 // 인라인 구현
 //------------------------------
 
-inline Server::Server(std::shared_ptr<IOCPManager> manager, int logic_thread_count)
-    : NetBase(manager), logic_thread_count_(logic_thread_count)
+inline Server::Server(std::shared_ptr<IOCPManager> manager, int game_thread_count)
+    : NetBase(manager), game_thread_count_(game_thread_count)
 {
     // 코어 JobThread 생성 (시스템 매니저들 공유)
     core_thread_ = std::make_unique<JobThread>();
 
-    // LogicThread 생성 (시작은 StartLogicThreads()에서)
-    logic_threads_.reserve(logic_thread_count_);
-    for (int i = 0; i < logic_thread_count_; ++i)
+    // GameThread 생성 (시작은 StartGameThreads()에서)
+    game_threads_.reserve(game_thread_count_);
+    for (int i = 0; i < game_thread_count_; ++i)
     {
-        logic_threads_.push_back(std::make_unique<LogicThread>());
+        game_threads_.push_back(std::make_unique<GameThread>());
     }
 }
 

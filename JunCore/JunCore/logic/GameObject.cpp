@@ -1,10 +1,10 @@
 ﻿#include "GameObject.h"
 #include "GameScene.h"
-#include "LogicThread.h"
+#include "GameThread.h"
 #include "GameObjectManager.h"
 
 GameObject::GameObject(GameScene* scene)
-    : JobObject(scene->GetLogicThread())
+    : JobObject(scene->GetGameThread())
     , m_pScene(scene)
     , m_sn(GameObjectManager::Instance().GenerateSN())
 {
@@ -16,7 +16,7 @@ GameObject::~GameObject()
 
 void GameObject::Destroy()
 {
-    // PostJob으로 감싸서 LogicThread에서 실행되도록 보장
+    // PostJob으로 감싸서 GameThread에서 실행되도록 보장
     // 외부 스레드에서 호출해도 안전
     PostJob([this]() {
         // Scene에서 Exit
@@ -55,12 +55,12 @@ void GameObject::MoveToScene(GameScene* newScene)
             m_pScene->Exit(this);
         }
 
-        // LogicThread 변경
-        SetJobThread(newScene->GetLogicThread());
+        // GameThread 변경
+        SetJobThread(newScene->GetGameThread());
     });
 
-    // 위 Job에서 LogicThread를 변경하여, JobObject::Flush()에서 자동으로 이 JobObject를 새 LogicThread로 이동시킴
-    // 즉, 이 새로운 씬에 입장하는 이 Job은 새 LogicThread에서 실행된다.
+    // 위 Job에서 GameThread를 변경하여, JobObject::Flush()에서 자동으로 이 JobObject를 새 GameThread로 이동시킴
+    // 즉, 이 새로운 씬에 입장하는 이 Job은 새 GameThread에서 실행된다.
     PostJob([this, newScene]() {
         newScene->Enter(this);
     });

@@ -94,7 +94,7 @@ public:
 
 private:
 	// ──────────────────────────────────────────────────────
-	// 내부 Job 핸들러들 (LogicThread에서 실행됨)
+	// 내부 Job 핸들러들 (GameThread에서 실행됨)
 	// ──────────────────────────────────────────────────────
 	void HandleSetDestPos(const game::Pos& dest_pos);
 

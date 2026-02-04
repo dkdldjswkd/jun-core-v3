@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "JobThread.h"
 #include "Time.h"
 #include <vector>
@@ -7,10 +7,10 @@
 class GameScene;
 
 //------------------------------
-// LogicThread - Unity 스타일 게임 로직 스레드
+// GameThread - Unity 스타일 게임 로직 스레드
 // JobThread 상속 + Scene 관리 + FixedUpdate/Update
 //------------------------------
-class LogicThread : public JobThread
+class GameThread : public JobThread
 {
 private:
     std::vector<GameScene*> m_scenes;
@@ -21,8 +21,8 @@ private:
     std::chrono::steady_clock::time_point m_lastFrameTime;
 
 public:
-    LogicThread();
-    virtual ~LogicThread() override;
+    GameThread();
+    virtual ~GameThread() override;
 
     //------------------------------
     // Scene 관리

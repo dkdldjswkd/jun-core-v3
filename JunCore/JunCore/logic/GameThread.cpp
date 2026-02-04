@@ -1,23 +1,23 @@
-﻿#include "LogicThread.h"
+#include "GameThread.h"
 #include "JobObject.h"
 #include "GameScene.h"
 
-LogicThread::LogicThread()
+GameThread::GameThread()
     : JobThread()
 {
 }
 
-LogicThread::~LogicThread()
+GameThread::~GameThread()
 {
     // JobThread 소멸자가 Stop() 호출
 }
 
-void LogicThread::AddScene(GameScene* scene)
+void GameThread::AddScene(GameScene* scene)
 {
     m_scenes.push_back(scene);
 }
 
-void LogicThread::RemoveScene(GameScene* scene)
+void GameThread::RemoveScene(GameScene* scene)
 {
     auto it = std::find(m_scenes.begin(), m_scenes.end(), scene);
     if (it != m_scenes.end())
@@ -26,7 +26,7 @@ void LogicThread::RemoveScene(GameScene* scene)
     }
 }
 
-void LogicThread::Start()
+void GameThread::Start()
 {
     if (m_running.load())
     {
@@ -41,12 +41,12 @@ void LogicThread::Start()
     });
 }
 
-void LogicThread::Stop()
+void GameThread::Stop()
 {
     JobThread::Stop();
 }
 
-void LogicThread::Run()
+void GameThread::Run()
 {
     // TLS 초기화
     Time::SetDeltaTime(0.0f);
@@ -103,7 +103,7 @@ void LogicThread::Run()
     ProcessJobObjects();
 }
 
-float LogicThread::CalcDeltaTime()
+float GameThread::CalcDeltaTime()
 {
     auto currentTime = std::chrono::steady_clock::now();
     std::chrono::duration<float> elapsed = currentTime - m_lastFrameTime;

@@ -3,10 +3,10 @@
 #include "Player.h"
 #include "../JunCore/logic/GameScene.h"
 #include "../JunCore/logic/GameObjectManager.h"
-#include "../JunCore/logic/LogicThread.h"
+#include "../JunCore/logic/GameThread.h"
 
-GameServer::GameServer(std::shared_ptr<IOCPManager> manager, int logic_thread_count)
-	: Server(manager, logic_thread_count)
+GameServer::GameServer(std::shared_ptr<IOCPManager> manager, int game_thread_count)
+	: Server(manager, game_thread_count)
 {
 }
 
@@ -209,7 +209,7 @@ void GameServer::OnUserDisconnect(User* user)
 	LOG_INFO("[DISCONNECT] Player (ID: %u) disconnected", player->GetPlayerId());
 
 	// Player 삭제 (Scene Exit + OnBeforeDestroy + MarkForDelete)
-	// PostJob으로 감싸져 있어 LogicThread에서 안전하게 실행됨
+	// PostJob으로 감싸져 있어 GameThread에서 안전하게 실행됨
 	player->Destroy();
 	user->ClearPlayer();
 }
@@ -217,7 +217,7 @@ void GameServer::OnUserDisconnect(User* user)
 void GameServer::OnServerStart()
 {
 	LOG_INFO("GameServer started successfully!");
-	scene_ = std::make_unique<GameScene>(GetLogicThread(0));
+	scene_ = std::make_unique<GameScene>(GetGameThread(0));
 }
 
 void GameServer::OnServerStop()

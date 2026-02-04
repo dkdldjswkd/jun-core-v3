@@ -1,22 +1,22 @@
 ﻿#include "GameScene.h"
 #include "GameObject.h"
-#include "LogicThread.h"
+#include "GameThread.h"
 #include "GameObjectManager.h"
 
-GameScene::GameScene(LogicThread* logicThread)
-    : m_pLogicThread(logicThread)
+GameScene::GameScene(GameThread* gameThread)
+    : m_pGameThread(gameThread)
 {
-    if (m_pLogicThread)
+    if (m_pGameThread)
     {
-        m_pLogicThread->AddScene(this);
+        m_pGameThread->AddScene(this);
     }
 }
 
 GameScene::~GameScene()
 {
-    if (m_pLogicThread)
+    if (m_pGameThread)
     {
-        m_pLogicThread->RemoveScene(this);
+        m_pGameThread->RemoveScene(this);
     }
 }
 

@@ -13,7 +13,7 @@ using Job = std::function<void()>;
 //------------------------------
 // JobObject - Job을 받아서 처리하는 객체
 // Player, Monster, GameObjectManager 등이 상속
-// JobThread (또는 LogicThread)에서 Flush됨
+// JobThread (또는 GameThread)에서 Flush됨
 //------------------------------
 class JobObject
 {
