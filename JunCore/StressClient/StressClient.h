@@ -2,7 +2,7 @@
 #include "../JunCore/network/Client.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
 #include "../JunCommon/container/LFQueue.h"
-#include "echo_message.pb.h"
+#include "../EchoServer/echo_message.pb.h"
 #include <vector>
 #include <thread>
 #include <random>

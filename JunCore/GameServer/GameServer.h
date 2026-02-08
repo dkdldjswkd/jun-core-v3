@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/Server.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
-#include "../JunCore/protocol/game_messages.pb.h"
+#include "protocol/game_messages.pb.h"
 #include <atomic>
 #include <unordered_map>
 #include <memory>

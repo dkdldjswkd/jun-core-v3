@@ -1,7 +1,7 @@
 ﻿#include "../JunCommon/system/CrashDump.h"
 #include "../JunCore/network/IOCPManager.h"
 #include "StressClient.h"
-#include "echo_message.pb.h"
+#include "../EchoServer/echo_message.pb.h"
 #include <iostream>
 #include <string>
 #include <chrono>

@@ -164,12 +164,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EchoClient.cpp" />
-    <ClCompile Include="echo_message.pb.cc" />
+    <ClCompile Include="..\EchoServer\echo_message.pb.cc" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EchoClient.h" />
-    <ClInclude Include="echo_message.pb.h" />
+    <ClInclude Include="..\EchoServer\echo_message.pb.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JunCore\JunCore.vcxproj">
@@ -177,7 +177,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="echo_message.proto" />
+    <None Include="..\EchoServer\echo_message.proto" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

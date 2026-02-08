@@ -6,20 +6,20 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="echo_message.pb.cc">
+    <ClCompile Include="..\EchoServer\echo_message.pb.cc">
       <Filter>protocol</Filter>
     </ClCompile>
     <ClCompile Include="EchoClient.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="echo_message.pb.h">
+    <ClInclude Include="..\EchoServer\echo_message.pb.h">
       <Filter>protocol</Filter>
     </ClInclude>
     <ClInclude Include="EchoClient.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="echo_message.proto">
+    <None Include="..\EchoServer\echo_message.proto">
       <Filter>protocol</Filter>
     </None>
   </ItemGroup>

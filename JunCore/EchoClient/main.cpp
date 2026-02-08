@@ -1,7 +1,7 @@
 ﻿#include "../JunCommon/system/CrashDump.h"
 #include "../JunCore/network/IOCPManager.h"
 #include "EchoClient.h"
-#include "echo_message.pb.h"
+#include "../EchoServer/echo_message.pb.h"
 #include <iostream>
 #include <string>
 using namespace std;

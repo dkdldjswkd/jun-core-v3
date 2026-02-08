@@ -4,7 +4,7 @@
 #include "../JunCore/core/Event.h"
 #include "MoveComponent.h"
 #include "../JunCore/network/User.h"
-#include "../JunCore/protocol/game_messages.pb.h"
+#include "protocol/game_messages.pb.h"
 #include <string>
 
 // Player는 GameObject 상속

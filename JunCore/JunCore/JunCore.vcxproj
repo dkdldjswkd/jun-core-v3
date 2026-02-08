@@ -31,7 +31,6 @@
     <ClCompile Include="network\IOCPManager.cpp" />
     <ClCompile Include="network\Server.cpp" />
     <ClCompile Include="network\Session.cpp" />
-    <ClCompile Include="protocol\game_messages.pb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\base.h" />
@@ -52,7 +51,6 @@
     <ClInclude Include="network\Server.h" />
     <ClInclude Include="network\Client.h" />
     <ClInclude Include="protocol\UnifiedPacketHeader.h" />
-    <ClInclude Include="protocol\game_messages.pb.h" />
     <ClInclude Include="network\Session.h" />
     <ClInclude Include="network\User.h" />
     <ClInclude Include="network\WSAInitializer.h" />
@@ -146,6 +144,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>../generate_protobuf.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -165,6 +166,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>../generate_protobuf.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -182,6 +186,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>../generate_protobuf.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -201,6 +208,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>../generate_protobuf.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

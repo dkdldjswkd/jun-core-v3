@@ -448,6 +448,10 @@ FodyWeavers.xsd
 # JunCore Project Specific
 #########################################
 
+# Protobuf generated files (regenerated from .proto)
+*.pb.cc
+*.pb.h
+
 # Additional build artifacts
 *.idb
 build.log

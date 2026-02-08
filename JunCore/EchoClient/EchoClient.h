@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "../JunCore/network/Client.h"
 #include "../JunCore/protocol/UnifiedPacketHeader.h"
-#include "echo_message.pb.h"
+#include "../EchoServer/echo_message.pb.h"
 
 class EchoClient : public Client
 {

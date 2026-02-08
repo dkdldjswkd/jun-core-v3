@@ -6,20 +6,20 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="echo_message.pb.cc">
+    <ClCompile Include="..\EchoServer\echo_message.pb.cc">
       <Filter>protobuf</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="StressClient.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="echo_message.pb.h">
+    <ClInclude Include="..\EchoServer\echo_message.pb.h">
       <Filter>protobuf</Filter>
     </ClInclude>
     <ClInclude Include="StressClient.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="echo_message.proto">
+    <None Include="..\EchoServer\echo_message.proto">
       <Filter>protobuf</Filter>
     </None>
   </ItemGroup>

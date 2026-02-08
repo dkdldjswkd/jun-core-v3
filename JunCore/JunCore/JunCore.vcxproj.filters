@@ -54,9 +54,6 @@
     <ClCompile Include="logic\Time.cpp">
       <Filter>logic</Filter>
     </ClCompile>
-    <ClCompile Include="protocol\game_messages.pb.cc">
-      <Filter>protocol</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="network\NetBase.h">
@@ -121,9 +118,6 @@
     </ClInclude>
     <ClInclude Include="logic\Time.h">
       <Filter>logic</Filter>
-    </ClInclude>
-    <ClInclude Include="protocol\game_messages.pb.h">
-      <Filter>protocol</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
