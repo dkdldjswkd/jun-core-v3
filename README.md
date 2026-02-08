@@ -40,6 +40,8 @@ cd vcpkg
 .\bootstrap-vcpkg.bat
 ```
 
+> vcpkg 설치 경로는 자유이며, Visual Studio에서 자동으로 인식됩니다.
+
 ### 3. 프로젝트 빌드
 
 ```bash
@@ -51,13 +53,15 @@ cd JunCore
 msbuild JunCore.sln /p:Configuration=Debug /p:Platform=x64
 ```
 
+> Visual Studio 프로젝트 설정에서 `Use vcpkg manifest = Yes`가 활성화되어 있어야 합니다.
+
 ### 의존성 관리
 
 외부 라이브러리(protobuf, openssl, boost)는 **vcpkg Manifest Mode**로 관리됩니다.
 
 - `vcpkg.json`에 의존성이 정의되어 있으며, 빌드 시 자동으로 설치됩니다
 - 별도로 `vcpkg install` 명령을 실행할 필요가 없습니다
-- 트리플렛은 각 프로젝트에서 `x64-windows-static`(정적 링크)으로 설정되어 있습니다
+- 트리플렛, 매니페스트 활성화 등 공통 vcpkg 설정은 `Directory.Build.props`에서 일괄 관리되며, `x64-windows-static`(정적 링크)으로 설정되어 있습니다
 
 ## 🔧 개발 워크플로우
 
