@@ -48,11 +48,22 @@ Windows 환경에서 고성능 게임 서버 개발을 목표로 하는 C++ 서�
 - Visual Studio 2022
 - vcpkg
 
+vcpkg가 설치되어 있지 않다면 최초 1회 설치 및 환경변수 설정이 필요합니다:
+
+```bash
+cd C:\
+git clone https://github.com/microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+```
+
+설치 경로는 자유이며 (위 예시는 `C:\vcpkg`), 이후 `VCPKG_ROOT` 환경변수를 해당 경로로 설정합니다.
+
 ### 프로젝트 빌드
 
 Visual Studio에서 `JunCore.sln`을 열고 빌드합니다.
 
-첫 빌드 시 `vcpkg.json`에 정의된 의존성이 자동으로 설치될 수 있으며, 이 경우 시간이 다소 소요될 수 있습니다.
+첫 빌드 시 `vcpkg.json`에 정의된 의존성이 자동으로 설치되므로 시간이 다소 소요될 수 있습니다.
 
 ### 의존성 관리
 
