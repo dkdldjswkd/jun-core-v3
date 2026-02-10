@@ -1,82 +1,100 @@
 # JunCore - Windows C++ Game Server Core
 
-고성능 Windows C++ 게임 서버 개발을 위한 네트워크 라이브러리 및 코어 시스템
+Windows 환경에서 고성능 게임 서버 개발을 목표로 하는 C++ 서버 코어 및 네트워크 라이브러리입니다.
 
-## 🎯 프로젝트 개요
+---
 
-**JunCore**는 IOCP 기반의 고성능 네트워크 라이브러리와 게임 서버 구현을 제공합니다.
+## 프로젝트 개요
 
-### 📦 구성 요소
+**JunCore**는 IOCP 기반의 네트워크 레이어와 게임 서버 구현에 필요한 공통 코어를 제공합니다.
 
-- **JunCore** - IOCP 기반 네트워크 라이브러리 (Static Library)
-- **JunCommon** - 공통 유틸리티 라이브러리 (Static Library)
-- **EchoServer / EchoClient** - 에코 서버/클라이언트 예제
-- **GameServer** - 게임 서버
-- **StressClient** - 스트레스 테스트 클라이언트
-- **Test** - Protobuf, 암호화 등 테스트
+### 구성 요소
 
-### 🛠 기술 스택
+- **JunCore**
+  IOCP 기반 네트워크 라이브러리 (Static Library)
 
-- **언어**: C++20
-- **플랫폼**: Windows 10/11
+- **JunCommon**
+  공통 유틸리티 및 기반 모듈 (Static Library)
+
+- **EchoServer / EchoClient**
+  네트워크 동작 확인용 에코 서버/클라이언트 예제
+
+- **GameServer**
+  실제 게임 서버 구현
+
+- **StressClient**
+  부하 테스트용 클라이언트
+
+- **Test**
+  Protobuf, 암호화 등 기능 테스트 프로젝트
+
+---
+
+## 기술 스택
+
+- **Language**: C++20
+- **Platform**: Windows 10 / 11
 - **IDE**: Visual Studio 2022
-- **네트워킹**: WinSock2, IOCP
-- **메시지**: Protocol Buffers
-- **패키지 관리**: vcpkg
+- **Networking**: WinSock2, IOCP
+- **Serialization**: Protocol Buffers
 
-## 🚀 빌드 방법
+---
 
-### 1. 빌드 환경
+## 빌드 방법
 
-- Windows 10/11
+### 빌드 환경
+
+- Windows 10 / 11
 - Visual Studio 2022
+- vcpkg
 
-### 2. vcpkg 설치
+### 프로젝트 빌드
 
-```bash
-cd C:\
-git clone https://github.com/Microsoft/vcpkg.git
-cd vcpkg
-.\bootstrap-vcpkg.bat
-```
+Visual Studio에서 `JunCore.sln`을 열고 빌드합니다.
 
-> vcpkg 설치 경로는 자유이며, Visual Studio에서 자동으로 인식됩니다.
-
-### 3. 프로젝트 빌드
-
-```bash
-git clone <repository-url>
-cd JunCore
-
-# Visual Studio에서 JunCore.sln 열고 빌드
-# 또는 명령줄에서:
-msbuild JunCore.sln /p:Configuration=Debug /p:Platform=x64
-```
-
-> Visual Studio 프로젝트 설정에서 `Use vcpkg manifest = Yes`가 활성화되어 있어야 합니다.
+첫 빌드 시 `vcpkg.json`에 정의된 의존성이 자동으로 설치될 수 있으며, 이 경우 시간이 다소 소요될 수 있습니다.
 
 ### 의존성 관리
 
-외부 라이브러리(protobuf, openssl, boost)는 **vcpkg Manifest Mode**로 관리됩니다.
+모든 프로젝트의 vcpkg 설정은 `Directory.Build.props`에서 일괄 관리됩니다:
 
-- `vcpkg.json`에 의존성이 정의되어 있으며, 빌드 시 자동으로 설치됩니다
-- 별도로 `vcpkg install` 명령을 실행할 필요가 없습니다
-- 트리플렛, 매니페스트 활성화 등 공통 vcpkg 설정은 `Directory.Build.props`에서 일괄 관리되며, `x64-windows-static`(정적 링크)으로 설정되어 있습니다
+| 속성 | 값 | 설명 |
+|------|------|------|
+| `VcpkgEnableManifest` | `true` | Manifest Mode - `vcpkg.json` 기반으로 의존성을 자동 관리 |
+| `VcpkgTriplet` (x64) | `x64-windows-static` | 정적 링크 (별도 DLL 배포 불필요) |
+| `VcpkgTriplet` (Win32) | `x86-windows-static` | 정적 링크 (별도 DLL 배포 불필요) |
 
-## 🔧 개발 워크플로우
+> 각 프로젝트(.vcxproj)에서 개별 설정할 필요 없이, 이 파일 하나로 모든 프로젝트에 일괄 적용됩니다.
 
-### .proto 파일 수정/추가 시
+의존성 목록은 `vcpkg.json`에 정의되어 있으며 (protobuf, openssl, boost), 빌드 시 자동으로 설치되므로 별도 `vcpkg install` 불필요합니다.
 
-```bash
-# 1. .proto 파일 수정 또는 새로 생성
-# 2. Protobuf 코드 재생성 (모든 .proto 파일을 자동 검색/컴파일)
-.\generate_protobuf.bat
+### 빌드 출력 경로
 
-# 3. 새 파일인 경우, 생성된 .pb.h/.pb.cc를 해당 .vcxproj에 추가
-# 4. 프로젝트 재빌드
-msbuild JunCore.sln /p:Configuration=Debug /p:Platform=x64
+```
+build/
+  bin/x64/Debug/      # 실행 파일 출력
+  bin/x64/Release/
+  obj/                # 중간 파일 출력
 ```
 
 ---
 
-**JunCore** - High Performance Game Server Core for Windows
+## Protobuf 코드 생성
+
+### 기본 원칙
+
+`.pb.cc`와 `.pb.h`는 `.proto`로부터 자동 생성되는 파일이므로 **Git에 커밋하지 않습니다** (`.gitignore`에 등록됨).
+
+### 자동 생성
+
+JunCore 프로젝트의 빌드 전 이벤트에서 Protobuf 코드가 자동 생성됩니다.
+
+- `.proto` 파일이 변경된 경우에만 protoc가 실행됩니다
+- 변경 없으면 스킵
+
+### 수동 생성 (필요 시)
+
+```bash
+# 솔루션 루트에서 실행
+.\generate_protobuf.bat
+```
