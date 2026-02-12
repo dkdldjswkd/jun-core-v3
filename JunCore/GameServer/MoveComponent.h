@@ -2,6 +2,7 @@
 #include "../JunCore/logic/Component.h"
 #include "../JunCore/core/Event.h"
 #include <cmath>
+#include <numbers>
 
 //──────────────────────────────────────────────────────────────
 // MoveComponent - 이동 기능 컴포넌트
@@ -78,6 +79,14 @@ public:
         m_destZ = z;
         m_arrivedNotified = false;  // 새 목적지 = 아직 도착 안 함
 
+        // 이동 방향으로 angle 갱신
+        float dx = m_destX - m_currentX;
+        float dz = m_destZ - m_currentZ;
+        if (dx * dx + dz * dz > 0.001f)
+        {
+            m_angle = std::atan2(dx, dz) * (180.0f / std::numbers::pi_v<float>);
+        }
+
         // 이동 시작 이벤트 발행
         OnMoveStart();
     }
@@ -98,6 +107,11 @@ public:
     //──────────────────────────────────────────────────────────
     void SetMoveSpeed(float speed) { m_moveSpeed = speed; }
     float GetMoveSpeed() const { return m_moveSpeed; }
+
+    //──────────────────────────────────────────────────────
+    // 방향 (Y축 회전, degrees)
+    //──────────────────────────────────────────────────────
+    float GetAngle() const { return m_angle; }
 
     //──────────────────────────────────────────────────────────
     // 이동 상태
@@ -154,6 +168,9 @@ private:
 
     // 이동 속도 (FixedUpdate당 이동 거리)
     float m_moveSpeed{0.1f};
+
+    // 바라보는 방향 (Y축 회전, degrees)
+    float m_angle{0.0f};
 
     // 도착 알림 플래그 (중복 호출 방지)
     bool m_arrivedNotified{true};

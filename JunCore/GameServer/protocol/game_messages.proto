@@ -110,6 +110,7 @@ message GC_PLAYER_APPEAR_NOTIFY
 {
   int32 player_id = 1;    // 나타난 플레이어 ID
   Pos position = 2;       // 현재 위치
+  float angle = 3;        // 바라보는 방향 (Y축 회전, degrees)
 }
 
 // 서버 → 클라이언트: 플레이어 시야 이탈 알림

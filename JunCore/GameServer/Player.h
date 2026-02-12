@@ -88,6 +88,7 @@ public:
 	// 위치 정보 (MoveComponent에서 가져와 game::Pos로 변환)
 	game::Pos GetCurrentPos() const;
 	game::Pos GetDestPos() const;
+	float GetAngle() const;
 
 	// MoveComponent 직접 접근
 	MoveComponent* GetMoveComponent() const { return m_pMoveComp; }

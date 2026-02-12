@@ -77,6 +77,7 @@ void Player::OnEnter()
 	game::GC_PLAYER_APPEAR_NOTIFY my_appear;
 	my_appear.set_player_id(player_id_);
 	my_appear.mutable_position()->CopyFrom(GetCurrentPos());
+	my_appear.set_angle(GetAngle());
 
 	BroadcastToOthers(my_appear);
 
@@ -97,6 +98,7 @@ void Player::OnEnter()
 			game::GC_PLAYER_APPEAR_NOTIFY other_appear;
 			other_appear.set_player_id(other->player_id_);
 			other_appear.mutable_position()->CopyFrom(other->GetCurrentPos());
+			other_appear.set_angle(other->GetAngle());
 
 			SendPacket(other_appear);
 			other_player_count++;
@@ -166,6 +168,11 @@ game::Pos Player::GetDestPos() const
 	pos.set_y(m_pMoveComp->GetDestY());
 	pos.set_z(m_pMoveComp->GetDestZ());
 	return pos;
+}
+
+float Player::GetAngle() const
+{
+	return m_pMoveComp->GetAngle();
 }
 
 void Player::BroadcastMoveNotify()
