@@ -87,6 +87,10 @@
     <ClInclude Include="crypto\RSA2048.h">
       <Filter>crypto</Filter>
     </ClInclude>
+    <ClInclude Include="synchronization\OnceInitializer.h" />
+    <ClInclude Include="synchronization\OnceInitializerPolicies.h" />
+    <ClInclude Include="queue\JobQueue.h" />
+    <ClInclude Include="queue\PacketJob.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="container\RingBuffer.cpp">

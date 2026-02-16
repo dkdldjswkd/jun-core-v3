@@ -23,7 +23,6 @@
       <UniqueIdentifier>{F9C2E3D7-B8A6-4d4f-C9D8-8B4B5B6B7B8B}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
-  
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="RSAExample.cpp">
@@ -33,9 +32,6 @@
       <Filter>examples\crypto</Filter>
     </ClCompile>
     <ClCompile Include="HandshakeExample.cpp">
-      <Filter>examples\network</Filter>
-    </ClCompile>
-    <ClCompile Include="SimpleHandshakeExample.cpp">
       <Filter>examples\network</Filter>
     </ClCompile>
     <ClCompile Include="ProtobufExample.cpp">
@@ -50,8 +46,9 @@
     <ClCompile Include="game_message.pb.cc">
       <Filter>protobuf\generated</Filter>
     </ClCompile>
+    <ClCompile Include="JobQueueTest.cpp" />
+    <ClCompile Include="OnceInitializerTest.cpp" />
   </ItemGroup>
-  
   <ItemGroup>
     <ClInclude Include="ProtobufExample.h">
       <Filter>examples\protocol</Filter>
@@ -66,7 +63,6 @@
       <Filter>protobuf\generated</Filter>
     </ClInclude>
   </ItemGroup>
-  
   <ItemGroup>
     <None Include="crypto_protocol.proto">
       <Filter>protobuf\proto</Filter>
