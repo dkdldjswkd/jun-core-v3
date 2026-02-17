@@ -3,6 +3,7 @@
 #include "../JunCore/logic/GameScene.h"
 #include "../JunCore/core/Event.h"
 #include "MoveComponent.h"
+#include "AttackComponent.h"
 #include "../JunCore/network/User.h"
 #include "protocol/game_messages.pb.h"
 #include <string>
@@ -84,6 +85,12 @@ public:
 		}
 	}
 
+	// HP
+	void TakeDamage(int32_t damage, Player* attacker);
+	int32_t GetHp() const { return hp_; }
+	int32_t GetMaxHp() const { return max_hp_; }
+	bool IsDead() const { return hp_ <= 0; }
+
 	// Getter
 	User* GetOwner() const { return owner_; }
 	uint32_t GetPlayerId() const { return player_id_; }
@@ -93,8 +100,9 @@ public:
 	game::Pos GetDestPos() const;
 	float GetAngle() const;
 
-	// MoveComponent 직접 접근
+	// Component 직접 접근
 	MoveComponent* GetMoveComponent() const { return m_pMoveComp; }
+	AttackComponent* GetAttackComponent() const { return m_pAttackComp; }
 
 private:
 	// ──────────────────────────────────────────────────────
@@ -102,6 +110,11 @@ private:
 	// ──────────────────────────────────────────────────────
 	void HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos);
 	void HandleAttack(const game::Pos& cur_pos, int32_t target_id);
+
+	// ──────────────────────────────────────────────────────
+	// 공격 이벤트 핸들러
+	// ──────────────────────────────────────────────────────
+	void HandleDamageApply(int32_t target_id, int32_t damage);
 
 	// ──────────────────────────────────────────────────────
 	// 이동 이벤트 핸들러
@@ -117,9 +130,17 @@ private:
 
 	User* owner_;               // 소유 네트워크 세션
 	uint32_t player_id_;        // 플레이어 ID
-	MoveComponent* m_pMoveComp; // 이동 컴포넌트 (Entity가 소유권 관리)
+
+	// HP
+	int32_t hp_{10};
+	int32_t max_hp_{10};
+
+	// 컴포넌트 (Entity가 소유권 관리)
+	MoveComponent* m_pMoveComp;
+	AttackComponent* m_pAttackComp;
 
 	// 이벤트 구독 (RAII 자동 해제)
 	Subscription m_moveStartSub;
 	Subscription m_arrivedSub;
+	Subscription m_damageApplySub;
 };

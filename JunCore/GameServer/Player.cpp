@@ -6,9 +6,13 @@ Player::Player(GameScene* scene, User* owner, uint32_t player_id)
 	, owner_(owner)
 	, player_id_(player_id)
 	, m_pMoveComp(nullptr)
+	, m_pAttackComp(nullptr)
 {
 	// MoveComponent 추가 (Entity가 소유권 관리)
 	m_pMoveComp = AddComponent<MoveComponent>(0.1f);  // 50Hz 기준 초당 5m 이동
+
+	// AttackComponent 추가
+	m_pAttackComp = AddComponent<AttackComponent>();
 
 	// 이동 이벤트 구독 (RAII - Player 소멸 시 자동 해제)
 	m_moveStartSub = m_pMoveComp->OnMoveStart.Subscribe([this]()
@@ -19,6 +23,12 @@ Player::Player(GameScene* scene, User* owner, uint32_t player_id)
 	m_arrivedSub = m_pMoveComp->OnArrived.Subscribe([this]()
 	{
 		BroadcastMoveNotify();
+	});
+
+	// 공격 데미지 적용 이벤트 구독
+	m_damageApplySub = m_pAttackComp->OnDamageApply.Subscribe([this](int32_t target_id, int32_t damage)
+	{
+		HandleDamageApply(target_id, damage);
 	});
 }
 
@@ -78,6 +88,8 @@ void Player::OnEnter()
 	my_appear.set_player_id(player_id_);
 	my_appear.mutable_position()->CopyFrom(GetCurrentPos());
 	my_appear.set_angle(GetAngle());
+	my_appear.set_hp(hp_);
+	my_appear.set_max_hp(max_hp_);
 
 	BroadcastToOthers(my_appear);
 
@@ -99,6 +111,8 @@ void Player::OnEnter()
 			other_appear.set_player_id(other->player_id_);
 			other_appear.mutable_position()->CopyFrom(other->GetCurrentPos());
 			other_appear.set_angle(other->GetAngle());
+			other_appear.set_hp(other->hp_);
+			other_appear.set_max_hp(other->max_hp_);
 
 			SendPacket(other_appear);
 			other_player_count++;
@@ -145,6 +159,13 @@ void Player::PostAttackJob(const game::Pos& cur_pos, int32_t target_id)
 
 void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 {
+	// 0. 사망 상태 체크
+	if (IsDead())
+	{
+		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack failed: attacker is dead", player_id_);
+		return;
+	}
+
 	// 1. 타겟 검증: Scene에서 target_id로 Player 찾기
 	Player* target = nullptr;
 	if (m_pScene)
@@ -164,6 +185,13 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 	if (!target)
 	{
 		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack failed: target (ID: %d) not found",
+			player_id_, target_id);
+		return;
+	}
+
+	if (target->IsDead())
+	{
+		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack failed: target (ID: %d) is dead",
 			player_id_, target_id);
 		return;
 	}
@@ -204,7 +232,10 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 	// 4. 이동 중지 (현재 서버 위치에서 멈춤)
 	m_pMoveComp->SetDestination(m_pMoveComp->GetX(), 0.0f, m_pMoveComp->GetZ());
 
-	// 5. 공격 알림 브로드캐스트
+	// 5. 공격 상태 시작 (0.5초 후 데미지 적용)
+	m_pAttackComp->StartAttack(target_id);
+
+	// 6. 공격 알림 브로드캐스트 (클라이언트 애니메이션 트리거)
 	game::GC_ATTACK_NOTIFY notify;
 	notify.set_attacker_id(player_id_);
 	notify.set_target_id(target_id);
@@ -216,11 +247,81 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 		player_id_, target_id, m_pMoveComp->GetX(), m_pMoveComp->GetZ(), std::sqrt(atkDistSq));
 }
 
+void Player::HandleDamageApply(int32_t target_id, int32_t damage)
+{
+	// AttackComponent의 OnDamageApply 이벤트에서 호출됨
+	// 0.5초 딜레이 후 실제 데미지 적용 시점
+
+	// 타겟 재검증 (딜레이 동안 나갔을 수 있음)
+	Player* target = nullptr;
+	if (m_pScene)
+	{
+		const auto& objects = m_pScene->GetObjects();
+		for (auto* obj : objects)
+		{
+			Player* p = dynamic_cast<Player*>(obj);
+			if (p && p->GetPlayerId() == static_cast<uint32_t>(target_id))
+			{
+				target = p;
+				break;
+			}
+		}
+	}
+
+	if (!target || target->IsDead())
+	{
+		LOG_DEBUG("[Player::HandleDamageApply] Player (ID: %u) damage skipped: target (ID: %d) %s",
+			player_id_, target_id, !target ? "not found" : "is dead");
+		return;
+	}
+
+	// 데미지 적용
+	target->TakeDamage(damage, this);
+
+	// 데미지 알림 브로드캐스트
+	game::GC_DAMAGE_NOTIFY damage_notify;
+	damage_notify.set_attacker_id(player_id_);
+	damage_notify.set_target_id(target_id);
+	damage_notify.set_damage(damage);
+	damage_notify.set_target_hp(target->GetHp());
+
+	BroadcastToScene(damage_notify);
+
+	LOG_DEBUG("[Player::HandleDamageApply] Player (ID: %u) dealt %d damage to Player (ID: %d), remaining HP: %d",
+		player_id_, damage, target_id, target->GetHp());
+}
+
+void Player::TakeDamage(int32_t damage, Player* attacker)
+{
+	if (IsDead())
+	{
+		return;
+	}
+
+	hp_ -= damage;
+	if (hp_ < 0)
+	{
+		hp_ = 0;
+	}
+
+	LOG_INFO("[Player::TakeDamage] Player (ID: %u) took %d damage from Player (ID: %u), HP: %d/%d",
+		player_id_, damage,
+		attacker ? attacker->GetPlayerId() : 0,
+		hp_, max_hp_);
+}
+
 void Player::HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos)
 {
 	// ──────────────────────────────────────────────────────
 	// GameThread에서 실행되는 목표 위치 설정
 	// ──────────────────────────────────────────────────────
+
+	// 이동 시 공격 취소
+	if (m_pAttackComp->IsAttacking())
+	{
+		m_pAttackComp->CancelAttack();
+		LOG_DEBUG("[Player::HandleSetDestPos] Player (ID: %u) attack cancelled by movement", player_id_);
+	}
 
 	// 클라-서버 위치 오차 체크
 	float dx = cur_pos.x() - m_pMoveComp->GetX();

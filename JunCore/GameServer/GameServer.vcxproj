@@ -179,6 +179,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameServer.h" />
+    <ClInclude Include="AttackComponent.h" />
     <ClInclude Include="MoveComponent.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="protocol\game_messages.pb.h" />

@@ -111,6 +111,8 @@ message GC_PLAYER_APPEAR_NOTIFY
   int32 player_id = 1;    // 나타난 플레이어 ID
   Pos position = 2;       // 현재 위치
   float angle = 3;        // 바라보는 방향 (Y축 회전, degrees)
+  int32 hp = 4;           // 현재 HP
+  int32 max_hp = 5;       // 최대 HP
 }
 
 // 서버 → 클라이언트: 플레이어 시야 이탈 알림
@@ -136,6 +138,15 @@ message GC_ATTACK_NOTIFY
   int32 attacker_id = 1;  // 공격한 플레이어 ID
   int32 target_id = 2;    // 공격 대상 플레이어 ID
   Pos attacker_pos = 3;   // 공격자 위치 (다른 클라에서 위치 보정용)
+}
+
+// 서버 → 클라이언트: 데미지 알림 (주변 플레이어들에게 브로드캐스트)
+message GC_DAMAGE_NOTIFY
+{
+  int32 attacker_id = 1;  // 공격한 플레이어 ID
+  int32 target_id = 2;    // 피격 대상 플레이어 ID
+  int32 damage = 3;       // 데미지량
+  int32 target_hp = 4;    // 피격 후 남은 HP
 }
 
 // ============================================================
