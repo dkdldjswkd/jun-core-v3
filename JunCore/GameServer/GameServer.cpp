@@ -35,6 +35,11 @@ void GameServer::RegisterPacketHandlers()
 	{
 		this->HandleMoveRequest(user, request);
 	});
+
+	RegisterPacketHandler<game::CG_ATTACK_REQ>([this](User& user, const game::CG_ATTACK_REQ& request)
+	{
+		this->HandleAttackRequest(user, request);
+	});
 }
 
 void GameServer::SendError(User& user, game::ErrorCode error_code, const std::string& error_message)
@@ -184,7 +189,19 @@ void GameServer::HandleMoveRequest(User& user, const game::CG_MOVE_REQ& request)
 		request.cur_pos().x(), request.cur_pos().y(), request.cur_pos().z(),
 		request.move_pos().x(), request.move_pos().y(), request.move_pos().z());
 
-	player->PostSetDestPosJob(request.move_pos());
+	player->PostSetDestPosJob(request.cur_pos(), request.move_pos());
+}
+
+void GameServer::HandleAttackRequest(User& user, const game::CG_ATTACK_REQ& request)
+{
+	Player* player = user.GetPlayer();
+	if (player == nullptr)
+	{
+		SendError(user, game::ErrorCode::PLAYER_NOT_FOUND, "Player not found");
+		return;
+	}
+
+	player->PostAttackJob(request.cur_pos(), request.target_id());
 }
 
 void GameServer::OnSessionConnect(User* user)

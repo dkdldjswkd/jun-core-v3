@@ -33,7 +33,10 @@ public:
 	// ──────────────────────────────────────────────────────
 
 	// 목표 위치 설정 Job 등록
-	void PostSetDestPosJob(const game::Pos& dest_pos);
+	void PostSetDestPosJob(const game::Pos& cur_pos, const game::Pos& dest_pos);
+
+	// 공격 처리 Job 등록
+	void PostAttackJob(const game::Pos& cur_pos, int32_t target_id);
 
 	// 패킷 전송 (User를 통해)
 	template<typename T>
@@ -97,7 +100,8 @@ private:
 	// ──────────────────────────────────────────────────────
 	// 내부 Job 핸들러들 (GameThread에서 실행됨)
 	// ──────────────────────────────────────────────────────
-	void HandleSetDestPos(const game::Pos& dest_pos);
+	void HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos);
+	void HandleAttack(const game::Pos& cur_pos, int32_t target_id);
 
 	// ──────────────────────────────────────────────────────
 	// 이동 이벤트 핸들러
@@ -105,6 +109,12 @@ private:
 	void BroadcastMoveNotify();
 
 private:
+	// 위치 동기화 임계값 (이 거리 이상 차이나면 sync 패킷 전송)
+	static constexpr float POSITION_SYNC_THRESHOLD = 2.0f;
+
+	// 공격 사거리
+	static constexpr float ATTACK_RANGE = 3.0f;
+
 	User* owner_;               // 소유 네트워크 세션
 	uint32_t player_id_;        // 플레이어 ID
 	MoveComponent* m_pMoveComp; // 이동 컴포넌트 (Entity가 소유권 관리)

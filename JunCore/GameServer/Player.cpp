@@ -127,23 +127,123 @@ void Player::OnExit()
 
 }
 
-void Player::PostSetDestPosJob(const game::Pos& dest_pos)
+void Player::PostSetDestPosJob(const game::Pos& cur_pos, const game::Pos& dest_pos)
 {
-	PostJob([this, dest_pos]()
+	PostJob([this, cur_pos, dest_pos]()
 	{
-		this->HandleSetDestPos(dest_pos);
+		this->HandleSetDestPos(cur_pos, dest_pos);
 	});
 }
 
-void Player::HandleSetDestPos(const game::Pos& dest_pos)
+void Player::PostAttackJob(const game::Pos& cur_pos, int32_t target_id)
+{
+	PostJob([this, cur_pos, target_id]()
+	{
+		this->HandleAttack(cur_pos, target_id);
+	});
+}
+
+void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
+{
+	// 1. 타겟 검증: Scene에서 target_id로 Player 찾기
+	Player* target = nullptr;
+	if (m_pScene)
+	{
+		const auto& objects = m_pScene->GetObjects();
+		for (auto* obj : objects)
+		{
+			Player* p = dynamic_cast<Player*>(obj);
+			if (p && p->GetPlayerId() == static_cast<uint32_t>(target_id))
+			{
+				target = p;
+				break;
+			}
+		}
+	}
+
+	if (!target)
+	{
+		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack failed: target (ID: %d) not found",
+			player_id_, target_id);
+		return;
+	}
+
+	// 2. 공격 사거리 검증 (서버 위치 기준, ATTACK_RANGE * 1.2 러프 체크)
+	float atk_dx = m_pMoveComp->GetX() - target->GetMoveComponent()->GetX();
+	float atk_dz = m_pMoveComp->GetZ() - target->GetMoveComponent()->GetZ();
+	float atkDistSq = atk_dx * atk_dx + atk_dz * atk_dz;
+	float toleranceRange = ATTACK_RANGE * 1.2f;
+
+	if (atkDistSq > toleranceRange * toleranceRange)
+	{
+		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack rejected: target (ID: %d) out of range (dist=%.2f, tolerance=%.2f)",
+			player_id_, target_id, std::sqrt(atkDistSq), toleranceRange);
+		return;
+	}
+
+	// 3. 클라-서버 위치 오차 체크 (cur_pos sync)
+	float dx = cur_pos.x() - m_pMoveComp->GetX();
+	float dz = cur_pos.z() - m_pMoveComp->GetZ();
+	float distSq = dx * dx + dz * dz;
+
+	if (distSq <= POSITION_SYNC_THRESHOLD * POSITION_SYNC_THRESHOLD)
+	{
+		m_pMoveComp->SetPosition(cur_pos.x(), 0.0f, cur_pos.z());
+	}
+	else
+	{
+		game::GC_POSITION_SYNC_NOTIFY sync;
+		sync.mutable_position()->CopyFrom(GetCurrentPos());
+		SendPacket(sync);
+
+		LOG_WARN("[Player::HandleAttack] Position sync: Player (ID: %u) client=(%.2f, %.2f) server=(%.2f, %.2f)",
+			player_id_, cur_pos.x(), cur_pos.z(),
+			m_pMoveComp->GetX(), m_pMoveComp->GetZ());
+	}
+
+	// 4. 이동 중지 (현재 서버 위치에서 멈춤)
+	m_pMoveComp->SetDestination(m_pMoveComp->GetX(), 0.0f, m_pMoveComp->GetZ());
+
+	// 5. 공격 알림 브로드캐스트
+	game::GC_ATTACK_NOTIFY notify;
+	notify.set_attacker_id(player_id_);
+	notify.set_target_id(target_id);
+	notify.mutable_attacker_pos()->CopyFrom(GetCurrentPos());
+
+	BroadcastToScene(notify);
+
+	LOG_DEBUG("[Player::HandleAttack] Player (ID: %u) attacks Player (ID: %d) at (%.2f, %.2f) dist=%.2f",
+		player_id_, target_id, m_pMoveComp->GetX(), m_pMoveComp->GetZ(), std::sqrt(atkDistSq));
+}
+
+void Player::HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos)
 {
 	// ──────────────────────────────────────────────────────
 	// GameThread에서 실행되는 목표 위치 설정
 	// ──────────────────────────────────────────────────────
 
-	// TODO: 이동 검증
-	// - 목표 위치가 맵 범위 내인지
-	// - 벽 충돌 체크 등
+	// 클라-서버 위치 오차 체크
+	float dx = cur_pos.x() - m_pMoveComp->GetX();
+	float dz = cur_pos.z() - m_pMoveComp->GetZ();
+	float distSq = dx * dx + dz * dz;
+
+	if (distSq <= POSITION_SYNC_THRESHOLD * POSITION_SYNC_THRESHOLD)
+	{
+		// 임계값 이내 → 클라 cur_pos로 위치 보정
+		m_pMoveComp->SetPosition(cur_pos.x(), 0.0f, cur_pos.z());
+	}
+	else
+	{
+		// 임계값 초과 → 서버 위치 유지, 클라에 위치 보정 알림
+		game::GC_POSITION_SYNC_NOTIFY sync;
+		sync.mutable_position()->CopyFrom(GetCurrentPos());
+		SendPacket(sync);
+
+		LOG_WARN("[Player::HandleSetDestPos] Position sync: Player (ID: %u) client=(%.2f, %.2f) server=(%.2f, %.2f) dist=%.2f",
+			player_id_, cur_pos.x(), cur_pos.z(),
+			m_pMoveComp->GetX(), m_pMoveComp->GetZ(),
+			std::sqrt(distSq));
+	}
 
 	m_pMoveComp->SetDestination(dest_pos.x(), dest_pos.y(), dest_pos.z());
 

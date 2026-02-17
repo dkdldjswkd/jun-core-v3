@@ -30,6 +30,7 @@ private:
 	void HandleSceneReadyRequest(User& user, const game::CG_SCENE_READY_REQ& request);
 	void HandleSceneChangeRequest(User& user, const game::CG_SCENE_CHANGE_REQ& request);
 	void HandleMoveRequest(User& user, const game::CG_MOVE_REQ& request);
+	void HandleAttackRequest(User& user, const game::CG_ATTACK_REQ& request);
 
 	// 에러 전송 헬퍼
 	void SendError(User& user, game::ErrorCode error_code, const std::string& error_message);
