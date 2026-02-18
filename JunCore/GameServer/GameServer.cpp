@@ -4,6 +4,24 @@
 #include "../JunCore/logic/GameScene.h"
 #include "../JunCore/logic/GameObjectManager.h"
 #include "../JunCore/logic/GameThread.h"
+#include <random>
+
+// 맵 범위: X[-15, 15], Z[-15, 15]
+static constexpr float MAP_MIN_X = -15.0f;
+static constexpr float MAP_MAX_X =  15.0f;
+static constexpr float MAP_MIN_Z = -15.0f;
+static constexpr float MAP_MAX_Z =  15.0f;
+
+static void GenerateRandomSpawnPos(float& out_x, float& out_y, float& out_z)
+{
+	thread_local std::mt19937 rng{ std::random_device{}() };
+	thread_local std::uniform_real_distribution<float> dist_x{ MAP_MIN_X, MAP_MAX_X };
+	thread_local std::uniform_real_distribution<float> dist_z{ MAP_MIN_Z, MAP_MAX_Z };
+
+	out_x = dist_x(rng);
+	out_y = 0.0f;
+	out_z = dist_z(rng);
+}
 
 GameServer::GameServer(std::shared_ptr<IOCPManager> manager, int game_thread_count)
 	: Server(manager, game_thread_count)
@@ -67,14 +85,10 @@ void GameServer::HandleLoginRequest(User& user, const game::CG_LOGIN_REQ& reques
 		return;
 	}
 
-	// Player ID 생성 및 마지막 위치 조회
 	const uint32_t player_id = GeneratePlayerId();
 	const int32_t scene_id = GetDefaultSceneId();
-
-	// TODO: DB에서 스폰 위치 조회 (현재는 기본값)
-	const float spawn_x = 0.0f;
-	const float spawn_y = 0.0f;
-	const float spawn_z = 0.0f;
+	float spawn_x, spawn_y, spawn_z;
+	GenerateRandomSpawnPos(spawn_x, spawn_y, spawn_z);
 
 	// User에 정보 저장 (씬 로딩 완료 후 사용)
 	user.SetPlayerId(player_id);
@@ -152,10 +166,8 @@ void GameServer::HandleSceneChangeRequest(User& user, const game::CG_SCENE_CHANG
 
 	// TODO: Scene 이동 조건 검증 (레벨, 퀘스트 조건 등)
 
-	// TODO: DB에서 새 씬의 스폰 위치 조회 (현재는 기본값)
-	const float spawn_x = 0.0f;
-	const float spawn_y = 0.0f;
-	const float spawn_z = 0.0f;
+	float spawn_x, spawn_y, spawn_z;
+	GenerateRandomSpawnPos(spawn_x, spawn_y, spawn_z);
 
 	// User에 새 씬 정보 저장
 	user.SetLastSceneId(new_scene_id);
