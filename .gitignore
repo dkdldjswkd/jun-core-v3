@@ -495,3 +495,7 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+# dist 폴더는 배포용 바이너리를 포함하므로 예외 처리
+!dist/**/*.exe
+!dist/**/*.dll
