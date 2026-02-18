@@ -141,21 +141,6 @@ void Player::OnExit()
 
 }
 
-void Player::PostSetDestPosJob(const game::Pos& cur_pos, const game::Pos& dest_pos)
-{
-	PostJob([this, cur_pos, dest_pos]()
-	{
-		this->HandleSetDestPos(cur_pos, dest_pos);
-	});
-}
-
-void Player::PostAttackJob(const game::Pos& cur_pos, int32_t target_id)
-{
-	PostJob([this, cur_pos, target_id]()
-	{
-		this->HandleAttack(cur_pos, target_id);
-	});
-}
 
 void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 {
@@ -227,7 +212,7 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 	// 4. 이동 중지 (이벤트 발행 없이 즉시 정지 - GC_ATTACK_NOTIFY가 정지를 대신 알림)
 	m_pMoveComp->Stop();
 
-	// 5. 공격 상태 시작 (0.5초 후 데미지 적용)
+	// 5. 공격 상태 시작 (몇초 후 (ex. 칼을 내리쳤을때) 데미지 적용)
 	m_pAttackComp->StartAttack(target_id);
 
 	// 6. 공격 알림 브로드캐스트 (클라이언트 애니메이션 트리거)

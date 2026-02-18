@@ -71,7 +71,7 @@ private:
     float m_elapsed{0.0f};
 
     // 공격 모션 선딜 (데미지 적용까지 딜레이)
-    static constexpr float DAMAGE_DELAY = 0.4f;
+    static constexpr float DAMAGE_DELAY = 0.33f;
 
     // 데미지량
     static constexpr int32_t DAMAGE_AMOUNT = 1;

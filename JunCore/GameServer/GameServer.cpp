@@ -189,7 +189,13 @@ void GameServer::HandleMoveRequest(User& user, const game::CG_MOVE_REQ& request)
 		request.cur_pos().x(), request.cur_pos().y(), request.cur_pos().z(),
 		request.move_pos().x(), request.move_pos().y(), request.move_pos().z());
 
-	player->PostSetDestPosJob(request.cur_pos(), request.move_pos());
+	auto cur_pos = request.cur_pos();
+	auto dest_pos = request.move_pos();
+
+	player->PostJob([player, cur_pos, dest_pos]()
+	{
+		player->HandleSetDestPos(cur_pos, dest_pos);
+	});
 }
 
 void GameServer::HandleAttackRequest(User& user, const game::CG_ATTACK_REQ& request)
@@ -201,7 +207,13 @@ void GameServer::HandleAttackRequest(User& user, const game::CG_ATTACK_REQ& requ
 		return;
 	}
 
-	player->PostAttackJob(request.cur_pos(), request.target_id());
+	auto cur_pos = request.cur_pos();
+	int32_t target_id = request.target_id();
+
+	player->PostJob([player, cur_pos, target_id]()
+	{
+		player->HandleAttack(cur_pos, target_id);
+	});
 }
 
 void GameServer::OnSessionConnect(User* user)

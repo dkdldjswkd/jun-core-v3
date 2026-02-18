@@ -33,11 +33,9 @@ public:
 	// Player 전용 메서드
 	// ──────────────────────────────────────────────────────
 
-	// 목표 위치 설정 Job 등록
-	void PostSetDestPosJob(const game::Pos& cur_pos, const game::Pos& dest_pos);
-
-	// 공격 처리 Job 등록
-	void PostAttackJob(const game::Pos& cur_pos, int32_t target_id);
+	// 패킷 핸들러 (GameThread에서 실행됨)
+	void HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos);
+	void HandleAttack(const game::Pos& cur_pos, int32_t target_id);
 
 	// 패킷 전송 (User를 통해)
 	template<typename T>
@@ -105,11 +103,6 @@ public:
 	AttackComponent* GetAttackComponent() const { return m_pAttackComp; }
 
 private:
-	// ──────────────────────────────────────────────────────
-	// 내부 Job 핸들러들 (GameThread에서 실행됨)
-	// ──────────────────────────────────────────────────────
-	void HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos);
-	void HandleAttack(const game::Pos& cur_pos, int32_t target_id);
 	void RejectAttack(const game::Pos& cur_pos);
 
 	// ──────────────────────────────────────────────────────
@@ -125,7 +118,7 @@ private:
 
 private:
 	// 공격 사거리
-	static constexpr float ATTACK_RANGE = 3.0f;
+	static constexpr float ATTACK_RANGE = 7.0f;
 
 	User* owner_;               // 소유 네트워크 세션
 	uint32_t player_id_;        // 플레이어 ID
