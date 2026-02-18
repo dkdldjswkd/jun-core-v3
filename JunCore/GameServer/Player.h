@@ -110,6 +110,7 @@ private:
 	// ──────────────────────────────────────────────────────
 	void HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos);
 	void HandleAttack(const game::Pos& cur_pos, int32_t target_id);
+	void RejectAttack(const game::Pos& cur_pos);
 
 	// ──────────────────────────────────────────────────────
 	// 공격 이벤트 핸들러
@@ -120,11 +121,9 @@ private:
 	// 이동 이벤트 핸들러
 	// ──────────────────────────────────────────────────────
 	void BroadcastMoveNotify();
+	void BroadcastMoveStopNotify();
 
 private:
-	// 위치 동기화 임계값 (이 거리 이상 차이나면 sync 패킷 전송)
-	static constexpr float POSITION_SYNC_THRESHOLD = 2.0f;
-
 	// 공격 사거리
 	static constexpr float ATTACK_RANGE = 3.0f;
 

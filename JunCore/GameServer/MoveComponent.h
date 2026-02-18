@@ -114,6 +114,37 @@ public:
     float GetAngle() const { return m_angle; }
 
     //──────────────────────────────────────────────────────────
+    // 클라-서버 위치 동기화
+    // 임계값 이내면 클라 위치로 보정 후 true 반환
+    // 초과하면 서버 위치 유지, false 반환 (호출자가 sync 패킷 전송)
+    //──────────────────────────────────────────────────────────
+    bool TrySyncPosition(float clientX, float clientY, float clientZ)
+    {
+        float dx = clientX - m_currentX;
+        float dz = clientZ - m_currentZ;
+        float distSq = dx * dx + dz * dz;
+
+        if (distSq <= SYNC_THRESHOLD * SYNC_THRESHOLD)
+        {
+            SetPosition(clientX, clientY, clientZ);
+            return true;
+        }
+        return false;
+    }
+
+    //──────────────────────────────────────────────────────────
+    // 즉시 정지 (이벤트 발행 없음)
+    // 공격 등 외부 요인으로 강제 정지할 때 사용
+    //──────────────────────────────────────────────────────────
+    void Stop()
+    {
+        m_destX = m_currentX;
+        m_destY = m_currentY;
+        m_destZ = m_currentZ;
+        m_arrivedNotified = true;  // OnArrived 발행 방지
+    }
+
+    //──────────────────────────────────────────────────────────
     // 이동 상태
     //──────────────────────────────────────────────────────────
     bool HasReachedDestination() const
@@ -177,4 +208,7 @@ private:
 
     // 도착 판정 임계값
     static constexpr float ARRIVAL_THRESHOLD = 0.1f;
+
+    // 클라-서버 위치 동기화 임계값
+    static constexpr float SYNC_THRESHOLD = 2.0f;
 };

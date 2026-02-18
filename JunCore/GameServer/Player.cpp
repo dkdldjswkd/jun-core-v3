@@ -22,7 +22,7 @@ Player::Player(GameScene* scene, User* owner, uint32_t player_id)
 
 	m_arrivedSub = m_pMoveComp->OnArrived.Subscribe([this]()
 	{
-		BroadcastMoveNotify();
+		BroadcastMoveStopNotify();
 	});
 
 	// 공격 데미지 적용 이벤트 구독
@@ -67,9 +67,9 @@ void Player::OnEnter()
 		owner_->GetSpawnPos(spawn_x, spawn_y, spawn_z);
 	}
 
-	// 스폰 위치로 MoveComponent에 위치 설정
+	// 스폰 위치로 MoveComponent에 위치 설정 (이벤트 발행 없이 초기화)
 	m_pMoveComp->SetPosition(spawn_x, spawn_y, spawn_z);
-	m_pMoveComp->SetDestination(spawn_x, spawn_y, spawn_z);
+	m_pMoveComp->Stop();
 
 	LOG_INFO("[Player::OnEnter] Player (ID: %u) entered Scene %d at (%.2f, %.2f, %.2f)",
 		player_id_,
@@ -186,6 +186,7 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 	{
 		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack failed: target (ID: %d) not found",
 			player_id_, target_id);
+		RejectAttack(cur_pos);
 		return;
 	}
 
@@ -193,6 +194,7 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 	{
 		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack failed: target (ID: %d) is dead",
 			player_id_, target_id);
+		RejectAttack(cur_pos);
 		return;
 	}
 
@@ -206,19 +208,12 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 	{
 		LOG_WARN("[Player::HandleAttack] Player (ID: %u) attack rejected: target (ID: %d) out of range (dist=%.2f, tolerance=%.2f)",
 			player_id_, target_id, std::sqrt(atkDistSq), toleranceRange);
+		RejectAttack(cur_pos);
 		return;
 	}
 
-	// 3. 클라-서버 위치 오차 체크 (cur_pos sync)
-	float dx = cur_pos.x() - m_pMoveComp->GetX();
-	float dz = cur_pos.z() - m_pMoveComp->GetZ();
-	float distSq = dx * dx + dz * dz;
-
-	if (distSq <= POSITION_SYNC_THRESHOLD * POSITION_SYNC_THRESHOLD)
-	{
-		m_pMoveComp->SetPosition(cur_pos.x(), 0.0f, cur_pos.z());
-	}
-	else
+	// 3. 클라-서버 위치 동기화
+	if (!m_pMoveComp->TrySyncPosition(cur_pos.x(), 0.0f, cur_pos.z()))
 	{
 		game::GC_POSITION_SYNC_NOTIFY sync;
 		sync.mutable_position()->CopyFrom(GetCurrentPos());
@@ -229,8 +224,8 @@ void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 			m_pMoveComp->GetX(), m_pMoveComp->GetZ());
 	}
 
-	// 4. 이동 중지 (현재 서버 위치에서 멈춤)
-	m_pMoveComp->SetDestination(m_pMoveComp->GetX(), 0.0f, m_pMoveComp->GetZ());
+	// 4. 이동 중지 (이벤트 발행 없이 즉시 정지 - GC_ATTACK_NOTIFY가 정지를 대신 알림)
+	m_pMoveComp->Stop();
 
 	// 5. 공격 상태 시작 (0.5초 후 데미지 적용)
 	m_pAttackComp->StartAttack(target_id);
@@ -266,6 +261,13 @@ void Player::HandleDamageApply(int32_t target_id, int32_t damage)
 				break;
 			}
 		}
+	}
+
+	// 공격자 사망 체크 (딜레이 동안 죽었을 수 있음)
+	if (IsDead())
+	{
+		LOG_DEBUG("[Player::HandleDamageApply] Player (ID: %u) damage skipped: attacker is dead", player_id_);
+		return;
 	}
 
 	if (!target || target->IsDead())
@@ -308,6 +310,29 @@ void Player::TakeDamage(int32_t damage, Player* attacker)
 		player_id_, damage,
 		attacker ? attacker->GetPlayerId() : 0,
 		hp_, max_hp_);
+
+	// 사망 시 진행 중이던 공격 취소
+	if (IsDead())
+	{
+		m_pAttackComp->CancelAttack();
+	}
+}
+
+void Player::RejectAttack(const game::Pos& cur_pos)
+{
+	// 공격 거부 시 클라-서버 위치 동기화 + 정지
+	// 클라는 이미 이동을 멈추고 공격 시도했으므로, 서버도 정지 + 위치 보정
+	if (!m_pMoveComp->TrySyncPosition(cur_pos.x(), 0.0f, cur_pos.z()))
+	{
+		game::GC_POSITION_SYNC_NOTIFY sync;
+		sync.mutable_position()->CopyFrom(GetCurrentPos());
+		SendPacket(sync);
+	}
+
+	m_pMoveComp->Stop();
+
+	// 클라에게 정지 알림
+	BroadcastMoveStopNotify();
 }
 
 void Player::HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_pos)
@@ -323,27 +348,16 @@ void Player::HandleSetDestPos(const game::Pos& cur_pos, const game::Pos& dest_po
 		LOG_DEBUG("[Player::HandleSetDestPos] Player (ID: %u) attack cancelled by movement", player_id_);
 	}
 
-	// 클라-서버 위치 오차 체크
-	float dx = cur_pos.x() - m_pMoveComp->GetX();
-	float dz = cur_pos.z() - m_pMoveComp->GetZ();
-	float distSq = dx * dx + dz * dz;
-
-	if (distSq <= POSITION_SYNC_THRESHOLD * POSITION_SYNC_THRESHOLD)
+	// 클라-서버 위치 동기화
+	if (!m_pMoveComp->TrySyncPosition(cur_pos.x(), 0.0f, cur_pos.z()))
 	{
-		// 임계값 이내 → 클라 cur_pos로 위치 보정
-		m_pMoveComp->SetPosition(cur_pos.x(), 0.0f, cur_pos.z());
-	}
-	else
-	{
-		// 임계값 초과 → 서버 위치 유지, 클라에 위치 보정 알림
 		game::GC_POSITION_SYNC_NOTIFY sync;
 		sync.mutable_position()->CopyFrom(GetCurrentPos());
 		SendPacket(sync);
 
-		LOG_WARN("[Player::HandleSetDestPos] Position sync: Player (ID: %u) client=(%.2f, %.2f) server=(%.2f, %.2f) dist=%.2f",
+		LOG_WARN("[Player::HandleSetDestPos] Position sync: Player (ID: %u) client=(%.2f, %.2f) server=(%.2f, %.2f)",
 			player_id_, cur_pos.x(), cur_pos.z(),
-			m_pMoveComp->GetX(), m_pMoveComp->GetZ(),
-			std::sqrt(distSq));
+			m_pMoveComp->GetX(), m_pMoveComp->GetZ());
 	}
 
 	m_pMoveComp->SetDestination(dest_pos.x(), dest_pos.y(), dest_pos.z());
@@ -389,4 +403,17 @@ void Player::BroadcastMoveNotify()
 		player_id_,
 		m_pMoveComp->GetX(), m_pMoveComp->GetY(), m_pMoveComp->GetZ(),
 		m_pMoveComp->GetDestX(), m_pMoveComp->GetDestY(), m_pMoveComp->GetDestZ());
+}
+
+void Player::BroadcastMoveStopNotify()
+{
+	game::GC_MOVE_STOP_NOTIFY notify;
+	notify.set_player_id(player_id_);
+	notify.mutable_position()->CopyFrom(GetCurrentPos());
+
+	BroadcastToScene(notify);
+
+	LOG_DEBUG("[Player::BroadcastMoveStopNotify] Player (ID: %u) stopped at (%.2f, %.2f, %.2f)",
+		player_id_,
+		m_pMoveComp->GetX(), m_pMoveComp->GetY(), m_pMoveComp->GetZ());
 }

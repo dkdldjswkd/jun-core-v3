@@ -180,7 +180,8 @@
       "Bash(\"$MSBUILD_PATH\" 'c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\JunCore.sln' '/p:Configuration=Debug' '/p:Platform=x64' '/clp:ErrorsOnly')",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe\" \"c:/rpos/jun-core-v3/JunCore/JunCore.sln\" /p:Configuration=Debug /p:Platform=x64 /clp:ErrorsOnly)",
       "Bash(\"/c/Program Files/Microsoft Visual Studio/18/Community/MSBuild/Current/Bin/MSBuild.exe\" \"c:\\\\rpos\\\\jun-core-v3\\\\JunCore\\\\JunCore.sln\" \"/p:Configuration=Debug\" \"/p:Platform=x64\" \"/clp:ErrorsOnly\")",
-      "Bash(printf:*)"
+      "Bash(printf:*)",
+      "Bash(\"C:/vcpkg/packages/protobuf_x64-windows-static/tools/protobuf/protoc.exe\" --proto_path=\"c:/rpos/jun-core-v3/JunCore/GameServer/protocol\" --cpp_out=\"c:/rpos/jun-core-v3/JunCore/GameServer/protocol\" game_messages.proto)"
     ],
     "deny": []
   }
