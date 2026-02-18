@@ -13,7 +13,6 @@ Write-Host "===============================================" -ForegroundColor Cy
 $protocPath = "C:\vcpkg\packages\protobuf_x64-windows-static\tools\protobuf\protoc.exe"
 if (-not (Test-Path $protocPath)) {
     Write-Host "[ERROR] protoc not found at $protocPath" -ForegroundColor Red
-    Read-Host "Press Enter to exit"
     exit 1
 }
 
@@ -98,4 +97,3 @@ if ($buildFiles -eq 0 -and $errorFiles -eq 0) {
 }
 
 Write-Host ""
-Read-Host "Press Enter to exit"

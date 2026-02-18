@@ -112,14 +112,21 @@ message GC_MOVE_STOP_NOTIFY
 // 시야 패킷
 // ============================================================
 
-// 서버 → 클라이언트: 플레이어 시야 진입 알림
-message GC_PLAYER_APPEAR_NOTIFY
+// 플레이어 출현 정보 (단일 플레이어)
+message PlayerAppearInfo
 {
-  int32 player_id = 1;    // 나타난 플레이어 ID
+  int32 player_id = 1;    // 플레이어 ID
   Pos position = 2;       // 현재 위치
   float angle = 3;        // 바라보는 방향 (Y축 회전, degrees)
   int32 hp = 4;           // 현재 HP
   int32 max_hp = 5;       // 최대 HP
+  Pos dest_pos = 6;       // 목표 위치 (이동 중인 경우 position과 다름)
+}
+
+// 서버 → 클라이언트: 플레이어 시야 진입 알림 (1명 또는 여러 명 일괄)
+message GC_PLAYER_APPEAR_NOTIFY
+{
+  repeated PlayerAppearInfo players = 1;  // 플레이어 목록
 }
 
 // 서버 → 클라이언트: 플레이어 시야 이탈 알림

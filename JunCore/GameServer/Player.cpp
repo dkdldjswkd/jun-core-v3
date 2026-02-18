@@ -83,45 +83,47 @@ void Player::OnEnter()
 	enter_notify.mutable_spawn_pos()->CopyFrom(GetCurrentPos());
 	SendPacket(enter_notify);
 
-	// 2. 주변 플레이어들에게 내가 나타났다고 알림
-	game::GC_PLAYER_APPEAR_NOTIFY my_appear;
-	my_appear.set_player_id(player_id_);
-	my_appear.mutable_position()->CopyFrom(GetCurrentPos());
-	my_appear.set_angle(GetAngle());
-	my_appear.set_hp(hp_);
-	my_appear.set_max_hp(max_hp_);
+	// 2. 주변 플레이어들에게 내가 나타났다고 알림 (1명짜리 리스트)
+	game::GC_PLAYER_APPEAR_NOTIFY my_appear_notify;
+	auto* my_info = my_appear_notify.add_players();
+	my_info->set_player_id(player_id_);
+	my_info->mutable_position()->CopyFrom(GetCurrentPos());
+	my_info->set_angle(GetAngle());
+	my_info->set_hp(hp_);
+	my_info->set_max_hp(max_hp_);
+	my_info->mutable_dest_pos()->CopyFrom(GetDestPos());
 
-	BroadcastToOthers(my_appear);
+	BroadcastToOthers(my_appear_notify);
 
 	LOG_DEBUG("[Player::OnEnter] Broadcast APPEAR - Player (ID: %u) to other players",
 		player_id_);
 
-	// 3. 나에게 주변에 이미 있는 모든 플레이어 정보 전송
+	// 3. 나에게 주변에 이미 있는 모든 플레이어 정보를 한 번에 전송
 	if (!m_pScene)
 		return;
 
 	const auto& objects = m_pScene->GetObjects();
-	int other_player_count = 0;
+	game::GC_PLAYER_APPEAR_NOTIFY existing_players_notify;
 	for (auto* obj : objects)
 	{
 		Player* other = dynamic_cast<Player*>(obj);
 		if (other && other != this && other->owner_)
 		{
-			game::GC_PLAYER_APPEAR_NOTIFY other_appear;
-			other_appear.set_player_id(other->player_id_);
-			other_appear.mutable_position()->CopyFrom(other->GetCurrentPos());
-			other_appear.set_angle(other->GetAngle());
-			other_appear.set_hp(other->hp_);
-			other_appear.set_max_hp(other->max_hp_);
-
-			SendPacket(other_appear);
-			other_player_count++;
+			auto* info = existing_players_notify.add_players();
+			info->set_player_id(other->player_id_);
+			info->mutable_position()->CopyFrom(other->GetCurrentPos());
+			info->set_angle(other->GetAngle());
+			info->set_hp(other->hp_);
+			info->set_max_hp(other->max_hp_);
+			info->mutable_dest_pos()->CopyFrom(other->GetDestPos());
 		}
 	}
 
+	int other_player_count = existing_players_notify.players_size();
 	if (other_player_count > 0)
 	{
-		LOG_DEBUG("[Player::OnEnter] Sent %d existing players info to Player (ID: %u)",
+		SendPacket(existing_players_notify);
+		LOG_DEBUG("[Player::OnEnter] Sent %d existing players (batch) to Player (ID: %u)",
 			other_player_count, player_id_);
 	}
 }
