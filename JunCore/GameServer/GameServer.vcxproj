@@ -187,11 +187,6 @@
   <ItemGroup>
     <None Include="protocol\game_messages.proto" />
   </ItemGroup>
-  <ItemDefinitionGroup>
-    <PreBuildEvent>
-      <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\..\generate_protobuf.ps1"</Command>
-    </PreBuildEvent>
-  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

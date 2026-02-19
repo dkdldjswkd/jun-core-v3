@@ -1,3 +1,8 @@
 @echo off
-:: Protobuf Generator Launcher - calls PowerShell script
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0generate_protobuf.ps1"
+set PROTOC="%~dp0vcpkg_installed\x64-windows-static\tools\protobuf\protoc.exe"
+
+for /r "%~dp0" %%f in (*.proto) do (
+    echo %%f | findstr /i "vcpkg_installed" >nul || (
+        %PROTOC% --proto_path="%%~dpf" --cpp_out="%%~dpf" "%%f"
+    )
+)
