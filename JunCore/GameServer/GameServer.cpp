@@ -6,11 +6,13 @@
 #include "../JunCore/logic/GameThread.h"
 #include <random>
 
-// 맵 범위: X[-15, 15], Z[-15, 15]
-static constexpr float MAP_MIN_X = -15.0f;
-static constexpr float MAP_MAX_X =  15.0f;
-static constexpr float MAP_MIN_Z = -15.0f;
-static constexpr float MAP_MAX_Z =  15.0f;
+// 맵 범위: X[-40, 40], Z[-40, 40] (클라 80x80 맵과 동일)
+static constexpr float MAP_MIN_X = -40.0f;
+static constexpr float MAP_MAX_X =  40.0f;
+static constexpr float MAP_MIN_Z = -40.0f;
+static constexpr float MAP_MAX_Z =  40.0f;
+// Cell 크기
+static constexpr float CELL_LEN =  10.0f;
 
 static void GenerateRandomSpawnPos(float& out_x, float& out_y, float& out_z)
 {
@@ -264,7 +266,7 @@ void GameServer::OnServerStart()
 	// 맵: X[-15, 15], Z[-15, 15] → 30x30, cellSize=5 → 6x6 그리드
 	// hysteresisBuffer=0.5: 셀 경계에서 0.5 단위 이상 넘어야 셀 이동 인정
 	scene_ = std::make_unique<GameScene>(GetGameThread(0),
-	    MAP_MIN_X, MAP_MIN_Z, MAP_MAX_X, MAP_MAX_Z, 5.0f, 0.5f);
+	    MAP_MIN_X, MAP_MIN_Z, MAP_MAX_X, MAP_MAX_Z, CELL_LEN, 0.5f);
 }
 
 void GameServer::OnServerStop()
