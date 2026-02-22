@@ -3,10 +3,13 @@
 #include "GameThread.h"
 #include "GameObjectManager.h"
 
-GameObject::GameObject(GameScene* scene)
+GameObject::GameObject(GameScene* scene, float x, float y, float z)
     : JobObject(scene->GetGameThread())
     , m_pScene(scene)
     , m_sn(GameObjectManager::Instance().GenerateSN())
+    , m_x(x)
+    , m_y(y)
+    , m_z(z)
 {
 }
 
@@ -74,4 +77,16 @@ void GameObject::ExitScene()
             m_pScene->Exit(this);
         }
     });
+}
+
+void GameObject::SetPosition(float x, float y, float z)
+{
+    m_x = x;
+    m_y = y;
+    m_z = z;
+
+    if (m_pScene != nullptr)
+    {
+        m_pScene->OnObjectMoved(this, x, z);
+    }
 }

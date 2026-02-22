@@ -3,6 +3,7 @@
 #include "JobObject.h"
 #include "../core/Event.h"
 #include <cstdint>
+#include <vector>
 
 class GameScene;
 class GameObjectManager;
@@ -25,6 +26,11 @@ protected:
     GameScene* m_pScene = nullptr;
     uint64_t m_sn = 0;
 
+    // 월드 좌표 (AoiGrid와 연동)
+    float m_x{0.f};
+    float m_y{0.f};
+    float m_z{0.f};
+
     //------------------------------
     // 가상 함수 (사용자 구현)
     //------------------------------
@@ -33,12 +39,13 @@ protected:
     virtual void OnFixedUpdate() {}
     virtual void OnUpdate() {}
 
+
     friend class GameScene;
 
     //------------------------------
     // 생성자 (protected)
     //------------------------------
-    explicit GameObject(GameScene* scene);
+    explicit GameObject(GameScene* scene, float x, float y, float z);
 
 public:
     virtual ~GameObject();
@@ -69,4 +76,20 @@ public:
     // Serial Number 접근
     //------------------------------
     uint64_t GetSN() const { return m_sn; }
+
+    //------------------------------
+    // AOI 이벤트 (AoiGrid에서 호출, public)
+    // 상대방이 내 시야에 들어옴/나감
+    //------------------------------
+    virtual void OnAppear(std::vector<GameObject*>& others) {}
+    virtual void OnDisappear(std::vector<GameObject*>& others) {}
+
+    //------------------------------
+    // 위치 관리 (AoiGrid 연동)
+    //------------------------------
+    void SetPosition(float x, float y, float z);
+
+    float GetX() const { return m_x; }
+    float GetY() const { return m_y; }
+    float GetZ() const { return m_z; }
 };

@@ -141,7 +141,10 @@ void GameServer::HandleSceneReadyRequest(User& user, const game::CG_SCENE_READY_
 
 	LOG_INFO("[SCENE_READY] Creating Player (ID: %u) at Scene %d", player_id, scene_id);
 
-	player = GameObjectManager::Instance().Create<Player>(target_scene, &user, player_id);
+	float spawn_x, spawn_y, spawn_z;
+	user.GetSpawnPos(spawn_x, spawn_y, spawn_z);
+
+	player = GameObjectManager::Instance().Create<Player>(target_scene, &user, player_id, spawn_x, spawn_y, spawn_z);
 	user.SetPlayer(player);
 }
 
@@ -258,7 +261,10 @@ void GameServer::OnUserDisconnect(User* user)
 void GameServer::OnServerStart()
 {
 	LOG_INFO("GameServer started successfully!");
-	scene_ = std::make_unique<GameScene>(GetGameThread(0));
+	// 맵: X[-15, 15], Z[-15, 15] → 30x30, cellSize=5 → 6x6 그리드
+	// hysteresisBuffer=0.5: 셀 경계에서 0.5 단위 이상 넘어야 셀 이동 인정
+	scene_ = std::make_unique<GameScene>(GetGameThread(0),
+	    MAP_MIN_X, MAP_MIN_Z, MAP_MAX_X, MAP_MAX_Z, 5.0f, 0.5f);
 }
 
 void GameServer::OnServerStop()
@@ -270,11 +276,16 @@ void GameServer::OnServerStop()
 GameScene* GameServer::GetSceneById(int32_t scene_id)
 {
 	// TODO: Scene ID별 Scene 매핑 (현재는 단일 Scene만 지원)
-	if (scene_id == 0)
+	if (scene_ && scene_->GetId() == scene_id)
 	{
 		return scene_.get();
 	}
 	return nullptr;
+}
+
+int32_t GameServer::GetDefaultSceneId() const
+{
+	return scene_ ? scene_->GetId() : 0;
 }
 
 uint32_t GameServer::GeneratePlayerId()

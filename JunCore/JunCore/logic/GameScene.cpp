@@ -1,10 +1,17 @@
-﻿#include "GameScene.h"
+#include "GameScene.h"
 #include "GameObject.h"
 #include "GameThread.h"
 #include "GameObjectManager.h"
 
-GameScene::GameScene(GameThread* gameThread)
+std::atomic<int32_t> GameScene::s_nextSceneId{1};
+
+GameScene::GameScene(GameThread* gameThread,
+                     float mapMinX, float mapMinZ,
+                     float mapMaxX, float mapMaxZ,
+                     float cellSize, float hysteresisBuffer)
     : m_pGameThread(gameThread)
+    , m_id(s_nextSceneId.fetch_add(1))
+    , m_aoiGrid(mapMinX, mapMinZ, mapMaxX, mapMaxZ, cellSize, hysteresisBuffer)
 {
     if (m_pGameThread)
     {
@@ -23,17 +30,21 @@ GameScene::~GameScene()
 void GameScene::Enter(GameObject* obj)
 {
     m_objects.push_back(obj);
+    m_aoiGrid.AddObject(obj, obj->GetX(), obj->GetZ());
+
     obj->m_pScene = this;
     obj->OnEnter();
 
-    // OnEnter 완료 후 GameObjectManager에 등록
-    // 다른 스레드에서 PostTo로 접근 가능해짐
     GameObjectManager::Instance().Register(obj);
 }
 
 void GameScene::Exit(GameObject* obj)
 {
     obj->OnExit();
+
+    // AoiGrid에서 제거 (주변 오브젝트에게 OnDisappear 발행)
+    m_aoiGrid.RemoveObject(obj);
+
     obj->m_pScene = nullptr;
 
     auto it = std::find(m_objects.begin(), m_objects.end(), obj);

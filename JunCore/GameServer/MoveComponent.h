@@ -1,5 +1,6 @@
 #pragma once
 #include "../JunCore/logic/Component.h"
+#include "../JunCore/logic/GameObject.h"
 #include "../JunCore/core/Event.h"
 #include <cmath>
 #include <numbers>
@@ -56,6 +57,12 @@ public:
         m_currentX = x;
         m_currentY = y;
         m_currentZ = z;
+
+        // AoiGrid 연동: GameObject에 위치 전달 (씬에 등록된 경우 OnObjectMoved 발행)
+        if (m_pOwner)
+        {
+            static_cast<GameObject*>(m_pOwner)->SetPosition(x, y, z);
+        }
     }
 
     void GetPosition(float& x, float& y, float& z) const
@@ -184,6 +191,12 @@ private:
 
         m_currentX += dirX * moveDistance;
         m_currentZ += dirZ * moveDistance;
+
+        // AoiGrid 연동: 이동 후 GameObject에 위치 전달
+        if (m_pOwner)
+        {
+            static_cast<GameObject*>(m_pOwner)->SetPosition(m_currentX, m_currentY, m_currentZ);
+        }
     }
 
 private:

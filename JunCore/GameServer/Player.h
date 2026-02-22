@@ -16,7 +16,7 @@
 class Player : public GameObject
 {
 public:
-	Player(GameScene* scene, User* owner, uint32_t player_id);
+	Player(GameScene* scene, User* owner, uint32_t player_id, float x, float y, float z);
 	~Player();
 
 protected:
@@ -27,6 +27,10 @@ protected:
 	void OnFixedUpdate() override;
 	void OnEnter() override;
 	void OnExit() override;
+
+	// AOI 이벤트: 내 시야에 다른 오브젝트가 들어옴/나감
+	void OnAppear(std::vector<GameObject*>& others) override;
+	void OnDisappear(std::vector<GameObject*>& others) override;
 
 public:
 	// ──────────────────────────────────────────────────────
@@ -47,40 +51,43 @@ public:
 		}
 	}
 
-	// Scene 내 모든 Player에게 브로드캐스트
+	// 인접 9셀 내 모든 Player에게 브로드캐스트 (자신 포함)
 	template<typename T>
 	void BroadcastToScene(const T& packet)
 	{
 		if (!m_pScene)
+		{
 			return;
+		}
 
-		const auto& objects = m_pScene->GetObjects();
-		for (auto* obj : objects)
+		m_pScene->ForEachAdjacentObjects(GetX(), GetZ(), [&](GameObject* obj)
 		{
 			Player* player = dynamic_cast<Player*>(obj);
 			if (player && player->owner_)
 			{
 				player->owner_->SendPacket(packet);
 			}
-		}
+		});
 	}
 
-	// Scene 내 다른 Player들에게 브로드캐스트 (자신 제외)
+	// 인접 9셀 내 다른 Player들에게 브로드캐스트 (자신 제외)
 	template<typename T>
 	void BroadcastToOthers(const T& packet)
 	{
 		if (!m_pScene)
 			return;
 
-		const auto& objects = m_pScene->GetObjects();
-		for (auto* obj : objects)
+		m_pScene->ForEachAdjacentObjects(GetX(), GetZ(), [&](GameObject* obj)
 		{
+			if (obj == this)
+				return;
+
 			Player* player = dynamic_cast<Player*>(obj);
-			if (player && player != this && player->owner_)
+			if (player && player->owner_)
 			{
 				player->owner_->SendPacket(packet);
 			}
-		}
+		});
 	}
 
 	// HP

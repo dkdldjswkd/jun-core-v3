@@ -1,8 +1,11 @@
-﻿#pragma once
+#pragma once
+#include "AoiGrid.h"
 #include "../../JunCommon/container/LFQueue.h"
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <utility>
+#include <atomic>
 
 class GameThread;
 class GameObject;
@@ -16,6 +19,7 @@ class GameScene
 protected:
     std::vector<GameObject*> m_objects;
     GameThread* m_pGameThread = nullptr;
+    AoiGrid m_aoiGrid;
 
     //------------------------------
     // 가상 함수 (사용자 구현)
@@ -24,7 +28,14 @@ protected:
     virtual void OnUpdate() {}
 
 public:
-    explicit GameScene(GameThread* gameThread);
+    // mapMinX/Z ~ mapMaxX/Z: 맵 범위
+    // cellSize: 셀 한 변의 길이
+    // hysteresisBuffer: 셀 이동 판정 버퍼 (경계 깜빡임 방지)
+    GameScene(GameThread* gameThread,
+              float mapMinX, float mapMinZ,
+              float mapMaxX, float mapMaxZ,
+              float cellSize, float hysteresisBuffer);
+
     virtual ~GameScene();
 
     //------------------------------
@@ -49,4 +60,36 @@ public:
     //------------------------------
     const std::vector<GameObject*>& GetObjects() const { return m_objects; }
 
+    //------------------------------
+    // AOI: 인접 9셀 오브젝트 반환
+    //------------------------------
+    std::vector<GameObject*> GetNearbyObjects(float x, float z, GameObject* excludeSelf = nullptr) const
+    {
+        return m_aoiGrid.GetNearbyObjects(x, z, excludeSelf);
+    }
+
+    //------------------------------
+    // AOI: 인접 9셀 오브젝트 순회
+    //------------------------------
+    void ForEachAdjacentObjects(float x, float z, const std::function<void(GameObject*)>& fn) const
+    {
+        m_aoiGrid.ForEachAdjacentObjects(x, z, fn);
+    }
+
+    //------------------------------
+    // AOI: 오브젝트 위치 갱신 (GameObject::SetPosition에서 호출)
+    //------------------------------
+    void OnObjectMoved(GameObject* obj, float x, float z)
+    {
+        m_aoiGrid.UpdatePosition(obj, x, z);
+    }
+
+    //------------------------------
+    // Scene ID
+    //------------------------------
+    int32_t GetId() const { return m_id; }
+
+private:
+    static std::atomic<int32_t> s_nextSceneId;
+    int32_t m_id{0};
 };

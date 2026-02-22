@@ -1,8 +1,8 @@
 ﻿#include "Player.h"
 #include "../JunCore/logic/GameScene.h"
 
-Player::Player(GameScene* scene, User* owner, uint32_t player_id)
-	: GameObject(scene)
+Player::Player(GameScene* scene, User* owner, uint32_t player_id, float x, float y, float z)
+	: GameObject(scene, x, y, z)
 	, owner_(owner)
 	, player_id_(player_id)
 	, m_pMoveComp(nullptr)
@@ -57,17 +57,12 @@ void Player::OnFixedUpdate()
 
 void Player::OnEnter()
 {
-	// User에서 scene_id와 spawn_pos 가져오기
-	int32_t scene_id = 0;
-	float spawn_x = 0.0f, spawn_y = 0.0f, spawn_z = 0.0f;
+	int32_t scene_id = m_pScene ? m_pScene->GetId() : 0;
+	float spawn_x = GetX();
+	float spawn_y = GetY();
+	float spawn_z = GetZ();
 
-	if (owner_)
-	{
-		scene_id = owner_->GetLastSceneId();
-		owner_->GetSpawnPos(spawn_x, spawn_y, spawn_z);
-	}
-
-	// 스폰 위치로 MoveComponent에 위치 설정 (이벤트 발행 없이 초기화)
+	// 스폰 위치로 MoveComponent에 위치 설정 (GameObject::SetPosition도 함께 갱신)
 	m_pMoveComp->SetPosition(spawn_x, spawn_y, spawn_z);
 	m_pMoveComp->Stop();
 
@@ -76,40 +71,55 @@ void Player::OnEnter()
 		scene_id,
 		spawn_x, spawn_y, spawn_z);
 
-	// 1. SCENE_ENTER_NOTIFY 전송 (Scene Enter 완료 알림)
+	// SCENE_ENTER_NOTIFY 전송 (Scene Enter 완료 알림)
 	game::GC_SCENE_ENTER_NOTIFY enter_notify;
 	enter_notify.set_scene_id(scene_id);
 	enter_notify.set_player_id(player_id_);
 	enter_notify.mutable_spawn_pos()->CopyFrom(GetCurrentPos());
 	SendPacket(enter_notify);
 
-	// 2. 주변 플레이어들에게 내가 나타났다고 알림 (1명짜리 리스트)
-	game::GC_PLAYER_APPEAR_NOTIFY my_appear_notify;
-	auto* my_info = my_appear_notify.add_players();
-	my_info->set_player_id(player_id_);
-	my_info->mutable_position()->CopyFrom(GetCurrentPos());
-	my_info->set_angle(GetAngle());
-	my_info->set_hp(hp_);
-	my_info->set_max_hp(max_hp_);
-	my_info->mutable_dest_pos()->CopyFrom(GetDestPos());
+	// 인접 셀(내 셀 포함)의 플레이어들에게 내 appear 알림 전송
+	if (m_pScene)
+	{
+		game::GC_PLAYER_APPEAR_NOTIFY my_appear_notify;
+		auto* my_info = my_appear_notify.add_players();
+		my_info->set_player_id(player_id_);
+		my_info->mutable_position()->CopyFrom(GetCurrentPos());
+		my_info->set_angle(GetAngle());
+		my_info->set_hp(hp_);
+		my_info->set_max_hp(max_hp_);
+		my_info->mutable_dest_pos()->CopyFrom(GetDestPos());
 
-	BroadcastToOthers(my_appear_notify);
+		m_pScene->ForEachAdjacentObjects(GetX(), GetZ(), [&](GameObject* obj)
+			{
+				if (obj == this)
+				{
+					return;
+				}
 
-	LOG_DEBUG("[Player::OnEnter] Broadcast APPEAR - Player (ID: %u) to other players",
-		player_id_);
+				Player* other = dynamic_cast<Player*>(obj);
+				if (other && other->owner_)
+				{
+					other->owner_->SendPacket(my_appear_notify);
+				}
+			});
+	}
+}
 
-	// 3. 나에게 주변에 이미 있는 모든 플레이어 정보를 한 번에 전송
-	if (!m_pScene)
-		return;
+void Player::OnExit()
+{
+	LOG_INFO("[Player::OnExit] Player (ID: %u) left scene", player_id_);
+}
 
-	const auto& objects = m_pScene->GetObjects();
-	game::GC_PLAYER_APPEAR_NOTIFY existing_players_notify;
-	for (auto* obj : objects)
+void Player::OnAppear(std::vector<GameObject*>& others)
+{
+	game::GC_PLAYER_APPEAR_NOTIFY notify;
+	for (auto* obj : others)
 	{
 		Player* other = dynamic_cast<Player*>(obj);
-		if (other && other != this && other->owner_)
+		if (other && other->owner_)
 		{
-			auto* info = existing_players_notify.add_players();
+			auto* info = notify.add_players();
 			info->set_player_id(other->player_id_);
 			info->mutable_position()->CopyFrom(other->GetCurrentPos());
 			info->set_angle(other->GetAngle());
@@ -119,30 +129,25 @@ void Player::OnEnter()
 		}
 	}
 
-	int other_player_count = existing_players_notify.players_size();
-	if (other_player_count > 0)
+	if (notify.players_size() > 0)
 	{
-		SendPacket(existing_players_notify);
-		LOG_DEBUG("[Player::OnEnter] Sent %d existing players (batch) to Player (ID: %u)",
-			other_player_count, player_id_);
+		SendPacket(notify);
 	}
 }
 
-void Player::OnExit()
+void Player::OnDisappear(std::vector<GameObject*>& others)
 {
-	LOG_INFO("[Player::OnExit] Player (ID: %u) left scene", player_id_);
-
-	// 주변 플레이어들에게 내가 사라졌다고 알림
-	game::GC_PLAYER_DISAPPEAR_NOTIFY disappear;
-	disappear.set_player_id(player_id_);
-
-	BroadcastToOthers(disappear);
-
-	LOG_DEBUG("[Player::OnExit] Broadcast DISAPPEAR - Player (ID: %u) to other players",
-		player_id_);
-
+	for (auto* obj : others)
+	{
+		Player* other = dynamic_cast<Player*>(obj);
+		if (other)
+		{
+			game::GC_PLAYER_DISAPPEAR_NOTIFY notify;
+			notify.set_player_id(other->player_id_);
+			SendPacket(notify);
+		}
+	}
 }
-
 
 void Player::HandleAttack(const game::Pos& cur_pos, int32_t target_id)
 {
@@ -386,10 +391,14 @@ void Player::BroadcastMoveNotify()
 
 	BroadcastToScene(notify);
 
-	LOG_DEBUG("[Player::BroadcastMoveNotify] Player (ID: %u) pos: (%.2f, %.2f, %.2f) -> dest: (%.2f, %.2f, %.2f)",
-		player_id_,
-		m_pMoveComp->GetX(), m_pMoveComp->GetY(), m_pMoveComp->GetZ(),
-		m_pMoveComp->GetDestX(), m_pMoveComp->GetDestY(), m_pMoveComp->GetDestZ());
+	// AOI 진단: GetNearbyObjects가 실제로 몇 명을 찾는지 확인
+	size_t nearby_count = m_pScene ? m_pScene->GetNearbyObjects(GetX(), GetZ()).size() : 0;
+	LOG_DEBUG("[Player::BroadcastMoveNotify] Player (ID: %u) nearby=%zu, "
+		"MoveComp pos=(%.2f, %.2f) GameObj pos=(%.2f, %.2f) -> dest=(%.2f, %.2f)",
+		player_id_, nearby_count,
+		m_pMoveComp->GetX(), m_pMoveComp->GetZ(),
+		GetX(), GetZ(),
+		m_pMoveComp->GetDestX(), m_pMoveComp->GetDestZ());
 }
 
 void Player::BroadcastMoveStopNotify()

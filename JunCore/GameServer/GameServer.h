@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <memory>
 
-// Forward declarations
 class Player;
 class GameScene;  // Forward declaration 유지 (헤더에서는 포인터만 사용)
 
@@ -37,7 +36,7 @@ private:
 
 	// Scene 관리 헬퍼
 	GameScene* GetSceneById(int32_t scene_id);
-	int32_t GetDefaultSceneId() const { return 0; }  // 기본 시작 Scene
+	int32_t GetDefaultSceneId() const;  // 기본 시작 Scene
 
 	// Player ID 생성
 	uint32_t GeneratePlayerId();

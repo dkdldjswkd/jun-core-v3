@@ -92,6 +92,9 @@
     <ClInclude Include="network\User.h">
       <Filter>network</Filter>
     </ClInclude>
+    <ClInclude Include="logic\AoiGrid.h">
+      <Filter>logic</Filter>
+    </ClInclude>
     <ClInclude Include="logic\Component.h">
       <Filter>logic</Filter>
     </ClInclude>

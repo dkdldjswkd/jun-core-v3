@@ -37,6 +37,7 @@
     <ClInclude Include="core\Event.h" />
     <ClInclude Include="core\WindowsIncludes.h" />
     <ClInclude Include="log.h" />
+    <ClInclude Include="logic\AoiGrid.h" />
     <ClInclude Include="logic\Component.h" />
     <ClInclude Include="logic\Entity.h" />
     <ClInclude Include="logic\GameObject.h" />
