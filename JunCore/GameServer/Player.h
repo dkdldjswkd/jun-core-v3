@@ -60,7 +60,7 @@ public:
 			return;
 		}
 
-		m_pScene->ForEachAdjacentObjects(GetX(), GetZ(), [&](GameObject* obj)
+		m_pScene->ForEachAdjacentObjects(this, true, [&](GameObject* obj)
 		{
 			Player* player = dynamic_cast<Player*>(obj);
 			if (player && player->owner_)
@@ -75,13 +75,12 @@ public:
 	void BroadcastToOthers(const T& packet)
 	{
 		if (!m_pScene)
-			return;
-
-		m_pScene->ForEachAdjacentObjects(GetX(), GetZ(), [&](GameObject* obj)
 		{
-			if (obj == this)
-				return;
+			return;
+		}
 
+		m_pScene->ForEachAdjacentObjects(this, false, [&](GameObject* obj)
+		{
 			Player* player = dynamic_cast<Player*>(obj);
 			if (player && player->owner_)
 			{

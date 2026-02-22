@@ -37,31 +37,16 @@ public:
 
     //------------------------------
     // 오브젝트를 그리드에 추가 (Scene Enter 시)
-    // 현재 위치의 인접 9셀 오브젝트에게 OnAppear 이벤트 발행
+    // appear/disappear 알림은 GameScene::Enter에서 OnAppear 경유로 처리
     //------------------------------
-    void AddObject(GameObject* obj, float x, float z)
+    void AddObject(GameObject* obj)
     {
-        int col = WorldToCol(x);
-        int row = WorldToRow(z);
+        int col = WorldToCol(obj->GetX());
+        int row = WorldToRow(obj->GetZ());
         ClampCell(row, col);
 
         m_objectCellMap[obj] = {row, col};
         m_cells[CellIndex(row, col)].objects.insert(obj);
-
-        // 주변 오브젝트와 상호 OnAppear
-        std::vector<GameObject*> nearby = CollectAdjacent(row, col, obj);
-        if (!nearby.empty())
-        {
-            // 나에게 주변 오브젝트들이 나타남
-            obj->OnAppear(nearby);
-
-            // 주변 오브젝트들에게 내가 나타남
-            std::vector<GameObject*> me_list = { obj };
-            for (auto* other : nearby)
-            {
-                other->OnAppear(me_list);
-            }
-        }
     }
 
     //------------------------------

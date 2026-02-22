@@ -58,52 +58,21 @@ void Player::OnFixedUpdate()
 void Player::OnEnter()
 {
 	int32_t scene_id = m_pScene ? m_pScene->GetId() : 0;
-	float spawn_x = GetX();
-	float spawn_y = GetY();
-	float spawn_z = GetZ();
 
 	// 스폰 위치로 MoveComponent에 위치 설정 (GameObject::SetPosition도 함께 갱신)
-	m_pMoveComp->SetPosition(spawn_x, spawn_y, spawn_z);
+	m_pMoveComp->SetPosition(GetX(), GetY(), GetZ());
 	m_pMoveComp->Stop();
 
 	LOG_INFO("[Player::OnEnter] Player (ID: %u) entered Scene %d at (%.2f, %.2f, %.2f)",
-		player_id_,
-		scene_id,
-		spawn_x, spawn_y, spawn_z);
+		player_id_, scene_id, GetX(), GetY(), GetZ());
 
-	// SCENE_ENTER_NOTIFY 전송 (Scene Enter 완료 알림)
+	// SCENE_ENTER_NOTIFY 전송
+	// appear 알림은 GameScene::Enter에서 OnEnter 반환 후 OnAppear 경유로 처리됨
 	game::GC_SCENE_ENTER_NOTIFY enter_notify;
 	enter_notify.set_scene_id(scene_id);
 	enter_notify.set_player_id(player_id_);
 	enter_notify.mutable_spawn_pos()->CopyFrom(GetCurrentPos());
 	SendPacket(enter_notify);
-
-	// 인접 셀(내 셀 포함)의 플레이어들에게 내 appear 알림 전송
-	if (m_pScene)
-	{
-		game::GC_PLAYER_APPEAR_NOTIFY my_appear_notify;
-		auto* my_info = my_appear_notify.add_players();
-		my_info->set_player_id(player_id_);
-		my_info->mutable_position()->CopyFrom(GetCurrentPos());
-		my_info->set_angle(GetAngle());
-		my_info->set_hp(hp_);
-		my_info->set_max_hp(max_hp_);
-		my_info->mutable_dest_pos()->CopyFrom(GetDestPos());
-
-		m_pScene->ForEachAdjacentObjects(GetX(), GetZ(), [&](GameObject* obj)
-			{
-				if (obj == this)
-				{
-					return;
-				}
-
-				Player* other = dynamic_cast<Player*>(obj);
-				if (other && other->owner_)
-				{
-					other->owner_->SendPacket(my_appear_notify);
-				}
-			});
-	}
 }
 
 void Player::OnExit()
@@ -279,7 +248,7 @@ void Player::HandleDamageApply(int32_t target_id, int32_t damage)
 	damage_notify.set_damage(damage);
 	damage_notify.set_target_hp(target->GetHp());
 
-	BroadcastToScene(damage_notify);
+	target->BroadcastToScene(damage_notify);
 
 	LOG_DEBUG("[Player::HandleDamageApply] Player (ID: %u) dealt %d damage to Player (ID: %d), remaining HP: %d",
 		player_id_, damage, target_id, target->GetHp());
@@ -392,7 +361,7 @@ void Player::BroadcastMoveNotify()
 	BroadcastToScene(notify);
 
 	// AOI 진단: GetNearbyObjects가 실제로 몇 명을 찾는지 확인
-	size_t nearby_count = m_pScene ? m_pScene->GetNearbyObjects(GetX(), GetZ()).size() : 0;
+	size_t nearby_count = m_pScene ? m_pScene->GetNearbyObjects(this, true).size() : 0;
 	LOG_DEBUG("[Player::BroadcastMoveNotify] Player (ID: %u) nearby=%zu, "
 		"MoveComp pos=(%.2f, %.2f) GameObj pos=(%.2f, %.2f) -> dest=(%.2f, %.2f)",
 		player_id_, nearby_count,

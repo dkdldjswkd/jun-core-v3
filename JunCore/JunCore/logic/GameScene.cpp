@@ -30,10 +30,23 @@ GameScene::~GameScene()
 void GameScene::Enter(GameObject* obj)
 {
     m_objects.push_back(obj);
-    m_aoiGrid.AddObject(obj, obj->GetX(), obj->GetZ());
+    m_aoiGrid.AddObject(obj);
 
     obj->m_pScene = this;
     obj->OnEnter();
+
+    // OnEnter 완료 후 appear 알림 (양방향)
+    auto nearby = GetNearbyObjects(obj, false);
+    if (!nearby.empty())
+    {
+        obj->OnAppear(nearby);
+
+        auto me_list = std::vector<GameObject*>{ obj };
+        for (auto* other : nearby)
+        {
+            other->OnAppear(me_list);
+        }
+    }
 
     GameObjectManager::Instance().Register(obj);
 }

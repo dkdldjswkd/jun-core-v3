@@ -63,17 +63,24 @@ public:
     //------------------------------
     // AOI: 인접 9셀 오브젝트 반환
     //------------------------------
-    std::vector<GameObject*> GetNearbyObjects(float x, float z, GameObject* excludeSelf = nullptr) const
+    std::vector<GameObject*> GetNearbyObjects(GameObject* obj, bool includeSelf = false) const
     {
-        return m_aoiGrid.GetNearbyObjects(x, z, excludeSelf);
+        return m_aoiGrid.GetNearbyObjects(obj->GetX(), obj->GetZ(), includeSelf ? nullptr : obj);
     }
 
     //------------------------------
     // AOI: 인접 9셀 오브젝트 순회
     //------------------------------
-    void ForEachAdjacentObjects(float x, float z, const std::function<void(GameObject*)>& fn) const
+    void ForEachAdjacentObjects(GameObject* obj, bool includeSelf, const std::function<void(GameObject*)>& fn) const
     {
-        m_aoiGrid.ForEachAdjacentObjects(x, z, fn);
+        m_aoiGrid.ForEachAdjacentObjects(obj->GetX(), obj->GetZ(), [&](GameObject* o)
+        {
+            if (!includeSelf && o == obj)
+            {
+                return;
+            }
+            fn(o);
+        });
     }
 
     //------------------------------
